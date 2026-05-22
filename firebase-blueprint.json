@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student in the school",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "class": { "type": "string" },
+        "section": { "type": "string" },
+        "roll": { "type": "string" }
+      }
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "A teacher in the school",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "subject": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "students": {
+      "schema": "Student",
+      "description": "Students collection"
+    },
+    "teachers": {
+      "schema": "Teacher",
+      "description": "Teachers collection"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Bhogamur Jatiya Vidya Niketon",
+  "description": "A modern, beautiful, colorful, fully responsive Bhogamur Jatiya Vidya Niketon for teachers, students, and school administration. Features student/teacher management, attendance tracking, fees collection, and analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
