@@ -126,7 +126,7 @@ export default function QRScanner({ onExit }: { onExit?: () => void }) {
                  title="Select class to restrict attendance"
                >
                  <option value="">All Classes</option>
-                 {Array.from(new Set(students.map(s => s.class))).filter(Boolean).map(c => (
+                 {['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'].map(c => (
                    <option key={c} value={c}>{c}</option>
                  ))}
                </select>

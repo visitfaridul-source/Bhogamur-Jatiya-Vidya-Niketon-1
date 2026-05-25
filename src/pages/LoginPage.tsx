@@ -5,20 +5,24 @@ import { BookOpen, ShieldCheck, Users, GraduationCap, ArrowLeft, ArrowRight, Hom
 import { cn } from '@/lib/utils';
 import { useWebsite } from '@/context/WebsiteContext';
 import { useAuth, UserRole } from '@/context/AuthContext';
-import { auth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db, handleFirestoreError, OperationType } from '@/firebase';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
+import { setDoc, doc } from 'firebase/firestore';
 
 type Role = 'Super Admin' | 'Admin' | 'Teacher' | 'Student' | 'Parent' | null;
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { settings } = useWebsite();
-  const { user, updateUserRole } = useAuth();
+  const { user, loginAsSuperAdminDirectly } = useAuth();
   const [selectedRole, setSelectedRole] = useState<Role>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isFirstTime, setIsFirstTime] = useState(false);
+  const [fullName, setFullName] = useState('');
 
   // If already logged in, redirect
   React.useEffect(() => {
@@ -36,24 +40,111 @@ export default function LoginPage() {
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);
     setErrorMessage('');
+    setSuccessMessage('');
+    setIsFirstTime(false);
+    setFullName('');
+  };
+
+  const handleForgotPassword = async () => {
+    if (!username) {
+      setErrorMessage('Please enter your email address in the field below first, then click "Forgot password?".');
+      return;
+    }
+    setIsAnimating(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await sendPasswordResetEmail(auth, username);
+      setSuccessMessage(`Password reset link has been sent to ${username}! Please check your Inbox and Spam folder.`);
+    } catch (err: any) {
+      console.error("Forgot password error:", err);
+      setErrorMessage(err.message || 'Failed to send password reset email. Please make sure the email is correct.');
+    } finally {
+      setIsAnimating(false);
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedRole || !username || !password) return;
+    if (isFirstTime && !fullName) {
+      setErrorMessage('Please enter your full name.');
+      return;
+    }
     
     setIsAnimating(true);
     setErrorMessage('');
+    setSuccessMessage('');
+
+    if (isFirstTime) {
+      // Registration Flow
+      const regEmail = username.trim().toLowerCase();
+      const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
+
+      if (!allowedAdminEmails.includes(regEmail)) {
+        setErrorMessage('Security Restriction: Self-registration for Super Admin is strictly pre-authorized. Only designated school master emails (such as visitfaridul@gmail.com or bjvnhs@gmail.com) are allowed to initialize a primary Super Admin account directly. For other accounts, please request an administrator to create one for you.');
+        setIsAnimating(false);
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, username.trim(), password);
+        const firebaseUser = userCredential.user;
+        
+        // Write details to users collection in Firestore
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), {
+            name: fullName,
+            email: regEmail,
+            role: 'Super Admin',
+            createdAt: new Date().toISOString()
+          });
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`);
+        }
+
+        setSuccessMessage('Super Admin account created successfully! Redirecting...');
+      } catch (error: any) {
+        console.error("Registration error:", error);
+        const errStr = (error?.code || error?.message || String(error)).toLowerCase();
+        
+        if (errStr.includes('email-already-in-use') || errStr.includes('already-in-use')) {
+          setErrorMessage('This email is already in use. Please sign in instead.');
+        } else if (errStr.includes('weak-password') || errStr.includes('weak')) {
+          setErrorMessage('The password is too weak. Please use at least 6 characters.');
+        } else if (errStr.includes('invalid-email') || errStr.includes('invalid')) {
+          setErrorMessage('Please enter a valid email address.');
+        } else if (errStr.includes('operation-not-allowed')) {
+          setErrorMessage('Developer Error: Email/Password authentication is not enabled in Firebase Console.');
+        } else {
+          setErrorMessage(error.message || 'Registration failed. Please try again.');
+        }
+        setIsAnimating(false);
+      }
+      return;
+    }
+
+    // Direct Login Bypass for Mubarak Hussain & Bjvn@1968
+    const isMubarakDirect = (username.trim().toLowerCase() === 'mubarak hussain' || username.trim().toLowerCase() === 'visitfaridul@gmail.com') && password === 'Bjvn@1968';
+
+    if (isMubarakDirect) {
+      setTimeout(() => {
+        loginAsSuperAdminDirectly('Mubarak Hussain', 'visitfaridul@gmail.com');
+        setIsAnimating(false);
+      }, 500);
+      return;
+    }
 
     try {
       await signInWithEmailAndPassword(auth, username, password);
       // Wait for auth context to update and redirect via useEffect above
     } catch (error: any) {
-      console.error("Authentication error:", error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        setErrorMessage('Invalid username or password');
-      } else if (error.code === 'auth/operation-not-allowed') {
+      const errStr = (error?.code || error?.message || String(error)).toLowerCase();
+      
+      if (errStr.includes('user-not-found') || errStr.includes('invalid-credential') || errStr.includes('wrong-password')) {
+        setErrorMessage('Invalid username or password. If this is your first time logging in, please select the "Super Admin" card and then use the link "First time? Create initial Super Admin account" below.');
+      } else if (errStr.includes('operation-not-allowed')) {
         setErrorMessage('Developer Error: Email/Password authentication is not enabled in Firebase Console.');
       } else {
         setErrorMessage('Login failed. Please check your credentials.');
@@ -201,8 +292,14 @@ export default function LoginPage() {
                 </button>
 
                 <div className="mb-8">
-                  <h2 className="text-3xl font-bold text-slate-900 mb-2">{selectedRole} Login</h2>
-                  <p className="text-slate-500 text-sm">Enter your credentials to access your account.</p>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                    {isFirstTime ? 'Create Super Admin' : `${selectedRole} Login`}
+                  </h2>
+                  <p className="text-slate-500 text-sm">
+                    {isFirstTime 
+                      ? 'Enter details to initialize your primary Super Admin account.' 
+                      : 'Enter your credentials to access your account.'}
+                  </p>
                 </div>
 
                 <form onSubmit={handleAuth} className="space-y-6">
@@ -211,15 +308,52 @@ export default function LoginPage() {
                       {errorMessage}
                     </div>
                   )}
+                  {successMessage && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700 font-bold text-center">
+                        {successMessage}
+                      </div>
+                      <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-xl text-left space-y-2 text-[13px] text-amber-900 leading-relaxed shadow-sm">
+                        <strong className="block text-sm text-amber-950 font-bold">⚠️ Link Expired Issue / लिंक एक्सपायर्ड प्रॉब्लम?</strong>
+                        <ul className="list-decimal pl-4 space-y-1.5 font-medium text-amber-800">
+                          <li>
+                            <strong className="text-amber-950">Newest Email open karein:</strong> Agar aapne multiple times password reset request kiya hai, toh purane saare links automatic expire ho jaate hain. Apne inbox mein aane wala <strong>sabse aakhri (latest) email</strong> hi open karein.
+                          </li>
+                          <li>
+                            <strong className="text-amber-950">Inbox clean karke dubara try karein:</strong> Apne inbox se pehle saare purane password reset mail delete kar dein. 1 minute wait karein, naya request send karein, aur turant naye link par click karein.
+                          </li>
+                          <li>
+                            <strong className="text-amber-950">Private / Incognito tab ka use karein:</strong> Email link ko click karne ke bajae link ko copy karein aur use browser ke <strong>Incognito (Private) Window</strong> mein paste karke open karein.
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {isFirstTime && (
+                    <div className="space-y-1 text-left">
+                      <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Mubarak Hussain" 
+                        value={fullName}
+                        required
+                        onChange={(e) => { setFullName(e.target.value); setErrorMessage(''); setSuccessMessage(''); }}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50 text-sm"
+                      />
+                    </div>
+                  )}
+
                   <div className="space-y-1 text-left">
-                    <label className="text-sm font-semibold text-slate-700">Email address</label>
+                    <label className="text-sm font-semibold text-slate-700">
+                      {isFirstTime ? 'Email Address' : 'Email address or Username'}
+                    </label>
                     <input 
-                      type="email" 
-                      placeholder="e.g. admin@school.com" 
+                      type={isFirstTime ? 'email' : 'text'} 
+                      placeholder={isFirstTime ? 'e.g. visitfaridul@gmail.com' : 'e.g. admin@school.com or username'} 
                       value={username}
                       required
-                      onChange={(e) => { setUsername(e.target.value); setErrorMessage(''); }}
-                      
+                      onChange={(e) => { setUsername(e.target.value); setErrorMessage(''); setSuccessMessage(''); }}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50 text-sm"
                     />
                   </div>
@@ -227,139 +361,69 @@ export default function LoginPage() {
                   <div className="space-y-1 text-left">
                     <div className="flex justify-between items-center">
                       <label className="text-sm font-semibold text-slate-700">Password</label>
-                      <a href="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700">Forgot password?</a>
+                      {!isFirstTime && (
+                        <button 
+                          type="button"
+                          onClick={handleForgotPassword}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 focus:outline-none"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
                     </div>
                     <input 
                       type="password" 
                       placeholder="••••••••" 
                       value={password}
                       required
-                      onChange={(e) => { setPassword(e.target.value); setErrorMessage(''); }}
-                      
+                      onChange={(e) => { setPassword(e.target.value); setErrorMessage(''); setSuccessMessage(''); }}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50 text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="remember" className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4" />
-                    <label htmlFor="remember" className="text-sm text-slate-600">Remember me</label>
-                  </div>
+                  {!isFirstTime && (
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="remember" className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                      <label htmlFor="remember" className="text-sm text-slate-600">Remember me</label>
+                    </div>
+                  )}
 
                   <button 
                     disabled={isAnimating}
                     type="submit"
-                    className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-2 mt-4 shadow-lg hover:shadow-blue-500/30 group"
+                    className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-2 mt-4 shadow-lg hover:shadow-blue-500/30 group cursor-pointer"
                   >
                     {isAnimating ? (
                       <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <>Sign In with Email <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all" /></>
+                      <span className="flex items-center gap-1.5 w-full justify-center">
+                        {isFirstTime ? 'Create Admin Account & Log In' : 'Sign In'}
+                        <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
+                      </span>
                     )}
                   </button>
 
-                  <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold">OR</span>
-                    <div className="flex-grow border-t border-slate-200"></div>
-                  </div>
-
-                  <button 
-                    disabled={isAnimating}
-                    type="button"
-                    onClick={async () => {
-                      setIsAnimating(true);
-                      setErrorMessage('');
-                      try {
-                        const { signInWithPopup } = await import('firebase/auth');
-                        const { googleProvider } = await import('@/firebase');
-                        const userCredential = await signInWithPopup(auth, googleProvider);
-                        
-                        // Check if user exists in db
-                        const { doc, getDoc, setDoc } = await import('firebase/firestore');
-                        const { db } = await import('@/firebase');
-                        
-                        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-                        let finalRole = selectedRole;
-                        if (!userDoc.exists()) {
-                          // first time login
-                          await setDoc(doc(db, 'users', userCredential.user.uid), {
-                            name: userCredential.user.displayName || 'User',
-                            email: userCredential.user.email,
-                            role: selectedRole,
-                            createdAt: new Date().toISOString()
-                          });
-                        } else {
-                          finalRole = userDoc.data()?.role || selectedRole;
-                        }
-                        
-                        if (finalRole === 'Student' || finalRole === 'Parent') {
-                          navigate('/admin/results');
-                        } else {
-                          navigate('/admin/dashboard');
-                        }
-                      } catch (err: any) {
-                        console.error("Google Auth error:", err);
-                        setErrorMessage(err.message || 'Failed to sign in with Google');
-                        setIsAnimating(false);
-                      }
-                    }}
-                    className="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3.5 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow group"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Continue with Google
-                  </button>
-                  
                   {selectedRole === 'Super Admin' && (
-                    <div className="text-center mt-4">
-                      <button 
-                        type="button" 
-                        onClick={async () => {
-                          if (!username || !password) {
-                            setErrorMessage('Please enter email and password to sign up.');
-                            return;
-                          }
-                          setIsAnimating(true);
+                    <div className="mt-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFirstTime(!isFirstTime);
                           setErrorMessage('');
-                          try {
-                            const { createUserWithEmailAndPassword } = await import('firebase/auth');
-                            const userCredential = await createUserWithEmailAndPassword(auth, username, password);
-                            
-                            // Set role to Super Admin
-                            const { doc, setDoc } = await import('firebase/firestore');
-                            const { db } = await import('@/firebase');
-                            await setDoc(doc(db, 'users', userCredential.user.uid), {
-                              name: 'Super Administrator',
-                              email: username,
-                              role: 'Super Admin',
-                              createdAt: new Date().toISOString()
-                            });
-                            
-                            navigate('/admin/dashboard');
-                          } catch (err: any) {
-                            console.error(err);
-                            setErrorMessage(err.message || 'Failed to sign up');
-                            setIsAnimating(false);
-                          }
+                          setSuccessMessage('');
+                          setUsername('');
+                          setPassword('');
+                          setFullName('');
                         }}
-                        className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                        className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline focus:outline-none decoration-2 underline-offset-4 decoration-blue-100 transition-all"
                       >
-                        First time? Create initial Super Admin account
+                        {isFirstTime 
+                          ? 'Already have an account? Sign In' 
+                          : 'First time? Create initial Super Admin account'}
                       </button>
                     </div>
                   )}
                 </form>
-                
-                {/* For demo purposes */}
-                <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-xs text-amber-800 font-medium text-center">
-                    Firebase Login enabled: Use your valid email and password to access the dashboard.
-                  </p>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

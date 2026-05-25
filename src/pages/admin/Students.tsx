@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Download, Upload, IdCard, X, Printer, UserPlus, Image as ImageIcon } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Download, Upload, IdCard, X, Printer, UserPlus, Image as ImageIcon, FileSpreadsheet, ClipboardList } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import * as XLSX from 'xlsx';
 import { useSchool } from '../../context/SchoolContext';
@@ -15,6 +15,155 @@ export default function Students() {
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Bulk Excel copy-paste sheet states
+  const [showBulkPasteModal, setShowBulkPasteModal] = useState(false);
+  const [bulkClass, setBulkClass] = useState('Class 1');
+  const [bulkSection, setBulkSection] = useState('A');
+
+  const bulkHeaders = [
+    "Student Name *", 
+    "Admission ID", 
+    "Roll No", 
+    "Class", "Section", 
+    "Father's Name *", 
+    "Mother's Name", 
+    "Mobile No", 
+    "D.O.B (YYYY-MM-DD)", 
+    "Admission Date", 
+    "Residential Address", 
+    "Aadhaar No.", 
+    "PEN No.", 
+    "APAAR ID"
+  ];
+
+  const [bulkGridData, setBulkGridData] = useState<string[][]>(() => 
+    Array.from({ length: 15 }, () => Array(14).fill(''))
+  );
+
+  const [parsedBulkStudents, setParsedBulkStudents] = useState<any[]>([]);
+  const [bulkParseError, setBulkParseError] = useState('');
+
+  React.useEffect(() => {
+    const rows = bulkGridData;
+    const nonEmptyRows = rows.filter(r => r.some(c => c && c.trim() !== ''));
+
+    if (nonEmptyRows.length === 0) {
+      setParsedBulkStudents([]);
+      setBulkParseError('');
+      return;
+    }
+
+    try {
+      const newStudents: any[] = [];
+      nonEmptyRows.forEach((row, index) => {
+        const firstColVal = row[0]?.trim() || '';
+        if (firstColVal.toLowerCase().includes('student name') || firstColVal.toLowerCase() === 'name') {
+          return;
+        }
+
+        const name = row[0]?.trim();
+        if (!name) return; // Name is mandatory
+
+        const id = row[1]?.trim() || `ADM${Date.now()}${Math.floor(Math.random() * 1000)}${index}`;
+        const roll = row[2]?.trim() || '-';
+        const cls = row[3]?.trim() || bulkClass || 'Class 1';
+        const sec = row[4]?.trim() || bulkSection || 'A';
+        const parentName = row[5]?.trim() || 'N/A';
+        const motherName = row[6]?.trim() || '';
+        const phone = row[7]?.trim() || 'N/A';
+        const dob = row[8]?.trim() || '';
+        const admissionDate = row[9]?.trim() || new Date().toISOString().split('T')[0];
+        const address = row[10]?.trim() || '';
+        const aadhaar = row[11]?.trim() || '';
+        const pen = row[12]?.trim() || '';
+        const apaar = row[13]?.trim() || '';
+
+        newStudents.push({
+          id,
+          name,
+          roll,
+          class: cls,
+          section: sec,
+          parentName,
+          motherName,
+          phone,
+          dob,
+          admissionDate,
+          address,
+          aadhaar,
+          pen,
+          apaar,
+          status: 'Active'
+        });
+      });
+      setParsedBulkStudents(newStudents);
+      setBulkParseError('');
+    } catch (err) {
+      setBulkParseError('Error parsing pasted columns. Please check that values are correct.');
+      setParsedBulkStudents([]);
+    }
+  }, [bulkGridData, bulkClass, bulkSection]);
+
+  const updateGridCell = (rIdx: number, cIdx: number, value: string) => {
+    const newGrid = [...bulkGridData];
+    newGrid[rIdx] = [...newGrid[rIdx]];
+    newGrid[rIdx][cIdx] = value;
+    setBulkGridData(newGrid);
+  };
+
+  const handleGridPaste = (e: React.ClipboardEvent, startRow: number, startCol: number) => {
+    const clipboardData = e.clipboardData.getData('text');
+    if (!clipboardData) return;
+    
+    if (clipboardData.includes('\t') || clipboardData.includes('\n')) {
+      e.preventDefault();
+      const pasteRows = clipboardData.split(/\r?\n/).map(r => r.split('\t'));
+      
+      let newGrid = [...bulkGridData.map(r => [...r])];
+      let maxRows = Math.max(newGrid.length, startRow + pasteRows.length);
+      let maxCols = newGrid[0].length;
+      
+      while(newGrid.length < maxRows) {
+        newGrid.push(Array(maxCols).fill(''));
+      }
+      newGrid.forEach(row => {
+        while (row.length < maxCols) row.push('');
+      });
+
+      pasteRows.forEach((r, i) => {
+        r.forEach((c, j) => {
+          const ri = startRow + i;
+          const ci = startCol + j;
+          if (ri < newGrid.length && ci < newGrid[ri].length) {
+            newGrid[ri][ci] = c;
+          }
+        });
+      });
+      setBulkGridData(newGrid);
+    }
+  };
+
+  const handleSaveBulkStudents = () => {
+    if (parsedBulkStudents.length === 0) {
+      alert('Please paste or write some student data first.');
+      return;
+    }
+    
+    const currentIds = students.map(s => s.id);
+    const resolvedStudents = parsedBulkStudents.map(s => {
+      const match = currentIds.includes(s.id);
+      return {
+        ...s,
+        id: match ? `${s.id}-${Math.floor(Math.random() * 1000)}` : s.id
+      };
+    });
+
+    setStudents(prev => [...resolvedStudents, ...prev]);
+    setShowBulkPasteModal(false);
+    setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+    alert(`Successfully enrolled ${resolvedStudents.length} students class-wise!`);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -138,6 +287,16 @@ export default function Students() {
             ref={fileInputRef}
             onChange={handleImportExcel}
           />
+          <button 
+            onClick={() => {
+              setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+              setShowBulkPasteModal(true);
+            }}
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-200 shadow-sm"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Excel Copy-Paste
+          </button>
           <button 
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors border border-emerald-200"
@@ -612,6 +771,209 @@ export default function Students() {
                  className="px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-blue-700 shadow-blue-500/20 transition-all active:scale-95"
                >
                  {editingStudent ? 'Save Changes' : 'Save & Enroll Student'}
+               </button>
+             </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {/* Excel Copy-Paste Modal */}
+      {showBulkPasteModal && createPortal(
+        <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-[95vw] h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+             {/* Header */}
+             <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center shrink-0 bg-slate-50/50 rounded-t-3xl">
+               <div>
+                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                     <FileSpreadsheet className="w-6 h-6 text-indigo-600" /> 
+                     Excel/Sheets Copy-Paste Student Entry (Classwise)
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">Copy rows from Excel or Google Sheets and paste (Ctrl+V) directly into any cell below. You can also edit manually.</p>
+               </div>
+               <button 
+                 onClick={() => {
+                   if (parsedBulkStudents.length > 0) {
+                     if (confirm('Are you sure you want to close? Your pasted data will be lost.')) {
+                       setShowBulkPasteModal(false);
+                     }
+                   } else {
+                     setShowBulkPasteModal(false);
+                   }
+                 }} 
+                 className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors border border-transparent hover:border-slate-200 bg-white shadow-sm"
+               >
+                 <X className="w-6 h-6" />
+               </button>
+             </div>
+
+             {/* Main content wrapper */}
+             <div className="flex-1 overflow-hidden flex flex-col p-6 min-h-0">
+                {/* Control Bar */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-indigo-50/40 border border-indigo-100 p-4 rounded-2xl mb-4 shrink-0">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Default Batch Class</label>
+                      <select 
+                        value={bulkClass} 
+                        onChange={(e) => setBulkClass(e.target.value)}
+                        className="bg-white border border-indigo-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        {['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'].map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Default Batch Section</label>
+                      <select 
+                        value={bulkSection} 
+                        onChange={(e) => setBulkSection(e.target.value)}
+                        className="bg-white border border-indigo-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                      </select>
+                    </div>
+
+                    <div className="text-xs text-indigo-800 font-medium max-w-sm sm:max-w-md lg:max-w-lg mt-1">
+                      💡 If "Class" or "Section" cells are left blank, the default values chosen above will auto-fill.
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setBulkGridData(prev => [...prev, ...Array.from({ length: 15 }, () => Array(14).fill(''))])}
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-slate-500" />
+                      Add 15 Rows
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (confirm('Are you sure you want to clear the entry grid?')) {
+                          setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Clear Grid
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid & Live Preview - split layout */}
+                <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6">
+                  {/* Grid section */}
+                  <div className="flex-1 min-h-0 flex flex-col border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-inner">
+                    <div className="overflow-auto flex-1 custom-scrollbar">
+                      <table className="w-full text-left border-collapse select-text">
+                        <thead className="sticky top-0 z-30 shadow-sm">
+                          <tr>
+                            <th className="bg-slate-100 text-slate-400 text-xs w-10 text-center border-b border-r border-slate-200 select-none font-bold py-3 uppercase">
+                              #
+                            </th>
+                            {bulkHeaders.map((header, idx) => (
+                              <th key={idx} className="bg-slate-100 border-b border-r border-slate-200 px-3 py-2 text-slate-700 font-bold text-xs select-none min-w-[150px] whitespace-nowrap">
+                                {header}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bulkGridData.map((row, ri) => (
+                            <tr key={ri} className="hover:bg-indigo-50/20 group">
+                              <td className="bg-slate-50 text-slate-400 text-xs text-center border-b border-r border-slate-200 font-bold select-none py-2">
+                                {ri + 1}
+                              </td>
+                              {row.map((cell, ci) => (
+                                <td key={`${ri}-${ci}`} className="border-b border-r border-slate-200 p-0 relative min-w-[150px]">
+                                  <input 
+                                    className="w-full px-3 py-2 outline-none focus:bg-indigo-50/50 focus:ring-1 focus:ring-indigo-400 text-xs font-medium border-0 m-0 bg-transparent text-slate-800"
+                                    value={cell}
+                                    onChange={(e) => updateGridCell(ri, ci, e.target.value)}
+                                    onPaste={(e) => handleGridPaste(e, ri, ci)}
+                                    placeholder={ci === 0 ? "John Doe" : ci === 5 ? "Father Name" : ""}
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Sidebar/Validation/Preview */}
+                  <div className="w-full lg:w-80 border border-slate-200 bg-slate-50 rounded-2xl p-4 overflow-y-auto flex flex-col shrink-0 custom-scrollbar">
+                     <h3 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5 border-b border-slate-200 pb-2 shrink-0">
+                        <ClipboardList className="w-4 h-4 text-blue-600" /> Live Validation Preview
+                     </h3>
+                     
+                     {parsedBulkStudents.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                          <ClipboardList className="w-12 h-12 mb-3 stroke-1 opacity-40 text-slate-500 animate-pulse" />
+                          <p className="text-xs font-semibold leading-relaxed">
+                            Click on any cell inside the grid and press <kbd className="bg-slate-200 text-slate-800 px-1 py-0.5 rounded text-[10px] font-bold shadow-xs">Ctrl+V</kbd> to paste rows from your Excel sheet directly!
+                          </p>
+                        </div>
+                     ) : (
+                        <div className="flex-1 min-h-0 flex flex-col space-y-3">
+                          <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center justify-between shrink-0">
+                            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Validated Entries</span>
+                            <span className="bg-emerald-600 text-white rounded-full px-2.5 py-0.5 text-xs font-black">{parsedBulkStudents.length}</span>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                            {parsedBulkStudents.map((s, idx) => (
+                              <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 text-xs shadow-sm hover:border-indigo-200 transition-all">
+                                <div className="flex justify-between items-start mb-1.5">
+                                  <span className="font-bold text-slate-900 truncate max-w-[140px]">{s.name}</span>
+                                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded animate-fade-in">
+                                    {s.class} ({s.section})
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-500 font-medium">
+                                  <div>Roll: <strong className="text-slate-750">{s.roll}</strong></div>
+                                  <div className="truncate">ID: <span className="text-slate-755 font-semibold">{s.id.length > 12 ? s.id.slice(0, 10) + '..' : s.id}</span></div>
+                                  <div className="col-span-2 truncate">Father: <strong className="text-slate-700">{s.parentName}</strong></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                     )}
+                  </div>
+                </div>
+
+             </div>
+
+             {/* Footer */}
+             <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0 rounded-b-3xl">
+               <button 
+                 onClick={() => {
+                   if (parsedBulkStudents.length > 0) {
+                     if (confirm('Are you sure you want to close? Your pasted data will be lost.')) {
+                       setShowBulkPasteModal(false);
+                     }
+                   } else {
+                     setShowBulkPasteModal(false);
+                   }
+                 }}
+                 className="px-6 py-2.5 text-sm font-bold text-slate-650 hover:bg-slate-100 rounded-xl transition-colors border border-transparent hover:border-slate-200 bg-white shadow-xs"
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={handleSaveBulkStudents}
+                 disabled={parsedBulkStudents.length === 0}
+                 className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+               >
+                 <UserPlus className="w-4 h-4" />
+                 Enroll & Save {parsedBulkStudents.length} Students
                </button>
              </div>
           </div>

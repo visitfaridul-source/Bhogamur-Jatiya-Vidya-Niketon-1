@@ -1,4 +1,4 @@
-import { Users, GraduationCap, Wallet, CalendarCheck, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Users, GraduationCap, Wallet, CalendarCheck, TrendingUp, TrendingDown, IndianRupee } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { format } from 'date-fns';
 
@@ -69,7 +69,7 @@ export default function Dashboard() {
         <div className="snap-center shrink-0 w-[85vw] sm:w-auto">
           <StatCard 
             title="Fees Collected" 
-            value="$124,500" 
+            value="₹1,24,500" 
             icon={Wallet} 
             trend="+12% vs last month"
             trendUp={true}
@@ -81,8 +81,8 @@ export default function Dashboard() {
         <div className="snap-center shrink-0 w-[85vw] sm:w-auto">
           <StatCard 
             title="Total Outstanding" 
-            value="$18,200" 
-            icon={DollarSign} 
+            value="₹18,200" 
+            icon={IndianRupee} 
             trend="-5% vs last month"
             trendUp={false}
             wrapperClass="bg-white border-slate-200 shadow-sm"
@@ -116,7 +116,7 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(8px)', borderRadius: '16px', border: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}

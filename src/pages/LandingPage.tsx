@@ -176,8 +176,8 @@ export default function LandingPage() {
               {settings.heroHeadline}
             </h1>
             
-            <p className="text-slate-300 text-sm sm:text-base md:text-lg font-medium mt-3 lg:mt-4 max-w-xl mx-auto lg:mx-0 leading-relaxed border-l-4 border-blue-500 pl-4 py-1 bg-gradient-to-r from-blue-500/10 to-transparent">
-               {settings.aboutText || "Empowering minds and shaping the future through excellence in education."}
+            <p className="text-slate-200 text-sm sm:text-base md:text-xl font-tiro font-bold mt-3 lg:mt-4 max-w-xl mx-auto lg:mx-0 leading-relaxed border-l-4 border-green-500 pl-4 py-1.5 bg-gradient-to-r from-green-500/10 to-transparent">
+               {settings.aboutText || "য’ত সপোনৰ আৰম্ভণি হয় আৰু ভৱিষ্যত উজলি উঠে।"}
             </p>
             
             {/* Call to Action Buttons */}
@@ -546,7 +546,7 @@ export default function LandingPage() {
                 )}
                 <span className="text-xl font-bold text-white tracking-tight">{settings.schoolName}</span>
               </div>
-              <p className="text-sm mb-6 max-w-xs">{settings.aboutText}</p>
+              <p className="text-sm mb-6 max-w-xs font-tiro text-slate-300 italic">{settings.aboutText}</p>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer" />
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer" />

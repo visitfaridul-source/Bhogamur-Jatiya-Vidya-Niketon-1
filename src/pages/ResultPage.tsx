@@ -217,7 +217,7 @@ export default function ResultPage() {
                 id="marksheet-content"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white p-8 sm:p-12 shadow-2xl rounded-sm border-t-8 border-indigo-700 relative overflow-hidden print:shadow-none print:border-none print:p-0"
+                className="bg-white p-6 sm:p-10 shadow-lg rounded-xl border border-slate-300 relative overflow-hidden print:shadow-none print:border-none print:p-0"
               >
                 {/* Background Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03]">
@@ -236,112 +236,143 @@ export default function ResultPage() {
                   </button>
                 </div>
 
-                {/* Header */}
-                <div className="text-center border-b-[3px] border-indigo-700 pb-8 mb-8 relative z-10 pt-8 sm:pt-4">
-                  {settings.logoUrl && (
-                    <img src={settings.logoUrl} alt={settings.schoolName} className="h-20 sm:h-24 mx-auto mb-4 object-contain" />
-                  )}
-                  <h1 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-widest">{settings.schoolName}</h1>
-                  <p className="text-slate-600 font-medium mt-1 uppercase tracking-wide">{searchedResult.examName}</p>
-                  <div className="mt-4 inline-block bg-indigo-50 border border-indigo-100 text-indigo-800 font-black px-6 py-2 rounded-full uppercase tracking-widest text-sm shadow-sm">
-                    Statement of Marks
+                {/* Header with BHOGAMUR JATIYA VIDYA NIKETON */}
+                <div className="text-center border-b border-indigo-250 pb-6 mb-6 relative z-10 pt-8 sm:pt-4">
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    {settings.logoUrl ? (
+                      <img src={settings.logoUrl} alt="Logo" className="h-20 sm:h-24 mx-auto mb-2 object-contain" />
+                    ) : (
+                      <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-full text-indigo-700 mb-2">
+                        <Award className="w-8 h-8" />
+                      </div>
+                    )}
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wider">BHOGAMUR JATIYA VIDYA NIKETON</h1>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">ESTD. 2004 • GORESWAR, ASSAM</p>
+                    <p className="text-xs text-slate-500 font-semibold mt-1">Under Shishu Shiksha Samiti, Assam (Affiliated to Vidya Bharati)</p>
+                  </div>
+                  <div className="mt-4 flex flex-col items-center gap-1">
+                    <span className="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-1 rounded-full uppercase tracking-widest">
+                      {searchedResult.examName}
+                    </span>
+                    <h2 className="text-base font-bold text-slate-800 tracking-tight uppercase">Statement of Academic Marks</h2>
                   </div>
                 </div>
 
-                {/* Student Details Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-sm sm:text-base relative z-10">
-                  <div className="space-y-3">
-                    <div className="flex border-b border-dashed border-slate-200 pb-1">
-                      <span className="font-semibold text-slate-500 w-32">Student Name:</span>
-                      <span className="font-bold text-slate-900 uppercase">{searchedResult.studentName}</span>
+                {/* Student Details Grid with Thin Borders */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-sm relative z-10 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <span className="font-semibold text-slate-500 w-32 text-xs uppercase tracking-wider">Student Name:</span>
+                      <span className="font-black text-slate-900 uppercase">{searchedResult.studentName}</span>
                     </div>
-                    <div className="flex border-b border-dashed border-slate-200 pb-1">
-                      <span className="font-semibold text-slate-500 w-32">Admission No:</span>
-                      <span className="font-bold text-slate-900">{searchedResult.studentId}</span>
+                    <div className="flex items-center">
+                      <span className="font-semibold text-slate-500 w-32 text-xs uppercase tracking-wider">Admission No:</span>
+                      <span className="font-bold text-slate-900 font-mono">{searchedResult.studentId}</span>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex border-b border-dashed border-slate-200 pb-1">
-                      <span className="font-semibold text-slate-500 w-32">Class & Sec:</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <span className="font-semibold text-slate-500 w-32 text-xs uppercase tracking-wider">Class & Sec:</span>
                       <span className="font-bold text-slate-900">{searchedResult.className}</span>
                     </div>
-                    <div className="flex border-b border-dashed border-slate-200 pb-1">
-                      <span className="font-semibold text-slate-500 w-32">Date of Issue:</span>
+                    <div className="flex items-center">
+                      <span className="font-semibold text-slate-500 w-32 text-xs uppercase tracking-wider">Date of Issue:</span>
                       <span className="font-bold text-slate-900">{new Date().toLocaleDateString('en-GB')}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Marks Table */}
-                <div className="mb-8 relative z-10">
-                  <table className="w-full text-left border-collapse border border-slate-300">
+                {/* Marks Table with Clean Borders */}
+                <div className="mb-6 relative z-10">
+                  <table className="w-full text-left border-collapse border border-slate-300 rounded-lg overflow-hidden">
                     <thead>
-                      <tr className="bg-slate-100 text-slate-800 uppercase text-xs sm:text-sm font-bold tracking-wider">
-                        <th className="border border-slate-300 px-4 py-3">Subject Name</th>
-                        <th className="border border-slate-300 px-4 py-3 text-center w-24">Max Marks</th>
-                        <th className="border border-slate-300 px-4 py-3 text-center w-32">Marks Obtained</th>
+                      <tr className="bg-slate-100 text-slate-800 uppercase text-xs font-bold tracking-wider">
+                        <th className="border border-slate-300 px-4 py-2.5">Subject Name</th>
+                        <th className="border border-slate-300 px-4 py-2.5 text-center w-24">Max Marks</th>
+                        <th className="border border-slate-300 px-4 py-2.5 text-center w-32">Marks Obtained</th>
                       </tr>
                     </thead>
-                    <tbody className="text-slate-800 text-sm sm:text-base font-medium">
+                    <tbody className="text-slate-800 text-sm font-medium">
                       {searchedResult.subjects.map((sub, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="border border-slate-300 px-4 py-3 font-bold">{sub.subject}</td>
-                          <td className="border border-slate-300 px-4 py-3 text-center text-slate-500">{sub.maxMarks}</td>
-                          <td className="border border-slate-300 px-4 py-3 text-center font-bold tracking-wider">{sub.obtainedMarks}</td>
+                        <tr key={idx} className="hover:bg-slate-50/40 transition-colors">
+                          <td className="border border-slate-300 px-4 py-2.5 font-bold text-slate-700">{sub.subject}</td>
+                          <td className="border border-slate-300 px-4 py-2.5 text-center text-slate-500">{sub.maxMarks}</td>
+                          <td className="border border-slate-300 px-4 py-2.5 text-center font-bold tracking-wider text-slate-900">{sub.obtainedMarks}</td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-indigo-50/50 text-indigo-900 font-black text-sm sm:text-base tracking-wide">
+                    <tfoot className="bg-indigo-50/30 text-indigo-900 font-black text-sm tracking-wide">
                       <tr>
-                        <td className="border border-slate-300 px-4 py-4 text-right pr-6 uppercase tracking-widest">Total</td>
-                        <td className="border border-slate-300 px-4 py-4 text-center">{searchedResult.subjects.reduce((acc, curr) => acc + curr.maxMarks, 0)}</td>
-                        <td className="border border-slate-300 px-4 py-4 text-center">{searchedResult.totalMarks}</td>
+                        <td className="border border-slate-300 px-4 py-3 text-right pr-6 uppercase tracking-widest">Total</td>
+                        <td className="border border-slate-300 px-4 py-3 text-center text-slate-700">{searchedResult.subjects.reduce((acc, curr) => acc + curr.maxMarks, 0)}</td>
+                        <td className="border border-slate-300 px-4 py-3 text-center text-indigo-950 font-black">{searchedResult.totalMarks}</td>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
 
-                {/* Final Result Summary */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-10 relative z-10">
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Percentage</div>
-                    <div className="text-2xl font-black text-slate-800">{searchedResult.percentage}%</div>
+                {/* Final Result Summary with Thin Borders */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8 relative z-10">
+                  <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl text-center">
+                    <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest mb-1">Percentage</div>
+                    <div className="text-xl font-black text-slate-800">{searchedResult.percentage}%</div>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Grade</div>
-                    <div className="text-2xl font-black text-slate-800">{searchedResult.grade}</div>
+                  <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl text-center">
+                    <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest mb-1">Grade</div>
+                    <div className="text-xl font-black text-slate-800">{searchedResult.grade}</div>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Rank</div>
-                    <div className="text-2xl font-black text-slate-800">#{(searchedResult as any).rank}</div>
+                  <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl text-center">
+                    <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest mb-1">Class Rank</div>
+                    <div className="text-xl font-black text-slate-800">#{(searchedResult as any).rank}</div>
                   </div>
-                  <div className={cn("border p-4 rounded-xl text-center col-span-2 sm:col-span-2", searchedResult.status === 'Pass' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200')}>
-                    <div className={cn("text-xs font-bold uppercase tracking-widest mb-1", searchedResult.status === 'Pass' ? 'text-emerald-600' : 'text-rose-600')}>Final Status</div>
-                    <div className={cn("text-2xl font-black flex items-center justify-center gap-2", searchedResult.status === 'Pass' ? 'text-emerald-700' : 'text-rose-700')}>
-                       {searchedResult.status === 'Pass' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                  <div className={cn("border p-3 rounded-xl text-center col-span-2 sm:col-span-2", searchedResult.status === 'Pass' ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200')}>
+                    <div className={cn("text-[10px] font-bold uppercase tracking-widest mb-1", searchedResult.status === 'Pass' ? 'text-emerald-650' : 'text-rose-655')}>Final Status</div>
+                    <div className={cn("text-xl font-black flex items-center justify-center gap-1.5", searchedResult.status === 'Pass' ? 'text-emerald-750' : 'text-rose-750')}>
+                       {searchedResult.status === 'Pass' ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <XCircle className="w-5 h-5 text-rose-600" />}
                        {searchedResult.status.toUpperCase()}
-                    </div>
+                     </div>
                   </div>
                 </div>
 
-                {/* Remarks & Signatures */}
-                <div className="flex flex-col sm:flex-row justify-between items-end mt-12 pt-8 border-t border-slate-200 relative z-10 gap-8">
-                  <div className="flex-1 w-full">
-                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Remarks</p>
-                    <p className="text-base font-medium text-slate-800 italic bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      "{searchedResult.remarks || (searchedResult.status === 'Pass' ? 'Promoted to next class.' : 'Needs improvement.')}"
-                    </p>
-                  </div>
-                  
-                  <div className="w-full sm:w-auto flex flex-row gap-8 justify-between sm:justify-end">
-                    <div className="text-center pt-8 border-t border-slate-300 w-32 relative">
-                       <span className="text-xs sm:text-sm font-bold text-slate-600">Class Teacher</span>
+                {/* Remarks, QR Code & Signatures with Beautiful Layout & Elegant Thin Borders */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-8 pt-6 border-t border-slate-200 relative z-10">
+                  {/* Left Column: Remarks */}
+                  <div className="md:col-span-5 flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Class Teacher Remarks</p>
+                      <p className="text-xs font-semibold text-slate-700 italic bg-slate-50/80 p-3 border border-slate-200 rounded-xl leading-relaxed">
+                        "{searchedResult.remarks || (searchedResult.status === 'Pass' ? 'Promoted to the next class with high merits.' : 'Needs continuous support and regular revisions.')}"
+                      </p>
                     </div>
-                    <div className="text-center pt-8 border-t border-slate-300 w-32 relative">
-                       {settings.principalSignatureUrl && (
-                         <img src={settings.principalSignatureUrl} alt="Principal Signature" className="absolute bottom-8 left-1/2 -translate-x-1/2 h-12 object-contain mix-blend-multiply" />
-                       )}
-                       <span className="text-xs sm:text-sm font-bold text-slate-600">Principal</span>
+                  </div>
+
+                  {/* Middle Column: Digital QR Code verification */}
+                  <div className="md:col-span-3 flex flex-col items-center justify-center p-3 border border-dashed border-slate-250 bg-slate-50/30 rounded-xl text-center">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=1e293b&data=STUDENT:${searchedResult.studentId}|NAME:${encodeURIComponent(searchedResult.studentName)}|SCORE:${searchedResult.percentage}%|STATUS:${searchedResult.status}`}
+                      alt="Verification Token"
+                      className="w-18 h-18 bg-white p-1 rounded border border-slate-200 shadow-xs"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">Digital Verification</span>
+                    <span className="text-[7px] font-mono text-slate-400 leading-none">{searchedResult.studentId}</span>
+                  </div>
+
+                  {/* Right Column: Signatures */}
+                  <div className="md:col-span-4 flex flex-row justify-between sm:justify-end items-end gap-6 pt-4 md:pt-0">
+                    <div className="text-center pt-8 border-t border-slate-250 w-24 relative">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Teacher</span>
+                    </div>
+                    <div className="text-center pt-8 border-t border-slate-250 w-24 relative">
+                      {settings.principalSignatureUrl && (
+                        <img 
+                          src={settings.principalSignatureUrl} 
+                          alt="Principal Signature" 
+                          className="absolute bottom-5 left-1/2 -translate-x-1/2 h-10 object-contain mix-blend-multiply" 
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Principal</span>
                     </div>
                   </div>
                 </div>

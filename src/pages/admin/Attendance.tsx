@@ -20,12 +20,37 @@ export default function Attendance() {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [viewMode, setViewMode] = useState<'detailed' | 'summary'>('detailed');
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [attendanceData, setAttendanceData] = useState(initialMockAttendance);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<any>(null);
 
-  const classes = useMemo(() => Array.from(new Set(students.map(s => s.class))).filter(Boolean), [students]);
+  const classes = ['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
+
+  const filteredStudents = useMemo(() => {
+    return students.filter(s => {
+      const matchesClass = selectedClass ? s.class.toLowerCase().trim() === selectedClass.toLowerCase().trim() : true;
+      const matchesSearch = searchQuery
+        ? s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.class && s.class.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (s.roll && s.roll.toLowerCase().includes(searchQuery.toLowerCase()))
+        : true;
+      return matchesClass && matchesSearch;
+    });
+  }, [students, selectedClass, searchQuery]);
+
+  const filteredAttendanceData = useMemo(() => {
+    return attendanceData.filter(record => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return record.class.toLowerCase().includes(query) ||
+             record.markedBy.toLowerCase().includes(query) ||
+             record.status.toLowerCase().includes(query);
+    });
+  }, [attendanceData, searchQuery]);
 
   const exportAttendanceDetails = () => {
     let csvHeader = "";
@@ -242,13 +267,18 @@ export default function Attendance() {
 
             {/* Table */}
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between gap-4 bg-slate-50/50">
-                <div className="flex gap-4 flex-1">
-                  <div className="relative max-w-[200px] w-full">
+              <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between gap-4 bg-slate-50/50">
+                <div className="flex flex-wrap gap-4 flex-1 items-center">
+                  <div className="relative min-w-[200px]">
                     <select
                       className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
                       value={selectedClass}
-                      onChange={(e) => setSelectedClass(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedClass(e.target.value);
+                        if (e.target.value) {
+                          setViewMode('detailed');
+                        }
+                      }}
                     >
                       <option value="">All Classes (Summary)</option>
                       {classes.map(c => (
@@ -260,8 +290,10 @@ export default function Attendance() {
                     <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input 
                       type="text" 
-                      placeholder="Search class or teacher..." 
+                      placeholder="Search class or student..." 
                       className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium shadow-sm"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                   <div className="relative max-w-[200px] w-full">
@@ -273,8 +305,32 @@ export default function Attendance() {
                      />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="flex items-center gap-2 p-2 border border-slate-200 rounded-xl bg-white text-slate-700 hover:bg-slate-50 text-sm font-bold px-5 shadow-sm transition-colors">
+                <div className="flex items-center gap-3">
+                  {!selectedClass && (
+                    <div className="flex bg-slate-200/60 p-1 rounded-xl whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('detailed')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                          viewMode === 'detailed' ? "bg-white text-slate-800 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                        )}
+                      >
+                        👥 Student-wise ({filteredStudents.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('summary')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                          viewMode === 'summary' ? "bg-white text-slate-800 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                        )}
+                      >
+                        📊 Summaries ({filteredAttendanceData.length})
+                      </button>
+                    </div>
+                  )}
+                  <button className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 hover:bg-slate-50 text-sm font-bold px-5 shadow-sm transition-colors">
                     <Filter className="w-4 h-4" /> Filter
                   </button>
                 </div>
@@ -283,7 +339,7 @@ export default function Attendance() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-100 text-slate-600 border-b border-slate-200">
-                    {selectedClass ? (
+                    {selectedClass || viewMode === 'detailed' ? (
                       <tr>
                         <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Roll No</th>
                         <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Student Name</th>
@@ -304,34 +360,47 @@ export default function Attendance() {
                     )}
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
-                    {selectedClass ? (
-                      students.filter(s => s.class === selectedClass).map((student, idx) => {
-                        const statuses = ['Present', 'Present', 'Present', 'Absent', 'Late'];
-                        const status = statuses[idx % statuses.length];
-                        return (
-                          <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
-                            <td className="px-6 py-4 font-bold text-slate-900">{student.roll}</td>
-                            <td className="px-6 py-4 font-bold text-slate-800 flex items-center gap-3">
-                              {student.avatar && <img src={student.avatar} alt="avatar" className="w-8 h-8 rounded-full border border-slate-200" />}
-                              {student.name}
-                            </td>
-                            <td className="px-6 py-4 font-bold text-slate-600">{student.class} - {student.section}</td>
-                            <td className="px-6 py-4">
-                              <span className={cn(
-                                "px-3 py-1.5 rounded-full text-xs font-bold",
-                                status === 'Present' ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-                                status === 'Absent' ? "bg-rose-50 text-rose-700 border border-rose-200" :
-                                "bg-amber-50 text-amber-700 border border-amber-200"
-                              )}>
-                                {status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-slate-500 font-medium">Auto-marked today</td>
-                          </tr>
-                        );
-                      })
+                    {selectedClass || viewMode === 'detailed' ? (
+                      filteredStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-10 text-center font-medium text-slate-400">
+                            No students found matching your criteria.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredStudents.map((student, idx) => {
+                          const statuses = ['Present', 'Present', 'Present', 'Absent', 'Late'];
+                          const status = statuses[idx % statuses.length];
+                          return (
+                            <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
+                              <td className="px-6 py-4 font-bold text-slate-900">{student.roll || '-'}</td>
+                              <td className="px-6 py-4 font-bold text-slate-800 flex items-center gap-3">
+                                <img
+                                  src={student.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`}
+                                  alt="avatar"
+                                  className="w-8 h-8 rounded-full border border-slate-200 bg-white"
+                                  referrerPolicy="no-referrer"
+                                />
+                                {student.name}
+                              </td>
+                              <td className="px-6 py-4 font-bold text-slate-600">{student.class} - {student.section || 'A'}</td>
+                              <td className="px-6 py-4">
+                                <span className={cn(
+                                  "px-3 py-1.5 rounded-full text-xs font-bold",
+                                  status === 'Present' ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                                  status === 'Absent' ? "bg-rose-50 text-rose-700 border border-rose-200" :
+                                  "bg-amber-50 text-amber-700 border border-amber-200"
+                                )}>
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-slate-500 font-medium">Auto-marked today</td>
+                            </tr>
+                          );
+                        })
+                      )
                     ) : (
-                      attendanceData.map((record) => (
+                      filteredAttendanceData.map((record) => (
                         <tr key={record.id} className="hover:bg-slate-50 transition-colors group">
                           <td className="px-6 py-4 font-bold text-slate-900">{record.class}</td>
                           <td className="px-6 py-4 font-bold text-slate-800">{format(new Date(record.date), 'MMM dd, yyyy')}</td>

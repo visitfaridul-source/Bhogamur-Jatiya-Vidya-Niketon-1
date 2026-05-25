@@ -2,23 +2,55 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Global safety net (Default-deny)
     match /{document=**} {
       allow read, write: if false;
     }
-    
-    // We will secure these properly later, but for now allow read/write for development
+
+    // Checking if a user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user has a bootstrapped admin email
+    function isEmailAdmin() {
+      let em = request.auth.token.email;
+      return isSignedIn() && (em == 'visitfaridul@gmail.com' || em == 'VISITFARIDUL@GMAIL.COM' || em == 'bjvnhs@gmail.com' || em == 'BJVNHS@GMAIL.COM');
+    }
+
+    // Check if user is a Database-defined Admin
+    function isDbAdmin(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid)) && 
+             (get(/databases/$(database)/documents/users/$(uid)).data.role == 'Super Admin' || 
+              get(/databases/$(database)/documents/users/$(uid)).data.role == 'Admin');
+    }
+
+    // Users Collection rules
     match /users/{userId} {
-      allow read, write: if request.auth != null;
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isEmailAdmin() ||
+        isDbAdmin(request.auth.uid)
+      );
+
+      allow write: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isEmailAdmin() ||
+        isDbAdmin(request.auth.uid)
+      );
     }
     
+    // Students Collection rules
     match /students/{studentId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if isEmailAdmin();
+      allow read, write: if isSignedIn() && isDbAdmin(request.auth.uid);
     }
     
+    // Teachers Collection rules
     match /teachers/{teacherId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if isEmailAdmin();
+      allow read, write: if isSignedIn() && isDbAdmin(request.auth.uid);
     }
   }
 }

@@ -363,7 +363,7 @@ const defaultSettings: WebsiteSettings = {
   phone: "+1 (555) 123-4567",
   email: "hello@bhogamurjatiyavidyaniketon.com",
   address: "123 Education Ave, Tech District, SF, CA 94103",
-  aboutText: "The most comprehensive and beautifully designed Bhogamur Jatiya Vidya Niketon available.",
+  aboutText: "য’ত সপোনৰ আৰম্ভণি হয় আৰু ভৱিষ্যত উজলি উঠে।",
   galleryImages: [],
   principalImageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
   principalName: "Dr. S. K. Sharma",
@@ -437,9 +437,27 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
                 parsed.heroHeadline === "Manage your school with complete ease." ||
                 parsed.heroHeadline === "Bhogamur Jatiya Vidya Niketon" ||
                 parsed.heroHeadline === "Bhogamur Jatiya Viyda Niketon" ||
-                parsed.heroHeadline === "Bhogamur Jatiya Viyda Niketon ভগামুৰ জাতীয় বিদ্যা নিকেতন"
+                parsed.heroHeadline === "Bhogamur Jatiya Viyda Niketon ভগামুৰ জাতীয় বিদ্যা নিকেতন" ||
+                parsed.heroHeadline === ""
             ) {
                 parsed.heroHeadline = "ভগামুৰ জাতীয় বিদ্যা নিকেতন";
+            }
+            
+            if (
+                !parsed.aboutText ||
+                parsed.aboutText === "The most comprehensive and beautifully designed Bhogamur Jatiya Vidya Niketon available." ||
+                parsed.aboutText.includes("comprehensive and beautifully designed")
+            ) {
+                parsed.aboutText = "য’ত সপোনৰ আৰম্ভণি হয় আৰু ভৱিষ্যত উজলি উঠে।";
+            }
+            
+            if (
+                parsed.schoolName === "School Management System" || 
+                parsed.schoolName === "Smart School" ||
+                parsed.schoolName === "My App" ||
+                !parsed.schoolName
+            ) {
+                parsed.schoolName = "Bhogamur Jatiya Vidya Niketon";
             }
             if (parsed.promoVideoUrl && (!parsed.promoVideos || parsed.promoVideos.length === 0)) {
                 parsed.promoVideos = [{

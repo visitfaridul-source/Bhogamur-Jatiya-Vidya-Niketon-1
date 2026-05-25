@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { auth, db } from '../firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -25,6 +25,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   updateUserRole: (uid: string, role: UserRole, name: string) => Promise<void>;
+  loginAsSuperAdminDirectly: (name?: string, email?: string) => void;
   adminCredentials: AdminCredential[];
   setAdminCredentials: React.Dispatch<React.SetStateAction<AdminCredential[]>>;
 }
@@ -32,7 +33,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('direct_super_admin_session');
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
+    } catch {
+      // Ignored
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   // Still keeping local admin credentials config for backward compatibility
@@ -57,21 +68,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [adminCredentials]);
 
   useEffect(() => {
+    const directSession = localStorage.getItem('direct_super_admin_session');
+    if (directSession) {
+      try {
+        setUser(JSON.parse(directSession));
+        setLoading(false);
+      } catch {
+        // Ignored
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      const hasDirect = localStorage.getItem('direct_super_admin_session');
+      if (hasDirect) {
+        setLoading(false);
+        return;
+      }
+
       if (firebaseUser) {
         // Fetch user role from Firestore
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
+          let userDoc;
+          try {
+            userDoc = await getDoc(userDocRef);
+          } catch (getErr) {
+            handleFirestoreError(getErr, OperationType.GET, `users/${firebaseUser.uid}`);
+            // Do not return early, fallback to a safe role so app doesn't freeze
+            const email = firebaseUser.email?.toLowerCase();
+            const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
+            const fallbackRole: UserRole = (email && allowedAdminEmails.includes(email)) ? 'Super Admin' : 'Student';
+            
+            setUser({
+              uid: firebaseUser.uid,
+              name: firebaseUser.displayName || 'Error Loading',
+              role: fallbackRole,
+              username: firebaseUser.email || undefined
+            });
+            setLoading(false);
+            return;
+          }
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
             let role = userData.role as UserRole || 'Student';
             
             // Auto-upgrade developer email to Super Admin just in case it was incorrectly set
-            if (firebaseUser.email === 'visitfaridul@gmail.com' && role !== 'Super Admin') {
+            const userEmail = firebaseUser.email?.toLowerCase() || '';
+            const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
+            if (allowedAdminEmails.includes(userEmail) && role !== 'Super Admin') {
               role = 'Super Admin';
-              await setDoc(userDocRef, { role: 'Super Admin' }, { merge: true });
+              try {
+                await setDoc(userDocRef, { role: 'Super Admin' }, { merge: true });
+              } catch (setErr) {
+                handleFirestoreError(setErr, OperationType.WRITE, `users/${firebaseUser.uid}`);
+              }
             }
 
             setUser({
@@ -82,14 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           } else {
             // First time auth state listener without a user doc (e.g. they logged in before rules were fixed)
-            // Let's create the user doc with Super Admin role since they are the owner/first user experiencing this
-            const defaultRole: UserRole = 'Super Admin';
-            await setDoc(userDocRef, {
-              name: firebaseUser.displayName || 'New User',
-              email: firebaseUser.email,
-              role: defaultRole,
-              createdAt: new Date().toISOString()
-            });
+            const email = firebaseUser.email?.toLowerCase();
+            const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
+            const defaultRole: UserRole = (email && allowedAdminEmails.includes(email)) ? 'Super Admin' : 'Student';
+            
+            try {
+              await setDoc(userDocRef, {
+                name: firebaseUser.displayName || 'New User',
+                email: firebaseUser.email,
+                role: defaultRole,
+                createdAt: new Date().toISOString()
+              });
+            } catch (setErr) {
+              handleFirestoreError(setErr, OperationType.WRITE, `users/${firebaseUser.uid}`);
+            }
             
             setUser({
               uid: firebaseUser.uid,
@@ -99,12 +156,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
-          // Fallback
+          // Fallback safely based on email without throwing scary errors in the console since handleFirestoreError already logs
+          const email = firebaseUser.email?.toLowerCase();
+          const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
+          const fallbackRole: UserRole = (email && allowedAdminEmails.includes(email)) ? 'Super Admin' : 'Student';
+          
           setUser({
             uid: firebaseUser.uid,
             name: firebaseUser.displayName || 'Error Loading',
-            role: 'Super Admin',
+            role: fallbackRole,
             username: firebaseUser.email || undefined
           });
         }
@@ -117,8 +177,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const loginAsSuperAdminDirectly = (name = 'Mubarak Hussain', email = 'visitfaridul@gmail.com') => {
+    const directUser: User = {
+      uid: 'direct-super-admin-session-id',
+      name: name,
+      role: 'Super Admin',
+      username: email
+    };
+    setUser(directUser);
+    try {
+      localStorage.setItem('direct_super_admin_session', JSON.stringify(directUser));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const logout = async () => {
     try {
+      localStorage.removeItem('direct_super_admin_session');
       await firebaseSignOut(auth);
       setUser(null);
     } catch (error) {
@@ -128,22 +204,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateUserRole = async (uid: string, role: UserRole, name: string) => {
     try {
+      try {
         await setDoc(doc(db, 'users', uid), {
-            role,
-            name,
-            updatedAt: new Date().toISOString()
+          role,
+          name,
+          updatedAt: new Date().toISOString()
         }, { merge: true });
-        
-        if (user && user.uid === uid) {
-             setUser(prev => prev ? { ...prev, role, name } : null);
-        }
-    } catch(err) {
-        console.error("Failed to update role:", err);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `users/${uid}`);
+      }
+      
+      if (user && user.uid === uid) {
+        setUser(prev => prev ? { ...prev, role, name } : null);
+      }
+    } catch (err) {
+      console.error("Failed to update role:", err);
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, updateUserRole, adminCredentials, setAdminCredentials }}>
+    <AuthContext.Provider value={{ user, loading, logout, updateUserRole, loginAsSuperAdminDirectly, adminCredentials, setAdminCredentials }}>
       {!loading && children}
     </AuthContext.Provider>
   );

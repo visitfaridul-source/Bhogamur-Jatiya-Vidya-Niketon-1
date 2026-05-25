@@ -1,10 +1,10 @@
 {
-  "projectId": "mimetic-almanac-907pf",
-  "appId": "1:148889971348:web:94a114815e4856ca03e281",
-  "apiKey": "AIzaSyC-F30lf9yaBZ3TxndOphGulMqaTZ11dcA",
-  "authDomain": "mimetic-almanac-907pf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-7445f6ee-304d-4fd5-b5c2-607cced2e90c",
-  "storageBucket": "mimetic-almanac-907pf.firebasestorage.app",
-  "messagingSenderId": "148889971348",
-  "measurementId": ""
+  "projectId": "mimetic-almanac-907pf-87209",
+  "appId": "1:827291605060:web:a12c430b546d8bfe4e4411",
+  "apiKey": "AIzaSyDGVUXHcIRNsjwuG_RaAcDS8wZx_0gBoQw",
+  "authDomain": "mimetic-almanac-907pf-87209.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "mimetic-almanac-907pf-87209.firebasestorage.app",
+  "messagingSenderId": "827291605060",
+  "measurementId": "G-8B1G03ZXJQ"
 }
