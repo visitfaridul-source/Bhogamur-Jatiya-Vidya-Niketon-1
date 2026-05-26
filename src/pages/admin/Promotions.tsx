@@ -302,7 +302,7 @@ export default function Promotions() {
 
       {/* Promotion Success Modal */}
       {isPromoteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
            <div className="bg-white p-8 rounded-3xl w-full max-w-sm flex flex-col items-center text-center shadow-xl">
              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 animate-bounce">
                <CheckCircle className="w-8 h-8" />

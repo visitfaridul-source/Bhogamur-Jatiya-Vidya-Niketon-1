@@ -486,7 +486,7 @@ export default function Dashboard() {
 
       {/* MODAL 1: Admission Quick Review & Status Changer Overlay */}
       {selectedAdmission && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4 transition-all">
           <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full overflow-hidden shadow-2xl animate-scale-up">
             
             {/* Header */}
@@ -600,7 +600,7 @@ export default function Dashboard() {
 
       {/* MODAL 2: Full CRUD Events School Calendar Planner */}
       {isCalendarOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4 transition-all overflow-y-auto">
           <div className="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full overflow-hidden shadow-2xl my-8 animate-scale-up">
             
             {/* Header */}
@@ -738,7 +738,7 @@ export default function Dashboard() {
 
       {/* MODAL 3: Mark Attendance Manual Register vs Face Recognition select Dialog */}
       {isAttendanceChoiceOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4 transition-all">
           <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full overflow-hidden shadow-2xl animate-scale-up">
             
             {/* Header */}

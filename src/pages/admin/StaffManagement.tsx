@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useWebsite, WebsiteStaffMember } from '../../context/WebsiteContext';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Briefcase, Mail, Phone, Link as LinkIcon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -135,8 +136,8 @@ export default function StaffManagement() {
 
       {/* Modal */}
       <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
+        {isModalOpen && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -196,13 +197,13 @@ export default function StaffManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Short Bio</label>
-                    <textarea 
-                      rows={3}
-                      value={formData.bio} 
-                      onChange={e => setFormData({...formData, bio: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                    ></textarea>
+                     <label className="block text-sm font-bold text-slate-700 mb-2">Short Bio</label>
+                     <textarea 
+                       rows={3}
+                       value={formData.bio} 
+                       onChange={e => setFormData({...formData, bio: e.target.value})}
+                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                     ></textarea>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
@@ -255,7 +256,8 @@ export default function StaffManagement() {
                 </button>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
     </div>
