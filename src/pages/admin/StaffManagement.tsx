@@ -146,161 +146,163 @@ export default function StaffManagement() {
       </div>
 
       {/* Modal */}
-      <AnimatePresence>
-        {isModalOpen && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
-            >
-              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 className="font-bold text-xl text-slate-800">
-                  {editingId ? 'Edit Staff Profile' : 'New Staff Profile'}
-                </h3>
-                <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-6">
-                <form id="staff-form" onSubmit={handleSave} className="space-y-6">
-                  {/* Photo Input (URL based & direct upload) */}
-                  <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Profile Photo</label>
-                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                         <div className="w-16 h-16 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center relative group">
-                            {formData.imageUrl ? (
-                              <img src={formData.imageUrl} alt="preview" className="w-full h-full object-cover" />
-                            ) : (
-                              <Camera className="w-6 h-6 text-slate-300" />
-                            )}
-                         </div>
-                         <div className="flex-1 space-y-2.5 w-full">
-                            <div className="flex flex-wrap items-center gap-2">
-                               <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm transition inline-flex items-center gap-1.5">
-                                  <Camera className="w-4 h-4 text-slate-500" />
-                                  Browse Photo...
-                                  <input 
-                                     type="file" 
-                                     accept="image/*" 
-                                     onChange={handleFileChange}
-                                     className="hidden" 
-                                  />
-                               </label>
-                               {formData.imageUrl && (
-                                  <button 
-                                     type="button" 
-                                     onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                                     className="text-xs text-rose-500 hover:text-rose-600 font-bold px-3 py-2.5 border border-rose-100 bg-rose-50 rounded-xl hover:bg-rose-100 transition"
-                                  >
-                                     Remove Photo
-                                  </button>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                               <span className="text-[10px] uppercase font-bold text-slate-400 whitespace-nowrap">Or use URL:</span>
-                               <input 
-                                  type="url" 
-                                  required={false}
-                                  value={formData.imageUrl && !formData.imageUrl.startsWith('data:') ? formData.imageUrl : ''} 
-                                  onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                                  placeholder="https://images.unsplash.com/photo-..." 
-                                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                               />
-                            </div>
-                         </div>
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                  <h3 className="font-bold text-xl text-slate-800">
+                    {editingId ? 'Edit Staff Profile' : 'New Staff Profile'}
+                  </h3>
+                  <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6">
+                  <form id="staff-form" onSubmit={handleSave} className="space-y-6">
+                    {/* Photo Input (URL based & direct upload) */}
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Profile Photo</label>
+                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                           <div className="w-16 h-16 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center relative group">
+                              {formData.imageUrl ? (
+                                <img src={formData.imageUrl} alt="preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <Camera className="w-6 h-6 text-slate-300" />
+                              )}
+                           </div>
+                           <div className="flex-1 space-y-2.5 w-full">
+                              <div className="flex flex-wrap items-center gap-2">
+                                 <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm transition inline-flex items-center gap-1.5">
+                                    <Camera className="w-4 h-4 text-slate-500" />
+                                    Browse Photo...
+                                    <input 
+                                       type="file" 
+                                       accept="image/*" 
+                                       onChange={handleFileChange}
+                                       className="hidden" 
+                                    />
+                                 </label>
+                                 {formData.imageUrl && (
+                                    <button 
+                                       type="button" 
+                                       onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                                       className="text-xs text-rose-500 hover:text-rose-600 font-bold px-3 py-2.5 border border-rose-100 bg-rose-50 rounded-xl hover:bg-rose-100 transition"
+                                    >
+                                       Remove Photo
+                                    </button>
+                                  )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <span className="text-[10px] uppercase font-bold text-slate-400 whitespace-nowrap">Or use URL:</span>
+                                 <input 
+                                    type="url" 
+                                    required={false}
+                                    value={formData.imageUrl && typeof formData.imageUrl === 'string' && !formData.imageUrl.startsWith('data:') ? formData.imageUrl : ''} 
+                                    onChange={e => setFormData({...formData, imageUrl: e.target.value})}
+                                    placeholder="https://images.unsplash.com/photo-..." 
+                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                 />
+                              </div>
+                           </div>
+                        </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Full Name *</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={formData.name || ''} 
+                          onChange={e => setFormData({...formData, name: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
                       </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Role/Position *</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={formData.role || ''} 
+                          onChange={e => setFormData({...formData, role: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Full Name *</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={formData.name || ''} 
-                        onChange={e => setFormData({...formData, name: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
+                       <label className="block text-sm font-bold text-slate-700 mb-2">Short Bio</label>
+                       <textarea 
+                         rows={3}
+                         value={formData.bio || ''} 
+                         onChange={e => setFormData({...formData, bio: e.target.value})}
+                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                       ></textarea>
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Role/Position *</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={formData.role || ''} 
-                        onChange={e => setFormData({...formData, role: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                     <label className="block text-sm font-bold text-slate-700 mb-2">Short Bio</label>
-                     <textarea 
-                       rows={3}
-                       value={formData.bio || ''} 
-                       onChange={e => setFormData({...formData, bio: e.target.value})}
-                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                     ></textarea>
-                  </div>
+                    <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Email</label>
+                        <input 
+                          type="email" 
+                          value={formData.email || ''} 
+                          onChange={e => setFormData({...formData, email: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Phone</label>
+                        <input 
+                          type="text" 
+                          value={formData.phone || ''} 
+                          onChange={e => setFormData({...formData, phone: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">LinkedIn URL</label>
+                        <input 
+                          type="url" 
+                          value={formData.linkedinUrl || ''} 
+                          onChange={e => setFormData({...formData, linkedinUrl: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Facebook URL</label>
+                        <input 
+                          type="url" 
+                          value={formData.facebookUrl || ''} 
+                          onChange={e => setFormData({...formData, facebookUrl: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </form>
+                </div>
 
-                  <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Email</label>
-                      <input 
-                        type="email" 
-                        value={formData.email || ''} 
-                        onChange={e => setFormData({...formData, email: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Phone</label>
-                      <input 
-                        type="text" 
-                        value={formData.phone || ''} 
-                        onChange={e => setFormData({...formData, phone: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">LinkedIn URL</label>
-                      <input 
-                        type="url" 
-                        value={formData.linkedinUrl || ''} 
-                        onChange={e => setFormData({...formData, linkedinUrl: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Facebook URL</label>
-                      <input 
-                        type="url" 
-                        value={formData.facebookUrl || ''} 
-                        onChange={e => setFormData({...formData, facebookUrl: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                </form>
-              </div>
-
-              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[2rem]">
-                <button type="button" onClick={handleCloseModal} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" form="staff-form" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
-                  Save Profile
-                </button>
-              </div>
-            </motion.div>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[2rem]">
+                  <button type="button" onClick={handleCloseModal} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" form="staff-form" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
+                    Save Profile
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
