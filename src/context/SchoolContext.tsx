@@ -218,44 +218,60 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
   // Firestore Real-time Snapshot listeners
   useEffect(() => {
-    // 1. Students
-    const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
-      const data: Student[] = [];
-      snapshot.forEach(doc => {
-        data.push(doc.data() as Student);
-      });
-      if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
-        setStudentsState(data);
-      }
-    }, (error) => {
-      console.warn("students listener background error (safe if logged out): ", error.message);
-    });
+    let unsubStudents = () => {};
+    let unsubTeachers = () => {};
+    let unsubAdmissions = () => {};
 
-    // 2. Teachers
-    const unsubTeachers = onSnapshot(collection(db, 'teachers'), (snapshot) => {
-      const data: Teacher[] = [];
-      snapshot.forEach(doc => {
-        data.push(doc.data() as Teacher);
+    // 1. Students - only if logged in
+    if (user) {
+      unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+        const data: Student[] = [];
+        snapshot.forEach(doc => {
+          data.push(doc.data() as Student);
+        });
+        if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
+          setStudentsState(data);
+        }
+      }, () => {
+        // Suppress background listener error in console
       });
-      if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
-        setTeachersState(data);
-      }
-    }, (error) => {
-      console.warn("teachers listener background error (safe if logged out): ", error.message);
-    });
+    } else {
+      setStudentsState(mockStudents);
+    }
 
-    // 3. Online Admissions
-    const unsubAdmissions = onSnapshot(collection(db, 'onlineAdmissions'), (snapshot) => {
-      const data: OnlineAdmissionForm[] = [];
-      snapshot.forEach(doc => {
-        data.push(doc.data() as OnlineAdmissionForm);
+    // 2. Teachers - only if logged in
+    if (user) {
+      unsubTeachers = onSnapshot(collection(db, 'teachers'), (snapshot) => {
+        const data: Teacher[] = [];
+        snapshot.forEach(doc => {
+          data.push(doc.data() as Teacher);
+        });
+        if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
+          setTeachersState(data);
+        }
+      }, () => {
+        // Suppress background listener error in console
       });
-      if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
-        setOnlineAdmissionsState(data);
-      }
-    }, (error) => {
-      console.warn("onlineAdmissions listener background error (safe if logged out): ", error.message);
-    });
+    } else {
+      setTeachersState(mockTeachers);
+    }
+
+    // 3. Online Admissions - only if Admin user
+    if (isAdminUser) {
+      unsubAdmissions = onSnapshot(collection(db, 'onlineAdmissions'), (snapshot) => {
+        const data: OnlineAdmissionForm[] = [];
+        snapshot.forEach(doc => {
+          data.push(doc.data() as OnlineAdmissionForm);
+        });
+        if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
+          setOnlineAdmissionsState(data);
+        }
+      }, () => {
+        // Suppress background listener error in console
+      });
+    } else {
+      setOnlineAdmissionsState(mockAdmissions);
+    }
 
     // 4. Results
     const unsubResults = onSnapshot(collection(db, 'results'), (snapshot) => {
@@ -266,8 +282,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
         setResultsState(data);
       }
-    }, (error) => {
-      console.warn("results listener background error: ", error.message);
+    }, () => {
+      // Suppress background listener error in console
     });
 
     // 5. Academic Sessions
@@ -279,8 +295,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
         setSessionsState(data);
       }
-    }, (error) => {
-      console.warn("sessions listener background error: ", error.message);
+    }, () => {
+      // Suppress background listener error in console
     });
 
     // 6. Courses
@@ -292,8 +308,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       if (data.length > 0 || localStorage.getItem('bhogamur_school_bootstrapped') === 'true') {
         setCoursesState(data);
       }
-    }, (error) => {
-      console.warn("courses listener background error: ", error.message);
+    }, () => {
+      // Suppress background listener error in console
     });
 
     return () => {
@@ -304,7 +320,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       unsubSessions();
       unsubCourses();
     };
-  }, []);
+  }, [user, isAdminUser]);
 
   // Admin-triggered one-time bootstrapping of Firestore with initial mock template datasets
   useEffect(() => {

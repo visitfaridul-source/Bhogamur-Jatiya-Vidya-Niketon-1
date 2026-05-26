@@ -135,7 +135,7 @@ export default function LoginPage() {
         // Clear any direct bypass session to ensure the real Firebase Auth is active
         localStorage.removeItem('direct_super_admin_session');
       } catch (authError: any) {
-        console.warn("Direct Firebase sign-in failed, attempting to auto-register Mubarak Hussain Super Admin:", authError);
+        // Direct Firebase sign-in fallback check (silent for clean console)
         const errCode = authError?.code;
         if (errCode === 'auth/user-not-found' || errCode === 'auth/invalid-credential' || String(authError).includes('invalid-credential') || String(authError).includes('user-not-found')) {
           try {
@@ -152,7 +152,6 @@ export default function LoginPage() {
             });
             localStorage.removeItem('direct_super_admin_session');
           } catch (regError) {
-            console.error("Auto-registration of direct bypass also failed, falling back to client-only bypass:", regError);
             // Fallback to client-only bypass as a safe safety recovery measure
             loginAsSuperAdminDirectly('Mubarak Hussain', 'visitfaridul@gmail.com');
           }

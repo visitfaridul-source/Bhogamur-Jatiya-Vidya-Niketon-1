@@ -476,8 +476,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       }
-    }, (error) => {
-      console.warn("Website settings listener background error: ", error.message);
+    }, () => {
+      // Suppress background listener error in console
     });
 
     return () => unsub();

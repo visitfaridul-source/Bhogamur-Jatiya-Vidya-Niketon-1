@@ -220,7 +220,7 @@ export default function StaffManagement() {
                       <input 
                         type="text" 
                         required
-                        value={formData.name} 
+                        value={formData.name || ''} 
                         onChange={e => setFormData({...formData, name: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
@@ -230,7 +230,7 @@ export default function StaffManagement() {
                       <input 
                         type="text" 
                         required
-                        value={formData.role} 
+                        value={formData.role || ''} 
                         onChange={e => setFormData({...formData, role: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
@@ -241,7 +241,7 @@ export default function StaffManagement() {
                      <label className="block text-sm font-bold text-slate-700 mb-2">Short Bio</label>
                      <textarea 
                        rows={3}
-                       value={formData.bio} 
+                       value={formData.bio || ''} 
                        onChange={e => setFormData({...formData, bio: e.target.value})}
                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
                      ></textarea>
@@ -252,7 +252,7 @@ export default function StaffManagement() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">Email</label>
                       <input 
                         type="email" 
-                        value={formData.email} 
+                        value={formData.email || ''} 
                         onChange={e => setFormData({...formData, email: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
@@ -261,7 +261,7 @@ export default function StaffManagement() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">Phone</label>
                       <input 
                         type="text" 
-                        value={formData.phone} 
+                        value={formData.phone || ''} 
                         onChange={e => setFormData({...formData, phone: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
@@ -270,7 +270,7 @@ export default function StaffManagement() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">LinkedIn URL</label>
                       <input 
                         type="url" 
-                        value={formData.linkedinUrl} 
+                        value={formData.linkedinUrl || ''} 
                         onChange={e => setFormData({...formData, linkedinUrl: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
@@ -279,7 +279,7 @@ export default function StaffManagement() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">Facebook URL</label>
                       <input 
                         type="url" 
-                        value={formData.facebookUrl} 
+                        value={formData.facebookUrl || ''} 
                         onChange={e => setFormData({...formData, facebookUrl: e.target.value})}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
