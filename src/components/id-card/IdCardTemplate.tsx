@@ -180,10 +180,7 @@ export default function IdCardTemplate({ student, theme = 'blue', side = 'front'
       )}
 
       {/* Header */}
-      <div className="w-full pt-2.5 pb-1 relative z-10 flex flex-col items-center">
-        {settings.logoUrl ? (
-          <img src={settings.logoUrl} alt="Logo" className="h-4 object-contain mb-0.5" />
-        ) : null}
+      <div className="w-full pt-3 pb-1 relative z-10 flex flex-col items-center">
         <h2 className={cn("text-[10px] font-bold tracking-wider uppercase text-white drop-shadow-md px-2 text-center leading-tight font-tiro", (settings.idCardSchoolName || settings.schoolName || "").length > 25 ? "text-[8px]" : "")}>
           {settings.idCardSchoolName || settings.schoolName || "Bhogamur Jatiya Vidya Niketon"}
         </h2>
