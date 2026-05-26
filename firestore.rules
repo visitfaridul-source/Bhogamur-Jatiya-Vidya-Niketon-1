@@ -16,15 +16,14 @@ service cloud.firestore {
     function isEmailAdmin() {
       return isSignedIn() && 
              ('email' in request.auth.token) && 
-             (request.auth.token.email == 'visitfaridul@gmail.com' || 
-              request.auth.token.email == 'VISITFARIDUL@GMAIL.COM' || 
-              request.auth.token.email == 'bjvnhs@gmail.com' || 
-              request.auth.token.email == 'BJVNHS@GMAIL.COM');
+             (request.auth.token.email.lower() == 'visitfaridul@gmail.com' || 
+              request.auth.token.email.lower() == 'bjvnhs@gmail.com');
     }
 
     // Check if user is a Database-defined Admin
     function isDbAdmin(uid) {
       return exists(/databases/$(database)/documents/users/$(uid)) && 
+             ('role' in get(/databases/$(database)/documents/users/$(uid)).data) && 
              (get(/databases/$(database)/documents/users/$(uid)).data.role == 'Super Admin' || 
               get(/databases/$(database)/documents/users/$(uid)).data.role == 'Admin');
     }
