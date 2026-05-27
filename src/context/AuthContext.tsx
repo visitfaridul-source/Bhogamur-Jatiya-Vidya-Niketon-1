@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             userDoc = await getDoc(userDocRef);
           } catch (getErr) {
-            handleFirestoreError(getErr, OperationType.GET, `users/${firebaseUser.uid}`);
+            console.error("Firestore Read Error during initial Auth setup; falling back gracefully:", getErr);
             // Do not return early, fallback to a safe role so app doesn't freeze
             const email = firebaseUser.email?.toLowerCase();
             const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               try {
                 await setDoc(userDocRef, { role: 'Super Admin' }, { merge: true });
               } catch (setErr) {
-                handleFirestoreError(setErr, OperationType.WRITE, `users/${firebaseUser.uid}`);
+                console.error("Firestore Write Error while auto-upgrading role:", setErr);
               }
             }
 
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 createdAt: new Date().toISOString()
               });
             } catch (setErr) {
-              handleFirestoreError(setErr, OperationType.WRITE, `users/${firebaseUser.uid}`);
+              console.error("Firestore Write Error while auto-registering profile:", setErr);
             }
             
             setUser({
