@@ -439,6 +439,22 @@ interface WebsiteContextType {
 
 const WebsiteContext = createContext<WebsiteContextType | undefined>(undefined);
 
+// Helper to remove any fields with undefined values recursively, as Firestore does not allow standard undefined fields
+const removeUndefined = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefined(item));
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((acc: any, key) => {
+      const val = obj[key];
+      if (val !== undefined) {
+        acc[key] = removeUndefined(val);
+      }
+      return acc;
+    }, {});
+  }
+  return obj;
+};
+
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<WebsiteSettings>(defaultSettings);
 
@@ -490,7 +506,7 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
         const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
         if (userEmail && allowedAdminEmails.includes(userEmail)) {
           console.log("Admin logged in. Bootstrapping default website settings template to Firestore...");
-          setDoc(doc(db, 'settings', 'website'), defaultSettings).catch(err => {
+          setDoc(doc(db, 'settings', 'website'), removeUndefined(defaultSettings)).catch(err => {
             console.error("Failed to bootstrap default website settings on Firestore: ", err);
           });
         }
@@ -511,7 +527,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
 
     // Save to Firestore
     try {
-      await setDoc(doc(db, 'settings', 'website'), nextSettings, { merge: true });
+      const sanitizedSettings = removeUndefined(nextSettings);
+      await setDoc(doc(db, 'settings', 'website'), sanitizedSettings, { merge: true });
     } catch (err: any) {
       // Revert optimism on write failure
       setSettings(previousSettings);
