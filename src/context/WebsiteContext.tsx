@@ -188,7 +188,44 @@ export interface WebsiteSettings {
 const defaultSettings: WebsiteSettings = {
   schoolName: "Bhogamur Jatiya Vidya Niketon",
   logoUrl: null,
-  staffMembers: [],
+  staffMembers: [
+    {
+      id: "edu-1",
+      name: "Dr. S. K. Sharma",
+      role: "Principal & Director",
+      bio: "An outstanding educator with over 20 years of experience in leading and organizing educational systems to cultivate academic and moral success.",
+      imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+      email: "principal@bjvn.edu",
+      phone: "+91 94350-00101"
+    },
+    {
+      id: "edu-2",
+      name: "Pranjal Dutta",
+      role: "Senior Assamese Language Educator",
+      bio: "Dedicated to nurturing love for Assamese literature and language, encouraging creative writing, and fostering cultural pride among students.",
+      imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+      email: "pranjal@bjvn.edu",
+      phone: "+91 94350-00102"
+    },
+    {
+      id: "edu-3",
+      name: "Nabanita Baruah",
+      role: "Senior Science & Physics Teacher",
+      bio: "Passionate about making scientific concepts digestible and engaging through interactive lab sessions and practical examples.",
+      imageUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=400",
+      email: "nabanita@bjvn.edu",
+      phone: "+91 94350-00103"
+    },
+    {
+      id: "edu-4",
+      name: "Mridupavan Gogoi",
+      role: "Mathematics & Analytical Logic Faculty",
+      bio: "Committed to building computational reasoning, arithmetic brilliance, and problem-solving skills in high-school students.",
+      imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+      email: "mridupavan@bjvn.edu",
+      phone: "+91 94350-00104"
+    }
+  ],
   heroHeadline: "ভগামুৰ জাতীয় বিদ্যা নিকেতন",
   heroSubtitle: "A premium, colorful, and fully responsive platform for administration, teachers, students, and parents. Simplify attendance, fees, exams, and more in one unified dashboard.",
   heroGalleryImages: [
@@ -397,7 +434,7 @@ const defaultSettings: WebsiteSettings = {
 
 interface WebsiteContextType {
   settings: WebsiteSettings;
-  updateSettings: (newSettings: Partial<WebsiteSettings>) => void;
+  updateSettings: (newSettings: Partial<WebsiteSettings>) => Promise<void>;
 }
 
 const WebsiteContext = createContext<WebsiteContextType | undefined>(undefined);
@@ -466,20 +503,20 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateSettings = async (newSettings: Partial<WebsiteSettings>) => {
-    try {
-      const nextSettings = { ...settings, ...newSettings };
-      
-      // Optimistic update
-      setSettings(nextSettings);
+    const nextSettings = { ...settings, ...newSettings };
+    const previousSettings = settings;
 
-      // Save to Firestore
-      try {
-        await setDoc(doc(db, 'settings', 'website'), nextSettings, { merge: true });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, 'settings/website');
-      }
-    } catch (e) {
-      console.error("Error setting website configurations: ", e);
+    // Optimistic update
+    setSettings(nextSettings);
+
+    // Save to Firestore
+    try {
+      await setDoc(doc(db, 'settings', 'website'), nextSettings, { merge: true });
+    } catch (err: any) {
+      // Revert optimism on write failure
+      setSettings(previousSettings);
+      handleFirestoreError(err, OperationType.WRITE, 'settings/website');
+      throw err;
     }
   };
 

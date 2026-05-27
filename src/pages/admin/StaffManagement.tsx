@@ -8,6 +8,9 @@ export default function StaffManagement() {
   const { settings, updateSettings } = useWebsite();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Partial<WebsiteStaffMember>>({
     name: '',
@@ -23,6 +26,7 @@ export default function StaffManagement() {
   const staff = settings.staffMembers || [];
 
   const handleOpenModal = (staffMember?: WebsiteStaffMember) => {
+    setErrorMsg(null);
     if (staffMember) {
       setEditingId(staffMember.id);
       setFormData(staffMember);
@@ -45,6 +49,8 @@ export default function StaffManagement() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setErrorMsg(null);
+    setIsSaving(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,27 +64,43 @@ export default function StaffManagement() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.role) return;
 
-    if (editingId) {
-      const updatedStaff = staff.map(s => s.id === editingId ? { ...s, ...formData } as WebsiteStaffMember : s);
-      updateSettings({ staffMembers: updatedStaff });
-    } else {
-      const newStaff: WebsiteStaffMember = {
-        ...formData,
-        id: `staff-${Date.now()}`
-      } as WebsiteStaffMember;
-      updateSettings({ staffMembers: [...staff, newStaff] });
+    setIsSaving(true);
+    setErrorMsg(null);
+
+    try {
+      if (editingId) {
+        const updatedStaff = staff.map(s => s.id === editingId ? { ...s, ...formData } as WebsiteStaffMember : s);
+        await updateSettings({ staffMembers: updatedStaff });
+      } else {
+        const newStaff: WebsiteStaffMember = {
+          ...formData,
+          id: `staff-${Date.now()}`
+        } as WebsiteStaffMember;
+        await updateSettings({ staffMembers: [...staff, newStaff] });
+      }
+      handleCloseModal();
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      setErrorMsg(err?.message || String(err));
+    } finally {
+      setIsSaving(false);
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to remove this staff member?')) {
       const updatedStaff = staff.filter(s => s.id !== id);
-      updateSettings({ staffMembers: updatedStaff });
+      setPageError(null);
+      try {
+        await updateSettings({ staffMembers: updatedStaff });
+      } catch (err: any) {
+        console.error("Delete failed:", err);
+        setPageError(`Failed to delete profile: ${err?.message || String(err)}. Please ensure your Admin session is authenticated with Firestore.`);
+      }
     }
   };
 
@@ -98,6 +120,16 @@ export default function StaffManagement() {
           Add Staff Member
         </button>
       </div>
+
+      {/* Page Level Error */}
+      {pageError && (
+        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-800 text-sm font-semibold rounded-2xl flex justify-between items-start gap-4">
+          <p className="flex-1">{pageError}</p>
+          <button onClick={() => setPageError(null)} className="text-rose-500 hover:text-rose-700">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -166,6 +198,21 @@ export default function StaffManagement() {
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-6">
+                  {errorMsg && (
+                    <div className="p-4 mb-6 text-xs font-semibold text-rose-800 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-2.5">
+                       <X className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+                       <div className="flex-1">
+                         <p className="font-bold">Sync Failed (অনলাইন সঞ্চয় ব্যৰ্থ হৈছে):</p>
+                         <p className="text-[10px] font-normal text-rose-600 mt-1">
+                            {errorMsg}.<br/>
+                            <strong className="font-semibold block mt-1.5">Troubleshooting Tips:</strong>
+                            - Make sure you are signed in as an Admin with the official email address (e.g., <span className="font-mono bg-white px-1 py-0.5 border rounded">visitfaridul@gmail.com</span>).<br/>
+                            - If you bypassed using mock/credentials, Firestore permissions will reject writes. Please log out, and re-login using authorized accounts.
+                         </p>
+                       </div>
+                    </div>
+                  )}
+
                   <form id="staff-form" onSubmit={handleSave} className="space-y-6">
                     {/* Photo Input (URL based & direct upload) */}
                     <div>
@@ -290,11 +337,17 @@ export default function StaffManagement() {
                 </div>
 
                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[2rem]">
-                  <button type="button" onClick={handleCloseModal} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors">
+                  <button type="button" disabled={isSaving} onClick={handleCloseModal} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50">
                     Cancel
                   </button>
-                  <button type="submit" form="staff-form" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
-                    Save Profile
+                  <button 
+                    type="submit" 
+                    form="staff-form" 
+                    disabled={isSaving}
+                    className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition flex items-center gap-2"
+                  >
+                    {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />}
+                    {isSaving ? 'Saving Profile...' : 'Save Profile'}
                   </button>
                 </div>
               </motion.div>
