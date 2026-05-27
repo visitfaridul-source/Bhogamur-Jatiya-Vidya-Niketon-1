@@ -27,21 +27,13 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const historicalRevenueData = [
-  { name: 'Jan', total: 38000 },
-  { name: 'Feb', total: 41000 },
-  { name: 'Mar', total: 39000 },
-  { name: 'Apr', total: 47000 },
-  { name: 'May', total: 42000 },
-  { name: 'Jun', total: 51000 },
-  { name: 'Jul', total: 55000 },
-];
-
-const attendanceData = [
-  { name: 'Mon', present: 95, absent: 5 },
-  { name: 'Tue', present: 92, absent: 8 },
-  { name: 'Wed', present: 96, absent: 4 },
-  { name: 'Thu', present: 88, absent: 12 },
-  { name: 'Fri', present: 94, absent: 6 },
+  { name: 'Jan', total: 0 },
+  { name: 'Feb', total: 0 },
+  { name: 'Mar', total: 0 },
+  { name: 'Apr', total: 0 },
+  { name: 'May', total: 0 },
+  { name: 'Jun', total: 0 },
+  { name: 'Jul', total: 0 },
 ];
 
 export default function Dashboard() {
@@ -61,13 +53,7 @@ export default function Dashboard() {
   const [transactions] = useState<any[]>(() => {
     const saved = localStorage.getItem('bhogamur_fees_transactions');
     try {
-      return saved ? JSON.parse(saved) : [
-        { id: 'INV-2023-001', student: 'Aarav Sharma', class: 'Class 10 - A', amount: 15500, date: new Date().toISOString(), type: 'Term 1 Fee', status: 'Paid', mode: 'UPI' },
-        { id: 'INV-2023-002', student: 'Diya Patel', class: 'Class 8 - B', amount: 4500, date: new Date().toISOString(), type: 'Transport Fee + Monthly', status: 'Pending', mode: '-' },
-        { id: 'INV-2023-003', student: 'Rohan Gupta', class: 'Class 12 - Science', amount: 24000, date: new Date(Date.now() - 86400000).toISOString(), type: 'Term 1 Fee + Lab', status: 'Paid', mode: 'Bank Transfer' },
-        { id: 'INV-2023-004', student: 'Ananya Verma', class: 'Class 5 - A', amount: 8500, date: new Date(Date.now() - 172800000).toISOString(), type: 'Tuition Fee (Q2)', status: 'Overdue', mode: '-' },
-        { id: 'INV-2023-005', student: 'Karan Singh', class: 'Class 10 - B', amount: 12000, date: new Date(Date.now() - 259200000).toISOString(), type: 'Term 1 Fee', status: 'Paid', mode: 'Cash' },
-      ];
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
@@ -77,17 +63,57 @@ export default function Dashboard() {
   const [events, setEvents] = useState<any[]>(() => {
     const saved = localStorage.getItem('bhogamur_school_events');
     try {
-      return saved ? JSON.parse(saved) : [
-        { id: '1', title: 'World Environment Day', date: '2026-06-05', type: 'Holiday' },
-        { id: '2', title: 'Admissions Deadline', date: '2026-05-30', type: 'Academic' },
-        { id: '3', title: 'First Term Exams Start', date: '2026-06-15', type: 'Exam' },
-        { id: '4', title: 'Principal Advisory Meeting', date: '2026-05-28', type: 'Meeting' },
-        { id: '5', title: 'Annual Sports Day Prep', date: '2026-06-01', type: 'Event' },
-      ];
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
+
+  // Dynamic Attendance week indicator chart calculation
+  const dynamicAttendanceData = useMemo(() => {
+    const saved = localStorage.getItem('bhogamur_attendance_registry');
+    let registry: Record<string, any> = {};
+    if (saved) {
+      try {
+        registry = JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const current = new Date();
+    const dayOfWeek = current.getDay(); // 0 is Sun, 1 is Mon...
+    const monday = new Date(current);
+    monday.setDate(current.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+    return weekdayNames.map((name, index) => {
+      const targetDate = new Date(monday);
+      targetDate.setDate(monday.getDate() + index);
+      const dateStr = format(targetDate, 'yyyy-MM-dd');
+
+      let presentCount = 0;
+      let absentCount = 0;
+
+      Object.keys(registry).forEach(key => {
+        if (key.startsWith(dateStr + ':')) {
+          const record = registry[key];
+          if (record.status === 'Present' || record.status === 'Late') {
+            presentCount++;
+          } else if (record.status === 'Absent') {
+            absentCount++;
+          }
+        }
+      });
+
+      return {
+        name,
+        present: presentCount,
+        absent: absentCount
+      };
+    });
+  }, [students, teachers]);
+
 
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -184,10 +210,7 @@ export default function Dashboard() {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(adm.name)}`
       }));
     }
-    return [
-      { id: 'REQ-001', name: 'John Doe', class: 'Class 5', date: new Date().toISOString(), status: 'Pending', parentName: 'Richard Doe', motherName: 'Jane Doe', phone: '9876543210', dob: '2016-04-12', address: 'Bhogamur Village', aadhaar: '883901238910', pen: 'PEN11003', apaar: 'AP112209', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John' },
-      { id: 'REQ-002', name: 'Aarav Sharma', class: 'Class 10', date: new Date(Date.now() - 86400000).toISOString(), status: 'Approved', parentName: 'Rajesh Sharma', motherName: 'Seema Sharma', phone: '8877332211', dob: '2011-09-18', address: 'Goalpara, Assam', aadhaar: '321098453412', pen: 'PEN11044', apaar: 'AP111983', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aarav' }
-    ];
+    return [];
   }, [onlineAdmissions]);
 
   // Action methods: Approve & auto-enroll
@@ -350,7 +373,7 @@ export default function Dashboard() {
           </h2>
           <div className="h-[210px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={attendanceData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+              <BarChart data={dynamicAttendanceData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip 
@@ -359,8 +382,8 @@ export default function Dashboard() {
                   itemStyle={{ fontWeight: 600 }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', marginTop: '5px' }} />
-                <Bar dataKey="present" name="Present %" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
-                <Bar dataKey="absent" name="Absent %" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} />
+                <Bar dataKey="present" name="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
+                <Bar dataKey="absent" name="Absent" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </div>
