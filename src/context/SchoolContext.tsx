@@ -229,12 +229,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as Student);
         });
-        setStudentsState(data);
+        setStudentsState(data.length > 0 ? data : mockStudents);
       }, () => {
         // Suppress background listener error in console
+        setStudentsState(mockStudents);
       });
     } else {
-      setStudentsState([]);
+      setStudentsState(mockStudents);
     }
 
     // 2. Teachers - only if logged in
@@ -244,12 +245,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as Teacher);
         });
-        setTeachersState(data);
+        setTeachersState(data.length > 0 ? data : mockTeachers);
       }, () => {
         // Suppress background listener error in console
+        setTeachersState(mockTeachers);
       });
     } else {
-      setTeachersState([]);
+      setTeachersState(mockTeachers);
     }
 
     // 3. Online Admissions - only if Admin user
@@ -259,9 +261,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as OnlineAdmissionForm);
         });
-        setOnlineAdmissionsState(data);
+        setOnlineAdmissionsState(data.length > 0 ? data : mockAdmissions);
       }, () => {
         // Suppress background listener error in console
+        setOnlineAdmissionsState(mockAdmissions);
       });
     } else {
       setOnlineAdmissionsState([]);
@@ -273,9 +276,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as StudentResult);
       });
-      setResultsState(data);
+      setResultsState(data.length > 0 ? data : mockResults);
     }, () => {
-      // Suppress background listener error in console
+      // Suppress background listener error in console and load fallback
+      setResultsState(mockResults);
     });
 
     // 5. Academic Sessions
@@ -284,9 +288,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as AcademicSession);
       });
-      setSessionsState(data);
+      setSessionsState(data.length > 0 ? data : mockSessions);
     }, () => {
-      // Suppress background listener error in console
+      // Suppress background listener error in console and load fallback
+      setSessionsState(mockSessions);
     });
 
     // 6. Courses
@@ -295,9 +300,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as Course);
       });
-      setCoursesState(data);
+      setCoursesState(data.length > 0 ? data : mockCourses);
     }, () => {
-      // Suppress background listener error in console
+      // Suppress background listener error in console and load fallback
+      setCoursesState(mockCourses);
     });
 
     return () => {
@@ -313,6 +319,76 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   // Admin-triggered one-time bootstrapping of Firestore with initial mock template datasets
   useEffect(() => {
     if (!isAdminUser) return;
+    const isBootstrapped = localStorage.getItem('bhogamur_school_bootstrapped_v2');
+    if (!isBootstrapped) {
+      console.log("Admin logged in. Bootstrapping default mock dataset to Firestore collections...");
+      
+      const bootstrapCollection = async () => {
+        // Bootstrap sessions
+        try {
+          const sessionsSnap = await getDocs(collection(db, 'sessions'));
+          if (sessionsSnap.empty) {
+            for (const s of mockSessions) {
+              await setDoc(doc(db, 'sessions', s.id), s);
+            }
+          }
+        } catch (e) {
+          console.error("Bootstrapping sessions failed: ", e);
+        }
+
+        // Bootstrap students
+        try {
+          const studentsSnap = await getDocs(collection(db, 'students'));
+          if (studentsSnap.empty) {
+            for (const s of mockStudents) {
+              await setDoc(doc(db, 'students', s.id), s);
+            }
+          }
+        } catch (e) {
+          console.error("Bootstrapping students failed: ", e);
+        }
+
+        // Bootstrap teachers
+        try {
+          const teachersSnap = await getDocs(collection(db, 'teachers'));
+          if (teachersSnap.empty) {
+            for (const t of mockTeachers) {
+              await setDoc(doc(db, 'teachers', t.id), t);
+            }
+          }
+        } catch (e) {
+          console.error("Bootstrapping teachers failed: ", e);
+        }
+
+        // Bootstrap results
+        try {
+          const resultsSnap = await getDocs(collection(db, 'results'));
+          if (resultsSnap.empty) {
+            for (const r of mockResults) {
+              await setDoc(doc(db, 'results', r.id), r);
+            }
+          }
+        } catch (e) {
+          console.error("Bootstrapping results failed: ", e);
+        }
+
+        // Bootstrap courses
+        try {
+          const coursesSnap = await getDocs(collection(db, 'courses'));
+          if (coursesSnap.empty) {
+            for (const c of mockCourses) {
+              await setDoc(doc(db, 'courses', c.id), c);
+            }
+          }
+        } catch (e) {
+          console.error("Bootstrapping courses failed: ", e);
+        }
+
+        localStorage.setItem('bhogamur_school_bootstrapped_v2', 'true');
+      };
+
+      bootstrapCollection();
+    }
     localStorage.setItem('bhogamur_school_bootstrapped', 'true');
   }, [isAdminUser]);
 
