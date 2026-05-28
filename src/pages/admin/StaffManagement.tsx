@@ -66,18 +66,36 @@ export default function StaffManagement() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.role) return;
 
     setIsSaving(true);
     setErrorMsg(null);
 
+    const nameVal = (formData.name || 'UNKNOWN STAFF').trim().toUpperCase();
+    const roleVal = (formData.role || 'STAFF MEMBER').trim().toUpperCase();
+    const bioVal = (formData.bio || '').trim().toUpperCase();
+    const emailVal = (formData.email || '').trim().toUpperCase();
+    const phoneVal = (formData.phone || '').trim();
+    const linkedinVal = (formData.linkedinUrl || '').trim();
+    const facebookVal = (formData.facebookUrl || '').trim();
+
+    const finalizedData = {
+      ...formData,
+      name: nameVal,
+      role: roleVal,
+      bio: bioVal,
+      email: emailVal,
+      phone: phoneVal,
+      linkedinUrl: linkedinVal,
+      facebookUrl: facebookVal
+    };
+
     try {
       if (editingId) {
-        const updatedStaff = staff.map(s => s.id === editingId ? { ...s, ...formData } as WebsiteStaffMember : s);
+        const updatedStaff = staff.map(s => s.id === editingId ? { ...s, ...finalizedData } as WebsiteStaffMember : s);
         await updateSettings({ staffMembers: updatedStaff });
       } else {
         const newStaff: WebsiteStaffMember = {
-          ...formData,
+          ...finalizedData,
           id: `staff-${Date.now()}`
         } as WebsiteStaffMember;
         await updateSettings({ staffMembers: [...staff, newStaff] });
@@ -264,23 +282,21 @@ export default function StaffManagement() {
 
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Full Name *</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
                         <input 
                           type="text" 
-                          required
                           value={formData.name || ''} 
                           onChange={e => setFormData({...formData, name: e.target.value})}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Role/Position *</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Role/Position</label>
                         <input 
                           type="text" 
-                          required
                           value={formData.role || ''} 
                           onChange={e => setFormData({...formData, role: e.target.value})}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase"
                         />
                       </div>
                     </div>
@@ -291,7 +307,7 @@ export default function StaffManagement() {
                          rows={3}
                          value={formData.bio || ''} 
                          onChange={e => setFormData({...formData, bio: e.target.value})}
-                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none uppercase"
                        ></textarea>
                     </div>
 
@@ -302,7 +318,7 @@ export default function StaffManagement() {
                           type="email" 
                           value={formData.email || ''} 
                           onChange={e => setFormData({...formData, email: e.target.value})}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase"
                         />
                       </div>
                       <div>
@@ -311,7 +327,7 @@ export default function StaffManagement() {
                           type="text" 
                           value={formData.phone || ''} 
                           onChange={e => setFormData({...formData, phone: e.target.value})}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase"
                         />
                       </div>
                       <div>

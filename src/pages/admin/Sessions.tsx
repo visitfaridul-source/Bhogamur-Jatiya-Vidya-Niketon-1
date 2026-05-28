@@ -14,13 +14,16 @@ export default function Sessions() {
 
   const handleAddSession = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.startDate || !formData.endDate) return;
+
+    const nameVal = (formData.name || `SESSION-${Date.now()}`).trim().toUpperCase();
+    const startVal = (formData.startDate || new Date().toISOString().split('T')[0]).trim();
+    const endVal = (formData.endDate || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]).trim();
 
     const newSession = {
       id: `session-${Date.now()}`,
-      name: formData.name,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      name: nameVal,
+      startDate: startVal,
+      endDate: endVal,
       isActive: sessions.length === 0 // Make active if it's the first
     };
 
@@ -72,8 +75,7 @@ export default function Sessions() {
                 placeholder="e.g. 2024-2025"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                required
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 uppercase"
               />
             </div>
             <div>
@@ -82,8 +84,7 @@ export default function Sessions() {
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                required
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 uppercase"
               />
             </div>
             <div>
@@ -92,8 +93,7 @@ export default function Sessions() {
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                required
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 uppercase"
               />
             </div>
             <div className="md:col-span-3 flex justify-end">

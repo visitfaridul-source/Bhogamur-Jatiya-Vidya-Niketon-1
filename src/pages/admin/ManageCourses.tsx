@@ -29,13 +29,28 @@ export default function ManageCourses() {
 
   const handleSaveCourse = (e: React.FormEvent) => {
     e.preventDefault();
+    const titleVal = (formData.title || 'UNKNOWN COURSE').trim().toUpperCase();
+    const descriptionVal = (formData.description || '').trim().toUpperCase();
+    const classVal = (formData.class || 'CLASS 10').trim().toUpperCase();
+    const subjectVal = (formData.subject || 'GENERAL').trim().toUpperCase();
+    const thumbnailVal = (formData.thumbnailUrl || '').trim();
+
+    const finalizedData = {
+      ...formData,
+      title: titleVal,
+      description: descriptionVal,
+      class: classVal,
+      subject: subjectVal,
+      thumbnailUrl: thumbnailVal
+    };
+
     if (editingCourseId) {
-      setCourses(courses.map(c => c.id === editingCourseId ? { ...c, ...formData as any } : c));
+      setCourses(courses.map(c => c.id === editingCourseId ? { ...c, ...finalizedData as any } : c));
     } else {
       const newCourse: Course = {
         id: `CRS-${Date.now()}`,
         materials: [],
-        ...(formData as any)
+        ...(finalizedData as any)
       };
       setCourses([...courses, newCourse]);
     }
@@ -72,10 +87,23 @@ export default function ManageCourses() {
     e.preventDefault();
     if (!activeCourseId) return;
 
+    const titleVal = (materialFormData.title || 'STUDY MATERIAL').trim().toUpperCase();
+    const typeVal = (materialFormData.type || 'PDF').trim().toUpperCase();
+    const urlVal = (materialFormData.url || '').trim();
+    const sizeVal = (materialFormData.size || '0 MB').trim().toUpperCase();
+
+    const finalizedMaterial = {
+      ...materialFormData,
+      title: titleVal,
+      type: typeVal,
+      url: urlVal,
+      size: sizeVal
+    };
+
     const newMaterial: CourseMaterial = {
       id: `MAT-${Date.now()}`,
       uploadDate: new Date().toISOString().split('T')[0],
-      ...(materialFormData as any)
+      ...(finalizedMaterial as any)
     };
 
     setCourses(courses.map(c => {
@@ -238,8 +266,7 @@ export default function ManageCourses() {
                   type="text" 
                   value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                 />
               </div>
 
@@ -249,8 +276,7 @@ export default function ManageCourses() {
                   <select 
                     value={formData.class}
                     onChange={e => setFormData({...formData, class: e.target.value})}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                   >
                     {['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'].map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -261,8 +287,7 @@ export default function ManageCourses() {
                     type="text" 
                     value={formData.subject}
                     onChange={e => setFormData({...formData, subject: e.target.value})}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                   />
                 </div>
               </div>
@@ -272,7 +297,7 @@ export default function ManageCourses() {
                 <textarea 
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px] resize-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px] resize-none uppercase"
                 />
               </div>
 
@@ -319,8 +344,7 @@ export default function ManageCourses() {
                   type="text" 
                   value={materialFormData.title}
                   onChange={e => setMaterialFormData({...materialFormData, title: e.target.value})}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                 />
               </div>
 
@@ -330,7 +354,7 @@ export default function ManageCourses() {
                   <select 
                     value={materialFormData.type}
                     onChange={e => setMaterialFormData({...materialFormData, type: e.target.value as any})}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                   >
                     <option value="PDF">PDF</option>
                     <option value="Video">Video</option>
@@ -345,7 +369,7 @@ export default function ManageCourses() {
                     placeholder="e.g. 2.5 MB"
                     value={materialFormData.size}
                     onChange={e => setMaterialFormData({...materialFormData, size: e.target.value})}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
                   />
                 </div>
               </div>
@@ -358,7 +382,6 @@ export default function ManageCourses() {
                   onChange={e => setMaterialFormData({...materialFormData, url: e.target.value})}
                   placeholder="https://..."
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                  required
                 />
               </div>
 

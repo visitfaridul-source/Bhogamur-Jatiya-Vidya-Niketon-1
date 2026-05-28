@@ -141,12 +141,18 @@ export default function LoginPage() {
     }
 
     // Direct Login Bypass for Mubarak Hussain & Bjvn@1968
-    const isMubarakDirect = (username.trim().toLowerCase() === 'mubarak hussain' || username.trim().toLowerCase() === 'visitfaridul@gmail.com') && password === 'Bjvn@1968';
+    const isMubarakDirect = (
+      username.trim().toLowerCase() === 'mubarak hussain' || 
+      username.trim().toLowerCase() === 'visitfaridul@gmail.com' ||
+      username.trim().toLowerCase() === 'bjvnhs@gmail.com'
+    ) && password === 'Bjvn@1968';
 
     if (isMubarakDirect) {
+      const targetEmail = (username.trim().toLowerCase() === 'mubarak hussain') ? 'visitfaridul@gmail.com' : username.trim().toLowerCase();
+      const targetName = (targetEmail === 'bjvnhs@gmail.com') ? 'Super Admin' : 'Mubarak Hussain';
       try {
         // Authenticate with real Firebase Auth so they have actual write permissions on Firestore (required for Vercel/production)
-        await signInWithEmailAndPassword(auth, 'visitfaridul@gmail.com', 'Bjvn@1968');
+        await signInWithEmailAndPassword(auth, targetEmail, 'Bjvn@1968');
         // Clear any direct bypass session to ensure the real Firebase Auth is active
         localStorage.removeItem('direct_super_admin_session');
       } catch (authError: any) {
@@ -155,24 +161,24 @@ export default function LoginPage() {
         if (errCode === 'auth/user-not-found' || errCode === 'auth/invalid-credential' || String(authError).includes('invalid-credential') || String(authError).includes('user-not-found')) {
           try {
             // Auto-register the Super Admin account dynamically to grant proper Firebase permissions
-            const userCred = await createUserWithEmailAndPassword(auth, 'visitfaridul@gmail.com', 'Bjvn@1968');
+            const userCred = await createUserWithEmailAndPassword(auth, targetEmail, 'Bjvn@1968');
             const firebaseUser = userCred.user;
             
             // Create user document in Firestore on the spot
             await setDoc(doc(db, 'users', firebaseUser.uid), {
-              name: 'Mubarak Hussain',
-              email: 'visitfaridul@gmail.com',
+              name: targetName,
+              email: targetEmail,
               role: 'Super Admin',
               createdAt: new Date().toISOString()
             });
             localStorage.removeItem('direct_super_admin_session');
           } catch (regError) {
             // Fallback to client-only bypass as a safe safety recovery measure
-            loginAsSuperAdminDirectly('Mubarak Hussain', 'visitfaridul@gmail.com');
+            loginAsSuperAdminDirectly(targetName, targetEmail);
           }
         } else {
           // General fallback
-          loginAsSuperAdminDirectly('Mubarak Hussain', 'visitfaridul@gmail.com');
+          loginAsSuperAdminDirectly(targetName, targetEmail);
         }
       } finally {
         setIsAnimating(false);

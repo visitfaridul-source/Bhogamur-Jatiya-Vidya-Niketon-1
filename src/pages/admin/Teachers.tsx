@@ -34,7 +34,8 @@ export default function Teachers() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const teacherId = formData.get('teacherId') as string;
+    const rawId = (formData.get('teacherId') as string || '').trim().toUpperCase();
+    const teacherId = rawId || `TCH${Date.now()}${(Math.floor(Math.random() * 100))}`;
     const isIdCollision = teachers.some(t => t.id === teacherId && (!editingTeacher || editingTeacher.id !== teacherId));
     
     if (isIdCollision) {
@@ -42,21 +43,23 @@ export default function Teachers() {
       return;
     }
 
+    const rawFullName = (formData.get('fullName') as string || 'UNKNOWN TEACHER').trim().toUpperCase();
+
     const newTeacher = {
       id: teacherId,
-      name: formData.get('fullName') as string,
-      subject: formData.get('subject') as string || editingTeacher?.subject || 'General',
-      qualification: formData.get('qualification') as string || editingTeacher?.qualification || 'B.Ed',
-      phone: formData.get('mobile') as string,
-      email: editingTeacher?.email || `${(formData.get('fullName') as string).split(' ')[0].toLowerCase()}@school.com`,
-      status: formData.get('status') as string,
-      avatar: photoPreview || editingTeacher?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('fullName')}`,
-      fatherName: formData.get('fatherName') as string,
-      dob: formData.get('dob') as string,
-      joiningDate: formData.get('joiningDate') as string,
-      aadhaar: formData.get('aadhaar') as string,
-      pan: formData.get('pan') as string,
-      address: formData.get('address') as string,
+      name: rawFullName,
+      subject: (formData.get('subject') as string || editingTeacher?.subject || 'GENERAL').trim().toUpperCase(),
+      qualification: (formData.get('qualification') as string || editingTeacher?.qualification || 'B.ED').trim().toUpperCase(),
+      phone: (formData.get('mobile') as string || '-').trim(),
+      email: editingTeacher?.email || `${rawFullName.split(' ')[0].toLowerCase() || 'teacher'}@school.com`,
+      status: (formData.get('status') as string || 'Present').trim(),
+      avatar: photoPreview || editingTeacher?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawFullName}`,
+      fatherName: (formData.get('fatherName') as string || '-').trim().toUpperCase(),
+      dob: (formData.get('dob') as string || '-').trim(),
+      joiningDate: (formData.get('joiningDate') as string || new Date().toISOString().split('T')[0]).trim(),
+      aadhaar: (formData.get('aadhaar') as string || '-').trim().toUpperCase(),
+      pan: (formData.get('pan') as string || '-').trim().toUpperCase(),
+      address: (formData.get('address') as string || '-').trim().toUpperCase(),
     };
 
     if (editingTeacher) {
@@ -260,27 +263,27 @@ export default function Teachers() {
                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Teacher ID</label>
-                              <input type="text" name="teacherId" defaultValue={editingTeacher?.id} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. TCH2024001" required />
+                              <input type="text" name="teacherId" defaultValue={editingTeacher?.id} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="e.g. TCH2024001" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Full Name</label>
-                              <input type="text" name="fullName" defaultValue={editingTeacher?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="JOHN DOE" required />
+                              <input type="text" name="fullName" defaultValue={editingTeacher?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="JOHN DOE" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Father's Name</label>
-                              <input type="text" name="fatherName" defaultValue={editingTeacher?.fatherName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="FATHER'S NAME" required />
+                              <input type="text" name="fatherName" defaultValue={editingTeacher?.fatherName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="FATHER'S NAME" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Subject</label>
-                              <input type="text" name="subject" defaultValue={editingTeacher?.subject} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. Mathematics" required />
+                              <input type="text" name="subject" defaultValue={editingTeacher?.subject} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="e.g. Mathematics" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Qualification</label>
-                              <input type="text" name="qualification" defaultValue={editingTeacher?.qualification} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. M.Sc, B.Ed" required />
+                              <input type="text" name="qualification" defaultValue={editingTeacher?.qualification} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="e.g. M.Sc, B.Ed" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Status</label>
-                              <select name="status" defaultValue={editingTeacher?.status || 'Present'} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required>
+                              <select name="status" defaultValue={editingTeacher?.status || 'Present'} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase">
                                 <option value="Present">Present</option>
                                 <option value="On Leave">On Leave</option>
                                 <option value="Resigned">Resigned</option>
@@ -288,15 +291,15 @@ export default function Teachers() {
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
-                              <input type="date" name="dob" defaultValue={editingTeacher?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                              <input type="date" name="dob" defaultValue={editingTeacher?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Mobile No</label>
-                              <input type="tel" name="mobile" defaultValue={editingTeacher?.phone} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="+1 (____) ___-____" required />
+                              <input type="tel" name="mobile" defaultValue={editingTeacher?.phone} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="+1 (____) ___-____" />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Date of Joining</label>
-                              <input type="date" name="joiningDate" defaultValue={editingTeacher?.joiningDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                              <input type="date" name="joiningDate" defaultValue={editingTeacher?.joiningDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                             </div>
                          </div>
                       </div>
@@ -312,15 +315,15 @@ export default function Teachers() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                          <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">Aadhaar No</label>
-                           <input type="text" name="aadhaar" defaultValue={editingTeacher?.aadhaar} pattern="\d{12}" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="12 Digit Aadhaar Number" required />
+                           <input type="text" name="aadhaar" defaultValue={editingTeacher?.aadhaar} pattern="\d{12}" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="12 Digit Aadhaar Number" />
                          </div>
                          <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">PAN No</label>
-                           <input type="text" name="pan" defaultValue={editingTeacher?.pan} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="ABCDE1234F" required />
+                           <input type="text" name="pan" defaultValue={editingTeacher?.pan} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="ABCDE1234F" />
                          </div>
                          <div className="space-y-1.5 md:col-span-2">
                            <label className="text-sm font-semibold text-slate-700">Residential Address</label>
-                           <textarea name="address" defaultValue={editingTeacher?.address} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none h-20 text-sm uppercase" placeholder="FULL RESIDENTIAL ADDRESS" required></textarea>
+                           <textarea name="address" defaultValue={editingTeacher?.address} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none h-20 text-sm uppercase" placeholder="FULL RESIDENTIAL ADDRESS"></textarea>
                          </div>
                       </div>
                    </div>

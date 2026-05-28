@@ -62,22 +62,21 @@ export default function Students() {
           return;
         }
 
-        const name = row[0]?.trim();
-        if (!name) return; // Name is mandatory
+        const name = row[0]?.trim()?.toUpperCase() || 'UNKNOWN STUDENT';
 
-        const id = row[1]?.trim() || `ADM${Date.now()}${Math.floor(Math.random() * 1000)}${index}`;
-        const roll = row[2]?.trim() || '-';
-        const cls = row[3]?.trim() || bulkClass || 'Class 1';
-        const sec = row[4]?.trim() || bulkSection || 'A';
-        const parentName = row[5]?.trim() || 'N/A';
-        const motherName = row[6]?.trim() || '';
-        const phone = row[7]?.trim() || 'N/A';
-        const dob = row[8]?.trim() || '';
+        const id = row[1]?.trim()?.toUpperCase() || `ADM${Date.now()}${Math.floor(Math.random() * 1000)}${index}`;
+        const roll = row[2]?.trim()?.toUpperCase() || '-';
+        const cls = row[3]?.trim()?.toUpperCase() || bulkClass || 'Class 1';
+        const sec = row[4]?.trim()?.toUpperCase() || bulkSection || 'A';
+        const parentName = row[5]?.trim()?.toUpperCase() || '-';
+        const motherName = row[6]?.trim()?.toUpperCase() || '-';
+        const phone = row[7]?.trim() || '-';
+        const dob = row[8]?.trim() || '-';
         const admissionDate = row[9]?.trim() || new Date().toISOString().split('T')[0];
-        const address = row[10]?.trim() || '';
-        const aadhaar = row[11]?.trim() || '';
-        const pen = row[12]?.trim() || '';
-        const apaar = row[13]?.trim() || '';
+        const address = row[10]?.trim()?.toUpperCase() || '-';
+        const aadhaar = row[11]?.trim()?.toUpperCase() || '-';
+        const pen = row[12]?.trim()?.toUpperCase() || '-';
+        const apaar = row[13]?.trim()?.toUpperCase() || '-';
 
         newStudents.push({
           id,
@@ -564,7 +563,8 @@ export default function Students() {
           e.preventDefault(); 
           const formData = new FormData(e.currentTarget);
           
-          const admId = formData.get('admId') as string;
+          const rawId = (formData.get('admId') as string || '').trim().toUpperCase();
+          const admId = rawId || `ADM${Date.now()}${Math.floor(Math.random() * 100)}`;
           const isIdCollision = students.some(s => s.id === admId && (!editingStudent || editingStudent.id !== admId));
           
           if (isIdCollision) {
@@ -574,20 +574,20 @@ export default function Students() {
 
           const newStudent = {
             id: admId,
-            name: formData.get('fullName') as string,
-            class: formData.get('class') as string,
-            section: formData.get('section') as string,
-            roll: formData.get('roll') as string || editingStudent?.roll || '-',
-            parentName: formData.get('fatherName') as string,
-            phone: formData.get('mobile') as string,
-            status: formData.get('status') as string,
-            admissionDate: formData.get('admissionDate') as string,
-            dob: formData.get('dob') as string,
-            motherName: formData.get('motherName') as string,
-            address: formData.get('address') as string,
-            aadhaar: formData.get('aadhaar') as string,
-            pen: formData.get('pen') as string,
-            apaar: formData.get('apaar') as string,
+            name: (formData.get('fullName') as string || 'UNKNOWN STUDENT').trim().toUpperCase(),
+            class: (formData.get('class') as string || 'Class 1'),
+            section: (formData.get('section') as string || 'A').toUpperCase(),
+            roll: (formData.get('roll') as string || editingStudent?.roll || '-').trim().toUpperCase(),
+            parentName: (formData.get('fatherName') as string || '-').trim().toUpperCase(),
+            phone: (formData.get('mobile') as string || '-').trim(),
+            status: (formData.get('status') as string || 'Active'),
+            admissionDate: (formData.get('admissionDate') as string || new Date().toISOString().split('T')[0]),
+            dob: (formData.get('dob') as string || '-'),
+            motherName: (formData.get('motherName') as string || '-').trim().toUpperCase(),
+            address: (formData.get('address') as string || '-').trim().toUpperCase(),
+            aadhaar: (formData.get('aadhaar') as string || '-').trim().toUpperCase(),
+            pen: (formData.get('pen') as string || '-').trim().toUpperCase(),
+            apaar: (formData.get('apaar') as string || '-').trim().toUpperCase(),
             photoUrl: photoPreview || editingStudent?.photoUrl,
           };
 
@@ -599,7 +599,6 @@ export default function Students() {
             setIsAddStudentModalOpen(false);
           }
           setPhotoPreview(null);
-          // Optional: e.currentTarget.reset(); is handled when form is re-rendered
         }}>
                  
                  {/* Section 1: Academic Details */}
@@ -611,15 +610,15 @@ export default function Students() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Admission No. (Adm Id)</label>
-                        <input type="text" name="admId" defaultValue={editingStudent?.id} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. ADM2023001" required />
+                        <input type="text" name="admId" defaultValue={editingStudent?.id} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="e.g. ADM2023001" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Date of Admission</label>
-                        <input type="date" name="admissionDate" defaultValue={editingStudent?.admissionDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                        <input type="date" name="admissionDate" defaultValue={editingStudent?.admissionDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Class</label>
-                        <select name="class" defaultValue={editingStudent?.class} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required>
+                        <select name="class" defaultValue={editingStudent?.class} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase">
                           <option value="">Select Class</option>
                           {['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'].map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -627,7 +626,7 @@ export default function Students() {
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Section</label>
                         <div className="relative">
-                           <select name="section" defaultValue={editingStudent?.section} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none text-sm" required>
+                           <select name="section" defaultValue={editingStudent?.section} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none text-sm uppercase">
                              <option value="">Select Section</option>
                              <option value="A">Section A</option>
                              <option value="B">Section B</option>
@@ -641,11 +640,11 @@ export default function Students() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Roll No.</label>
-                        <input type="text" name="roll" defaultValue={editingStudent?.roll} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. 1" />
+                        <input type="text" name="roll" defaultValue={editingStudent?.roll} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="e.g. 1" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Status</label>
-                        <select name="status" defaultValue={editingStudent?.status || 'Active'} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required>
+                        <select name="status" defaultValue={editingStudent?.status || 'Active'} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase">
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
                         </select>
@@ -663,15 +662,15 @@ export default function Students() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                          <div className="space-y-1.5 md:col-span-2">
                            <label className="text-sm font-semibold text-slate-700">Full Name</label>
-                           <input type="text" name="fullName" defaultValue={editingStudent?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Student's Legal Name" required />
+                           <input type="text" name="fullName" defaultValue={editingStudent?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="Student's Legal Name" />
                          </div>
                          <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">Date of Birth (D.O.B)</label>
-                           <input type="date" name="dob" defaultValue={editingStudent?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                           <input type="date" name="dob" defaultValue={editingStudent?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                          </div>
                          <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">Mobile Number</label>
-                           <input type="tel" name="mobile" defaultValue={editingStudent?.phone} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="+1 (___) ___-____" />
+                           <input type="tel" name="mobile" defaultValue={editingStudent?.phone} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="+1 (___) ___-____" />
                          </div>
                       </div>
                    </div>
@@ -718,15 +717,15 @@ export default function Students() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Father's Name</label>
-                        <input type="text" name="fatherName" defaultValue={editingStudent?.parentName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                        <input type="text" name="fatherName" defaultValue={editingStudent?.parentName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Mother's Name</label>
-                        <input type="text" name="motherName" defaultValue={editingStudent?.motherName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
+                        <input type="text" name="motherName" defaultValue={editingStudent?.motherName} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                       </div>
                       <div className="space-y-1.5 md:col-span-2">
                         <label className="text-sm font-semibold text-slate-700">Residential Address</label>
-                        <textarea name="address" defaultValue={(editingStudent as any)?.address} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none h-20 text-sm" placeholder="Full residential street address..." required></textarea>
+                        <textarea name="address" defaultValue={(editingStudent as any)?.address} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none h-20 text-sm uppercase" placeholder="Full residential street address..."></textarea>
                       </div>
                     </div>
                  </div>
@@ -740,15 +739,15 @@ export default function Students() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Aadhaar No. (12 Digits)</label>
-                        <input type="text" name="aadhaar" defaultValue={(editingStudent as any)?.aadhaar} pattern="\d{12}" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="XXXX XXXX XXXX" />
+                        <input type="text" name="aadhaar" defaultValue={(editingStudent as any)?.aadhaar} pattern="\d{12}" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="XXXX XXXX XXXX" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">PEN No. (Permanent Ed. No.)</label>
-                        <input type="text" name="pen" defaultValue={(editingStudent as any)?.pen} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter PEN" />
+                        <input type="text" name="pen" defaultValue={(editingStudent as any)?.pen} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="Enter PEN" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">APAAR ID (One Nation ID)</label>
-                        <input type="text" name="apaar" defaultValue={(editingStudent as any)?.apaar} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter APAAR ID" />
+                        <input type="text" name="apaar" defaultValue={(editingStudent as any)?.apaar} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="Enter APAAR ID" />
                       </div>
                     </div>
                  </div>
