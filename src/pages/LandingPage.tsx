@@ -182,51 +182,19 @@ export default function LandingPage() {
             
             {/* Call to Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-4 mt-6 lg:mt-8 w-full lg:w-auto">
-              <div className="relative group w-[200px] sm:w-[220px]">
-                <button 
-                  className="flex w-full items-center justify-center gap-2 bg-white text-slate-900 font-bold text-base sm:text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-                >
-                  <span className="relative z-10">Sign In</span>
-                  <ChevronDown className="w-5 h-5 relative z-10 transition-transform group-hover:rotate-180" />
-                </button>
-                <div className="absolute top-full left-0 right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform origin-top translate-y-[-10px] group-hover:translate-y-0 w-[260px] sm:w-[280px] -ml-[30px]">
-                  <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col p-2 gap-1 relative before:content-[''] before:absolute before:-top-2 before:left-1/2 before:-translate-x-1/2 before:border-8 before:border-transparent before:border-b-white">
-                    <button onClick={() => navigate('/login?role=student')} className="flex items-center gap-3 px-3 py-2 text-left hover:bg-blue-50/80 rounded-xl transition-all group/btn">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 group-hover/btn:scale-110 group-hover/btn:bg-blue-600 transition-all duration-300">
-                        <User className="w-5 h-5 text-blue-600 group-hover/btn:text-white transition-colors" />
-                      </div>
-                      <div>
-                        <div className="text-slate-800 font-bold text-sm tracking-tight group-hover/btn:text-blue-700">Student Portal</div>
-                        <div className="text-slate-500 text-[11px] font-medium leading-tight">Assignments & results</div>
-                      </div>
-                    </button>
-                    <button onClick={() => navigate('/login?role=parent')} className="flex items-center gap-3 px-3 py-2 text-left hover:bg-indigo-50/80 rounded-xl transition-all group/btn">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 group-hover/btn:scale-110 group-hover/btn:bg-indigo-600 transition-all duration-300">
-                        <Users className="w-5 h-5 text-indigo-600 group-hover/btn:text-white transition-colors" />
-                      </div>
-                      <div>
-                        <div className="text-slate-800 font-bold text-sm tracking-tight group-hover/btn:text-indigo-700">Parent Portal</div>
-                        <div className="text-slate-500 text-[11px] font-medium leading-tight">Fees & progress tracking</div>
-                      </div>
-                    </button>
-                    <button onClick={() => navigate('/login?role=staff')} className="flex items-center gap-3 px-3 py-2 text-left hover:bg-orange-50/80 rounded-xl transition-all group/btn">
-                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0 group-hover/btn:scale-110 group-hover/btn:bg-orange-500 transition-all duration-300">
-                        <Briefcase className="w-5 h-5 text-orange-600 group-hover/btn:text-white transition-colors" />
-                      </div>
-                      <div>
-                        <div className="text-slate-800 font-bold text-sm tracking-tight group-hover/btn:text-orange-700">Staff & Teacher</div>
-                        <div className="text-slate-500 text-[11px] font-medium leading-tight">Attendance & grading</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <button 
+                onClick={() => navigate('/online-admission')}
+                className="flex w-[200px] sm:w-[220px] items-center justify-center gap-2 bg-white text-slate-900 font-bold text-base sm:text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              >
+                Online Admission
+                <ArrowRight className="w-5 h-5" />
+              </button>
               <button 
                 onClick={() => navigate('/courses')}
                 className="flex w-[200px] sm:w-[220px] items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-semibold text-base sm:text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
-                Courses 
-                <Download className="w-5 h-5 transition-transform group-hover:translate-y-1" />
+                Our Courses 
+                <BookOpen className="w-5 h-5" />
               </button>
             </div>
             

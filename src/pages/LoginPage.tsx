@@ -321,9 +321,6 @@ export default function LoginPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <RoleCard role="Super Admin" icon={ShieldCheck} onClick={() => handleRoleSelect('Super Admin')} color="text-amber-600 bg-amber-50 border-amber-100 ring-amber-500" />
                   <RoleCard role="Admin" icon={ShieldCheck} onClick={() => handleRoleSelect('Admin')} color="text-rose-600 bg-rose-50 border-rose-100 ring-rose-500" />
-                  <RoleCard role="Teacher" icon={Users} onClick={() => handleRoleSelect('Teacher')} color="text-blue-600 bg-blue-50 border-blue-100 ring-blue-500" />
-                  <RoleCard role="Student" icon={GraduationCap} onClick={() => handleRoleSelect('Student')} color="text-emerald-600 bg-emerald-50 border-emerald-100 ring-emerald-500" />
-                  <RoleCard role="Parent" icon={Users} onClick={() => handleRoleSelect('Parent')} color="text-purple-600 bg-purple-50 border-purple-100 ring-purple-500" />
                 </div>
               </motion.div>
             ) : (
