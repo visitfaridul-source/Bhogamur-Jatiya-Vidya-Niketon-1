@@ -1,8 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Relaxed rules for development preview to ensure data persists across all devices
-    // regardless of Firebase Auth configuration or email bypass states.
+    // Explicit collection rules to prevent any permission issues in development preview
+    match /students/{docId} {
+      allow read, write: if true;
+    }
+    match /teachers/{docId} {
+      allow read, write: if true;
+    }
+    match /onlineAdmissions/{docId} {
+      allow read, write: if true;
+    }
+    match /results/{docId} {
+      allow read, write: if true;
+    }
+    match /sessions/{docId} {
+      allow read, write: if true;
+    }
+    match /courses/{docId} {
+      allow read, write: if true;
+    }
+    match /settings/{docId} {
+      allow read, write: if true;
+    }
+    match /users/{docId} {
+      allow read, write: if true;
+    }
+
+    // Global wildcard fallback
     match /{document=**} {
       allow read, write: if true;
     }
