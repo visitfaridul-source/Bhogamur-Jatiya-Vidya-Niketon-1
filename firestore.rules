@@ -21,13 +21,16 @@ service cloud.firestore {
 
     // Check if user is a Database-defined Admin
     function isDbAdmin(uid) {
-      return isSignedIn() && 
-             exists(/databases/$(database)/documents/users/$(uid)) && (
-               'role' in get(/databases/$(database)/documents/users/$(uid)).data && (
-                 get(/databases/$(database)/documents/users/$(uid)).data.role == 'Super Admin' || 
-                 get(/databases/$(database)/documents/users/$(uid)).data.role == 'Admin'
-               )
-             );
+      return isSignedIn() && (
+        request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1' || (
+          exists(/databases/$(database)/documents/users/$(uid)) && (
+            'role' in get(/databases/$(database)/documents/users/$(uid)).data && (
+              get(/databases/$(database)/documents/users/$(uid)).data.role == 'Super Admin' || 
+              get(/databases/$(database)/documents/users/$(uid)).data.role == 'Admin'
+            )
+          )
+        )
+      );
     }
 
     // Master Override: Super Admins (including bjvnhs@gmail.com / visitfaridul@gmail.com)
