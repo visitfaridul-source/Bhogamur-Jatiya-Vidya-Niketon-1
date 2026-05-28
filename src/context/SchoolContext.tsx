@@ -120,6 +120,19 @@ interface SchoolContextType {
   setSessions: React.Dispatch<React.SetStateAction<AcademicSession[]>>;
   courses: Course[];
   setCourses: React.Dispatch<React.SetStateAction<Course[]>>;
+  isSyncing: boolean;
+  syncStatus: 'synced' | 'pending' | 'syncing' | 'error';
+  syncAllToFirebase: () => Promise<void>;
+  resetFirestoreToMock: () => Promise<void>;
+  firestoreDbEmpty: boolean;
+  dbStats: {
+    students: number;
+    teachers: number;
+    onlineAdmissions: number;
+    results: number;
+    sessions: number;
+    courses: number;
+  };
 }
 
 const mockStudents: Student[] = [
@@ -216,6 +229,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessionsState] = useState<AcademicSession[]>([]);
   const [courses, setCoursesState] = useState<Course[]>([]);
 
+  // Track Firestore actual database statistics
+  const [dbStats, setDbStats] = useState({
+    students: 0,
+    teachers: 0,
+    onlineAdmissions: 0,
+    results: 0,
+    sessions: 0,
+    courses: 0
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // Firestore Real-time Snapshot listeners
   useEffect(() => {
     let unsubStudents = () => {};
@@ -229,6 +253,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as Student);
         });
+        setDbStats(prev => ({ ...prev, students: snapshot.size }));
         setStudentsState(data.length > 0 ? data : mockStudents);
       }, () => {
         // Suppress background listener error in console
@@ -245,6 +270,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as Teacher);
         });
+        setDbStats(prev => ({ ...prev, teachers: snapshot.size }));
         setTeachersState(data.length > 0 ? data : mockTeachers);
       }, () => {
         // Suppress background listener error in console
@@ -261,6 +287,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         snapshot.forEach(doc => {
           data.push(doc.data() as OnlineAdmissionForm);
         });
+        setDbStats(prev => ({ ...prev, onlineAdmissions: snapshot.size }));
         setOnlineAdmissionsState(data.length > 0 ? data : mockAdmissions);
       }, () => {
         // Suppress background listener error in console
@@ -276,6 +303,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as StudentResult);
       });
+      setDbStats(prev => ({ ...prev, results: snapshot.size }));
       setResultsState(data.length > 0 ? data : mockResults);
     }, () => {
       // Suppress background listener error in console and load fallback
@@ -288,6 +316,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as AcademicSession);
       });
+      setDbStats(prev => ({ ...prev, sessions: snapshot.size }));
       setSessionsState(data.length > 0 ? data : mockSessions);
     }, () => {
       // Suppress background listener error in console and load fallback
@@ -300,6 +329,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       snapshot.forEach(doc => {
         data.push(doc.data() as Course);
       });
+      setDbStats(prev => ({ ...prev, courses: snapshot.size }));
       setCoursesState(data.length > 0 ? data : mockCourses);
     }, () => {
       // Suppress background listener error in console and load fallback
@@ -606,6 +636,114 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const firestoreDbEmpty = dbStats.students === 0 && dbStats.teachers === 0;
+  const syncStatus = firestoreDbEmpty ? 'pending' : 'synced';
+
+  const syncAllToFirebase = async () => {
+    setIsSyncing(true);
+    try {
+      console.log("Forcing manual complete sync to Firebase Firestore...");
+      
+      // 1. Students
+      for (const s of students) {
+        await setDoc(doc(db, 'students', s.id), s);
+      }
+      
+      // 2. Teachers
+      for (const t of teachers) {
+        await setDoc(doc(db, 'teachers', t.id), t);
+      }
+      
+      // 3. Online Admissions
+      for (const a of onlineAdmissions) {
+        await setDoc(doc(db, 'onlineAdmissions', a.id), a);
+      }
+      
+      // 4. Results
+      for (const r of results) {
+        await setDoc(doc(db, 'results', r.id), r);
+      }
+      
+      // 5. Sessions
+      for (const s of sessions) {
+        await setDoc(doc(db, 'sessions', s.id), s);
+      }
+      
+      // 6. Courses
+      for (const c of courses) {
+        await setDoc(doc(db, 'courses', c.id), c);
+      }
+
+      setDbStats({
+        students: students.length,
+        teachers: teachers.length,
+        onlineAdmissions: onlineAdmissions.length,
+        results: results.length,
+        sessions: sessions.length,
+        courses: courses.length
+      });
+      
+    } catch (e) {
+      console.error("Manual direct sync to Firebase failed:", e);
+      throw e;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const resetFirestoreToMock = async () => {
+    setIsSyncing(true);
+    try {
+      console.log("Resetting all Firestore documents to default Mockup values...");
+      
+      // Clean existing state lists in firestore first
+      for (const s of students) {
+        try { await deleteDoc(doc(db, 'students', s.id)); } catch {}
+      }
+      for (const t of teachers) {
+        try { await deleteDoc(doc(db, 'teachers', t.id)); } catch {}
+      }
+      for (const r of results) {
+        try { await deleteDoc(doc(db, 'results', r.id)); } catch {}
+      }
+      for (const s of sessions) {
+        try { await deleteDoc(doc(db, 'sessions', s.id)); } catch {}
+      }
+      for (const c of courses) {
+        try { await deleteDoc(doc(db, 'courses', c.id)); } catch {}
+      }
+      for (const a of onlineAdmissions) {
+        try { await deleteDoc(doc(db, 'onlineAdmissions', a.id)); } catch {}
+      }
+
+      // Write mock data models
+      for (const s of mockStudents) {
+        await setDoc(doc(db, 'students', s.id), s);
+      }
+      for (const t of mockTeachers) {
+        await setDoc(doc(db, 'teachers', t.id), t);
+      }
+      for (const r of mockResults) {
+        await setDoc(doc(db, 'results', r.id), r);
+      }
+      for (const s of mockSessions) {
+        await setDoc(doc(db, 'sessions', s.id), s);
+      }
+      for (const c of mockCourses) {
+        await setDoc(doc(db, 'courses', c.id), c);
+      }
+      for (const a of mockAdmissions) {
+        await setDoc(doc(db, 'onlineAdmissions', a.id), a);
+      }
+      
+    } catch (e) {
+      console.error("Database hard reset failed:", e);
+      throw e;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <SchoolContext.Provider value={{
       students, setStudents,
@@ -613,7 +751,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       onlineAdmissions, setOnlineAdmissions,
       results, setResults,
       sessions, setSessions,
-      courses, setCourses
+      courses, setCourses,
+      isSyncing,
+      syncStatus,
+      syncAllToFirebase,
+      resetFirestoreToMock,
+      firestoreDbEmpty,
+      dbStats
     }}>
       {children}
     </SchoolContext.Provider>

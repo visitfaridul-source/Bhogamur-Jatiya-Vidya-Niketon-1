@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useWebsite } from '@/context/WebsiteContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSchool } from '@/context/SchoolContext';
 import { 
   LayoutDashboard, 
   Users, 
@@ -25,7 +26,13 @@ import {
   Home,
   Clock,
   ShieldCheck,
-  Library
+  Library,
+  CloudUpload,
+  CloudOff,
+  Database,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -49,8 +56,19 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { 
+    isSyncing, 
+    syncStatus, 
+    syncAllToFirebase, 
+    resetFirestoreToMock, 
+    firestoreDbEmpty, 
+    dbStats 
+  } = useSchool();
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [syncDropdownOpen, setSyncDropdownOpen] = useState(false);
+  const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { settings } = useWebsite();
@@ -291,6 +309,134 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
+            {/* Firebase Live Cloud Connection Control */}
+            <div className="relative">
+              {syncStatus === 'pending' ? (
+                <button 
+                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-amber-500 text-white rounded-2xl text-xs md:text-sm font-bold shadow-md hover:bg-amber-600 transition-all cursor-pointer animate-pulse shrink-0"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Sync Pending</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
+                  className="flex items-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-650" />
+                  <span className="hidden sm:inline">Firebase Connected</span>
+                  <span className="sm:hidden">Ready</span>
+                </button>
+              )}
+
+              <AnimatePresence>
+                {syncDropdownOpen && (
+                  <>
+                    {/* Popover overlay backdrop to close */}
+                    <div className="fixed inset-0 z-40" onClick={() => setSyncDropdownOpen(false)} />
+                    
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-xl border border-slate-100 p-5 z-50 flex flex-col gap-4 text-slate-800"
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Database className="w-4 h-4 text-blue-600" />
+                          <h4 className="font-bold text-sm text-slate-900">Firebase Cloud Hub</h4>
+                        </div>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-bold block",
+                          syncStatus === 'pending' ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-emerald-100 text-emerald-700"
+                        )}>
+                          {syncStatus === 'pending' ? 'Desynced' : 'Ready'}
+                        </span>
+                      </div>
+
+                      {/* DB Live breakdown stats */}
+                      <div className="space-y-2 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Firestore Active Documents</span>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Students:</span>
+                            <span className="font-bold text-slate-800">{dbStats.students}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Teachers:</span>
+                            <span className="font-bold text-slate-800">{dbStats.teachers}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Admissions:</span>
+                            <span className="font-bold text-slate-800">{dbStats.onlineAdmissions}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Results:</span>
+                            <span className="font-bold text-slate-800">{dbStats.results}</span>
+                          </div>
+                          <div className="flex items-center justify-between col-span-2">
+                            <span className="text-slate-500">Sessions & Courses:</span>
+                            <span className="font-bold text-slate-800">{dbStats.sessions} S, {dbStats.courses} C</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {actionSuccessMessage && (
+                        <div className="p-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-center text-xs font-bold leading-snug">
+                          {actionSuccessMessage}
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-2.5">
+                        <button
+                          disabled={isSyncing}
+                          onClick={async () => {
+                            try {
+                              await syncAllToFirebase();
+                              setActionSuccessMessage("✓ All records pushed inside Firebase Firestore successfully!");
+                              setTimeout(() => setActionSuccessMessage(null), 4000);
+                            } catch (e: any) {
+                              alert("Sync error: " + (e.message || String(e)));
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <CloudUpload className="w-4 h-4" />
+                          {isSyncing ? "Syncing..." : "Push Data"}
+                        </button>
+
+                        <button
+                          disabled={isSyncing}
+                          onClick={async () => {
+                            if (confirm("WARNING: This will completely overwrite all remote documents in Firebase with original mock student templates. Are you sure you want to perform a full database reset?")) {
+                              try {
+                                await resetFirestoreToMock();
+                                setActionSuccessMessage("✓ Database schema has been reset to mockup templates!");
+                                setTimeout(() => setActionSuccessMessage(null), 4000);
+                              } catch (e: any) {
+                                alert("Reset error: " + (e.message || String(e)));
+                              }
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200/60 disabled:opacity-50"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Restore Clean Mock Data
+                        </button>
+                      </div>
+
+                      {syncStatus === 'pending' && (
+                        <p className="text-[10.5px] text-amber-600 font-medium leading-relaxed bg-amber-50 border border-amber-100/60 p-2.5 rounded-xl">
+                          Note: Your database is currently empty. Pages are loading client fallbacks. Press "Push Data" to write all records to cloud nodes immediately.
+                        </p>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button className="relative p-2 text-slate-500 bg-white shadow-sm border border-slate-100 md:bg-transparent md:shadow-none md:border-transparent hover:bg-slate-100 rounded-full transition-colors">
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
               <span className="absolute top-1 right-1 md:top-1.5 md:right-1.5 w-2 md:w-2.5 h-2 md:h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
