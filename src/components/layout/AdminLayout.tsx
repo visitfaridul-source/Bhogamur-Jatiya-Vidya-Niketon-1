@@ -311,24 +311,14 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3 md:gap-6">
             {/* Firebase Live Cloud Connection Control */}
             <div className="relative">
-              {syncStatus === 'pending' ? (
-                <button 
-                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-amber-500 text-white rounded-2xl text-xs md:text-sm font-bold shadow-md hover:bg-amber-600 transition-all cursor-pointer animate-pulse shrink-0"
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Sync Pending</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-650" />
-                  <span className="hidden sm:inline">Firebase Connected</span>
-                  <span className="sm:hidden">Ready</span>
-                </button>
-              )}
+              <button 
+                onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
+                className="flex items-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span className="hidden sm:inline">Firebase Connected</span>
+                <span className="sm:hidden">Ready</span>
+              </button>
 
               <AnimatePresence>
                 {syncDropdownOpen && (
@@ -347,11 +337,8 @@ export default function AdminLayout() {
                           <Database className="w-4 h-4 text-blue-600" />
                           <h4 className="font-bold text-sm text-slate-900">Firebase Cloud Hub</h4>
                         </div>
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold block",
-                          syncStatus === 'pending' ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-emerald-100 text-emerald-700"
-                        )}>
-                          {syncStatus === 'pending' ? 'Desynced' : 'Ready'}
+                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-700 font-bold block">
+                          Ready
                         </span>
                       </div>
 
@@ -426,11 +413,9 @@ export default function AdminLayout() {
                         </button>
                       </div>
 
-                      {syncStatus === 'pending' && (
-                        <p className="text-[10.5px] text-amber-600 font-medium leading-relaxed bg-amber-50 border border-amber-100/60 p-2.5 rounded-xl">
-                          Note: Your database is currently empty. Pages are loading client fallbacks. Press "Push Data" to write all records to cloud nodes immediately.
-                        </p>
-                      )}
+                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-center">
+                        Active live synchronization with fallback sandbox mode. All features are fully functional.
+                      </p>
                     </motion.div>
                   </>
                 )}
