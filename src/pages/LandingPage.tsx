@@ -181,31 +181,26 @@ export default function LandingPage() {
             </p>
             
             {/* Call to Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-4 mt-6 lg:mt-8 w-full lg:w-auto">
-              <button 
-                onClick={() => navigate('/online-admission')}
-                className="flex w-[200px] sm:w-[220px] items-center justify-center gap-2 bg-white text-slate-900 font-bold text-base sm:text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-              >
-                Online Admission
-                <ArrowRight className="w-5 h-5" />
-              </button>
+            <div className="flex flex-row flex-wrap items-center justify-center lg:justify-start gap-3 mt-6 lg:mt-8 w-full">
               <button 
                 onClick={() => navigate('/courses')}
-                className="flex w-[200px] sm:w-[220px] items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-semibold text-base sm:text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="flex items-center justify-center gap-2 bg-white text-slate-900 font-bold text-sm sm:text-base px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
               >
                 Our Courses 
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="w-4.5 h-4.5" />
               </button>
-            </div>
-            
-            {/* Mobile Action Buttons (Visible only on mobile/tablet) */}
-            <div className="flex xl:hidden flex-wrap justify-center lg:justify-start gap-4 mt-8 w-full">
-              <button onClick={() => navigate('/prospectus')} className="flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-medium py-3 px-6 rounded-full transition-all duration-300 shadow-lg border border-white/20 active:scale-95 text-sm sm:text-base">
-                <Download className="w-5 h-5" />
+              <button 
+                onClick={() => navigate('/prospectus')}
+                className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 text-white font-bold text-sm sm:text-base px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+              >
+                <Download className="w-4.5 h-4.5" />
                 Prospectus
               </button>
-              <button onClick={() => navigate('/video')} className="flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-medium py-3 px-6 rounded-full transition-all duration-300 shadow-lg border border-white/20 active:scale-95 text-sm sm:text-base">
-                <PlayCircle className="w-5 h-5" />
+              <button 
+                onClick={() => navigate('/video')}
+                className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 text-white font-bold text-sm sm:text-base px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+              >
+                <PlayCircle className="w-4.5 h-4.5" />
                 Watch Tour
               </button>
             </div>

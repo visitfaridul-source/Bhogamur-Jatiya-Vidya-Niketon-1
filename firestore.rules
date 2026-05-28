@@ -7,17 +7,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSuperAdminUid() {
+      return isSignedIn() && request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1';
+    }
+
+    function isSuperAdminEmail() {
+      return isSignedIn() && 
+             request.auth.token != null && 
+             request.auth.token.email != null && (
+               request.auth.token.email == 'bjvnhs@gmail.com' ||
+               request.auth.token.email == 'visitfaridul@gmail.com' ||
+               request.auth.token.email == 'BJVNHS@GMAIL.COM' ||
+               request.auth.token.email == 'VISITFARIDUL@GMAIL.COM'
+             );
+    }
+
     // Checking if the signed-in user is a pre-authorized master admin
     function isSuperAdmin() {
-      return isSignedIn() && (
-        request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1' ||
-        (request.auth.token != null && 'email' in request.auth.token && (
-          request.auth.token.email == 'bjvnhs@gmail.com' ||
-          request.auth.token.email == 'visitfaridul@gmail.com' ||
-          request.auth.token.email == 'BJVNHS@GMAIL.COM' ||
-          request.auth.token.email == 'VISITFARIDUL@GMAIL.COM'
-        ))
-      );
+      return isSuperAdminUid() || isSuperAdminEmail();
     }
 
     // Check if user is a Database-defined Admin
@@ -34,7 +41,13 @@ service cloud.firestore {
     // Master Override: Super Admins (including bjvnhs@gmail.com / visitfaridul@gmail.com)
     // have total write, read, delete, and update capabilities across all collections.
     match /{document=**} {
-      allow read, write: if isSuperAdmin();
+      allow read, write: if isSignedIn() && request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1';
+      allow read, write: if isSignedIn() && request.auth.token != null && request.auth.token.email != null && (
+        request.auth.token.email == 'bjvnhs@gmail.com' ||
+        request.auth.token.email == 'visitfaridul@gmail.com' ||
+        request.auth.token.email == 'BJVNHS@GMAIL.COM' ||
+        request.auth.token.email == 'VISITFARIDUL@GMAIL.COM'
+      );
     }
 
     // Individual collection rules to allow read/write for other roles as appropriate
