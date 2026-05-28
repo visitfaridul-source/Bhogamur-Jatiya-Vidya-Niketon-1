@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
             setUser({
               uid: firebaseUser.uid,
-              name: firebaseUser.displayName || 'Error Loading',
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
               role: fallbackRole,
               username: firebaseUser.email || undefined
             });
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           setUser({
             uid: firebaseUser.uid,
-            name: firebaseUser.displayName || 'Error Loading',
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             role: fallbackRole,
             username: firebaseUser.email || undefined
           });

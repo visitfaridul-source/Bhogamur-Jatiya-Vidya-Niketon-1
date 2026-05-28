@@ -16,8 +16,10 @@ service cloud.firestore {
     function isEmailAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1' ||
-        request.auth.token.get('email', '') == 'visitfaridul@gmail.com' || 
-        request.auth.token.get('email', '') == 'bjvnhs@gmail.com'
+        (request.auth.token != null && 'email' in request.auth.token && (
+          request.auth.token.email.lower() == 'visitfaridul@gmail.com' || 
+          request.auth.token.email.lower() == 'bjvnhs@gmail.com'
+        ))
       );
     }
 
@@ -25,8 +27,10 @@ service cloud.firestore {
     function isDbAdmin(uid) {
       return isSignedIn() && 
              exists(/databases/$(database)/documents/users/$(uid)) && (
-               get(/databases/$(database)/documents/users/$(uid)).data.get('role', '') == 'Super Admin' || 
-               get(/databases/$(database)/documents/users/$(uid)).data.get('role', '') == 'Admin'
+               'role' in get(/databases/$(database)/documents/users/$(uid)).data && (
+                 get(/databases/$(database)/documents/users/$(uid)).data.role == 'Super Admin' || 
+                 get(/databases/$(database)/documents/users/$(uid)).data.role == 'Admin'
+               )
              );
     }
 
