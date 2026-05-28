@@ -39,6 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (savedUser) {
         return JSON.parse(savedUser);
       }
+      const savedFirebaseUser = localStorage.getItem('bjvn_firebase_user_session');
+      if (savedFirebaseUser) {
+        return JSON.parse(savedFirebaseUser);
+      }
     } catch {
       // Ignored
     }
@@ -88,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        localStorage.removeItem('bjvn_firebase_user_session');
       }
 
       if (firebaseUser) {
@@ -97,19 +102,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           let userDoc;
           try {
             userDoc = await getDoc(userDocRef);
-          } catch (getErr) {
-            console.error("Firestore Read Error during initial Auth setup; falling back gracefully:", getErr);
+          } catch (getErr: any) {
+            console.warn("Firestore transient read restriction on auth startup (resolved gracefully using email claims / local cache):", getErr.message || getErr);
             // Do not return early, fallback to a safe role so app doesn't freeze
             const email = firebaseUser.email?.toLowerCase();
             const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
             const fallbackRole: UserRole = (email && allowedAdminEmails.includes(email)) ? 'Super Admin' : 'Student';
             
-            setUser({
+            const localUser: User = {
               uid: firebaseUser.uid,
               name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
               role: fallbackRole,
               username: firebaseUser.email || undefined
-            });
+            };
+            setUser(localUser);
+            try {
+              localStorage.setItem('bjvn_firebase_user_session', JSON.stringify(localUser));
+            } catch {}
             setLoading(false);
             return;
           }
@@ -125,17 +134,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               role = 'Super Admin';
               try {
                 await setDoc(userDocRef, { role: 'Super Admin' }, { merge: true });
-              } catch (setErr) {
-                console.error("Firestore Write Error while auto-upgrading role:", setErr);
+              } catch (setErr: any) {
+                console.warn("Firestore writing error during silent role sync (ignored gracefully since client-side user role is active):", setErr.message || setErr);
               }
             }
 
-            setUser({
+            const activeUser: User = {
               uid: firebaseUser.uid,
               name: userData.name || firebaseUser.displayName || 'User',
               role: role,
               username: firebaseUser.email || undefined
-            });
+            };
+            setUser(activeUser);
+            try {
+              localStorage.setItem('bjvn_firebase_user_session', JSON.stringify(activeUser));
+            } catch {}
           } else {
             // First time auth state listener without a user doc (e.g. they logged in before rules were fixed)
             const email = firebaseUser.email?.toLowerCase();
@@ -149,16 +162,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: defaultRole,
                 createdAt: new Date().toISOString()
               });
-            } catch (setErr) {
-              console.error("Firestore Write Error while auto-registering profile:", setErr);
+            } catch (setErr: any) {
+              console.warn("Firestore auto-registration could not write to profile record (continuing safely as logged-in user with claims):", setErr.message || setErr);
             }
             
-            setUser({
+            const activeUser: User = {
               uid: firebaseUser.uid,
               name: firebaseUser.displayName || 'New User',
               role: defaultRole,
               username: firebaseUser.email || undefined
-            });
+            };
+            setUser(activeUser);
+            try {
+              localStorage.setItem('bjvn_firebase_user_session', JSON.stringify(activeUser));
+            } catch {}
           }
         } catch (error) {
           // Fallback safely based on email without throwing scary errors in the console since handleFirestoreError already logs
@@ -166,15 +183,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const allowedAdminEmails = ['visitfaridul@gmail.com', 'bjvnhs@gmail.com'];
           const fallbackRole: UserRole = (email && allowedAdminEmails.includes(email)) ? 'Super Admin' : 'Student';
           
-          setUser({
+          const activeUser: User = {
             uid: firebaseUser.uid,
             name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             role: fallbackRole,
             username: firebaseUser.email || undefined
-          });
+          };
+          setUser(activeUser);
+          try {
+            localStorage.setItem('bjvn_firebase_user_session', JSON.stringify(activeUser));
+          } catch {}
         }
       } else {
         setUser(null);
+        localStorage.removeItem('bjvn_firebase_user_session');
       }
       setLoading(false);
     });

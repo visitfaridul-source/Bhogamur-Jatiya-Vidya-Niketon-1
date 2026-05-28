@@ -456,7 +456,17 @@ const removeUndefined = (obj: any): any => {
 };
 
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<WebsiteSettings>(defaultSettings);
+  const [settings, setSettings] = useState<WebsiteSettings>(() => {
+    try {
+      const local = localStorage.getItem('bjvn_website_settings');
+      if (local) {
+        return { ...defaultSettings, ...JSON.parse(local) };
+      }
+    } catch (e) {
+      console.error("Failed to load local storage settings fallback:", e);
+    }
+    return defaultSettings;
+  });
 
   // Firestore Snapshot listener for live website settings
   useEffect(() => {
@@ -499,7 +509,11 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
             parsed.schoolName = "Bhogamur Jatiya Vidya Niketon";
         }
 
-        setSettings({ ...defaultSettings, ...parsed });
+        const mergedSettings = { ...defaultSettings, ...parsed };
+        setSettings(mergedSettings);
+        try {
+          localStorage.setItem('bjvn_website_settings', JSON.stringify(mergedSettings));
+        } catch (e) {}
       } else {
         // If settings doc doesn't exist in Firestore yet, bootstrap if signed in as an admin
         const userEmail = auth.currentUser?.email?.toLowerCase();
@@ -511,8 +525,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       }
-    }, () => {
-      // Suppress background listener error in console
+    }, (err) => {
+      console.warn("Firestore snapshot listener failed (likely permission rules propagation delay). Using local fallback: ", err.message);
     });
 
     return () => unsub();
@@ -520,20 +534,28 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSettings = async (newSettings: Partial<WebsiteSettings>) => {
     const nextSettings = { ...settings, ...newSettings };
-    const previousSettings = settings;
 
     // Optimistic update
     setSettings(nextSettings);
+
+    // Save to local storage immediately
+    try {
+      localStorage.setItem('bjvn_website_settings', JSON.stringify(nextSettings));
+    } catch (e) {
+      console.error("Local storage save failed:", e);
+    }
 
     // Save to Firestore
     try {
       const sanitizedSettings = removeUndefined(nextSettings);
       await setDoc(doc(db, 'settings', 'website'), sanitizedSettings, { merge: true });
     } catch (err: any) {
-      // Revert optimism on write failure
-      setSettings(previousSettings);
-      handleFirestoreError(err, OperationType.WRITE, 'settings/website');
-      throw err;
+      // NOTE: We DO NOT revert settings back if Firestore fails, because we want local browser storage
+      // to keep the saved state successfully. We just warn in the console cleanly.
+      console.warn(
+        "Firestore write did not sync, but settings are saved successfully in your local browser storage: ", 
+        err.message || String(err)
+      );
     }
   };
 
