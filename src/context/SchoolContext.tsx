@@ -645,33 +645,57 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       console.log("Forcing manual complete sync to Firebase Firestore...");
       
       // 1. Students
-      for (const s of students) {
-        await setDoc(doc(db, 'students', s.id), s);
+      try {
+        for (const s of students) {
+          await setDoc(doc(db, 'students', s.id), s);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [students] (ID: ${students[0]?.id || 'N/A'}): ${err.message || err}`);
       }
       
       // 2. Teachers
-      for (const t of teachers) {
-        await setDoc(doc(db, 'teachers', t.id), t);
+      try {
+        for (const t of teachers) {
+          await setDoc(doc(db, 'teachers', t.id), t);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [teachers] (ID: ${teachers[0]?.id || 'N/A'}): ${err.message || err}`);
       }
       
       // 3. Online Admissions
-      for (const a of onlineAdmissions) {
-        await setDoc(doc(db, 'onlineAdmissions', a.id), a);
+      try {
+        for (const a of onlineAdmissions) {
+          await setDoc(doc(db, 'onlineAdmissions', a.id), a);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [onlineAdmissions] (ID: ${onlineAdmissions[0]?.id || 'N/A'}): ${err.message || err}`);
       }
       
       // 4. Results
-      for (const r of results) {
-        await setDoc(doc(db, 'results', r.id), r);
+      try {
+        for (const r of results) {
+          await setDoc(doc(db, 'results', r.id), r);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [results] (ID: ${results[0]?.id || 'N/A'}): ${err.message || err}`);
       }
       
       // 5. Sessions
-      for (const s of sessions) {
-        await setDoc(doc(db, 'sessions', s.id), s);
+      try {
+        for (const s of sessions) {
+          await setDoc(doc(db, 'sessions', s.id), s);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [sessions] (ID: ${sessions[0]?.id || 'N/A'}): ${err.message || err}`);
       }
       
       // 6. Courses
-      for (const c of courses) {
-        await setDoc(doc(db, 'courses', c.id), c);
+      try {
+        for (const c of courses) {
+          await setDoc(doc(db, 'courses', c.id), c);
+        }
+      } catch (err: any) {
+        throw new Error(`Failed writing block [courses] (ID: ${courses[0]?.id || 'N/A'}): ${err.message || err}`);
       }
 
       setDbStats({
