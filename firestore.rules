@@ -2,31 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Global safety net & Master Override for Super Admins
-    match /{document=**} {
-      allow read: if false;
-      allow write: if isSignedIn() && (
-        request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1' ||
-        request.auth.token.get('email', '') == 'visitfaridul@gmail.com' ||
-        request.auth.token.get('email', '') == 'bjvnhs@gmail.com' ||
-        request.auth.token.get('email', '') == 'VISITFARIDUL@GMAIL.COM' ||
-        request.auth.token.get('email', '') == 'BJVNHS@GMAIL.COM'
-      );
-    }
-
-    // Checking if a user is authenticated
+    // Check if user is signed in
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Check if the authenticated user has a bootstrapped admin email or known admin UID
-    function isEmailAdmin() {
+    // Checking if the signed-in user is a pre-authorized master admin
+    function isSuperAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'EepWyaNAChdn3aOYhkR2u6ME7pv1' ||
-        request.auth.token.get('email', '') == 'visitfaridul@gmail.com' ||
         request.auth.token.get('email', '') == 'bjvnhs@gmail.com' ||
-        request.auth.token.get('email', '') == 'VISITFARIDUL@GMAIL.COM' ||
-        request.auth.token.get('email', '') == 'BJVNHS@GMAIL.COM'
+        request.auth.token.get('email', '') == 'visitfaridul@gmail.com' ||
+        request.auth.token.get('email', '') == 'BJVNHS@GMAIL.COM' ||
+        request.auth.token.get('email', '') == 'VISITFARIDUL@GMAIL.COM'
       );
     }
 
@@ -41,73 +29,71 @@ service cloud.firestore {
              );
     }
 
-    // Users Collection rules
+    // Master Override: Super Admins (including bjvnhs@gmail.com / visitfaridul@gmail.com)
+    // have total write, read, delete, and update capabilities across all collections.
+    match /{document=**} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    // Individual collection rules to allow read/write for other roles as appropriate
     match /users/{userId} {
-      // Allow user to read their own profile immediately, or admins to read any profile
       allow read: if isSignedIn() && (
         request.auth.uid == userId ||
-        isEmailAdmin() ||
-        (request.auth.uid != userId && isDbAdmin(request.auth.uid))
+        isSuperAdmin() ||
+        isDbAdmin(request.auth.uid)
       );
 
       allow write: if isSignedIn() && (
-        isEmailAdmin() ||
+        isSuperAdmin() ||
         (request.auth.uid == userId && (
           // If the profile does not exist yet (create operation)
           (resource == null && (
             request.resource.data.get('role', 'Student') == 'Student' || 
             request.resource.data.get('role', '') == 'Teacher' || 
             request.resource.data.get('role', '') == 'Parent' ||
-            (request.resource.data.get('role', '') == 'Super Admin' && isEmailAdmin())
+            ((request.resource.data.get('role', '') == 'Super Admin' || request.resource.data.get('role', '') == 'Admin') && isSuperAdmin())
           )) ||
           // If profile exists (update operation), prevent role modifications for non-admins
           (resource != null && 
            request.resource.data.get('role', '') == resource.data.get('role', ''))
         )) ||
-        (request.auth.uid != userId && isDbAdmin(request.auth.uid))
+        isDbAdmin(request.auth.uid)
       );
     }
     
-    // Students Collection rules
     match /students/{studentId} {
       allow read: if isSignedIn();
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
     
-    // Teachers Collection rules
     match /teachers/{teacherId} {
       allow read: if isSignedIn();
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
 
-    // Online Admissions rules
     match /onlineAdmissions/{admissionId} {
       allow create: if true;
-      allow read, update, delete: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow read, update, delete: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
 
-    // Student Results rules
     match /results/{resultId} {
       allow read: if true;
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
 
-    // Academic Sessions rules
     match /sessions/{sessionId} {
       allow read: if true;
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
 
-    // Courses rules
     match /courses/{courseId} {
       allow read: if true;
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
 
-    // Website Settings rules
     match /settings/{settingsId} {
       allow read: if true;
-      allow write: if isEmailAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
+      allow write: if isSuperAdmin() || (isSignedIn() && isDbAdmin(request.auth.uid));
     }
   }
 }
