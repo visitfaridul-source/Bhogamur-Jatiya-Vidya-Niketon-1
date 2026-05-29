@@ -998,16 +998,64 @@ export default function Settings() {
              <div>
                <h3 className="text-md font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100">Profile & Title</h3>
                <div className="grid md:grid-cols-2 gap-6">
-                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Image URL</label>
-                    <input 
-                      type="text" 
-                      name="principalImageUrl"
-                      value={formData.principalImageUrl || ''}
-                      onChange={handleChange}
-                      placeholder="e.g. https://images.unsplash.com/..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                    />
+                 <div className="md:col-span-2 grid md:grid-cols-3 gap-6 items-start bg-slate-50/55 p-5 rounded-3xl border border-slate-100 mb-2">
+                   <div>
+                     <label className="block text-sm font-bold text-slate-700 mb-2">Browse Photo</label>
+                     <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white relative overflow-hidden group transition-colors aspect-square max-h-[140px] w-full">
+                       {formData.principalImageUrl ? (
+                         <div className="relative w-full h-full flex items-center justify-center">
+                           <img src={formData.principalImageUrl} alt="Principal" className="w-full h-full object-cover rounded-xl" />
+                           <button 
+                             type="button"
+                             onClick={() => { setFormData(prev => ({...prev, principalImageUrl: ''})); setSaved(false); }} 
+                             className="absolute top-1 right-1 bg-rose-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow-md hover:bg-rose-600 transition-colors z-10"
+                           >
+                             ×
+                           </button>
+                         </div>
+                       ) : (
+                         <>
+                           <div className="w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-1 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                             <Upload className="w-4 h-4" />
+                           </div>
+                           <p className="text-[11px] font-bold text-slate-600 leading-tight">Drag or Click</p>
+                           <p className="text-[9px] text-slate-400 mt-1">JPG, PNG up to 5MB</p>
+                         </>
+                       )}
+                       <input 
+                         type="file" 
+                         onChange={(e) => {
+                           if (e.target.files && e.target.files[0]) {
+                             const reader = new FileReader();
+                             reader.onload = (event) => {
+                               if (event.target?.result) {
+                                 setFormData(prev => ({ ...prev, principalImageUrl: event.target!.result as string }));
+                                 setSaved(false);
+                               }
+                             };
+                             reader.readAsDataURL(e.target.files[0]);
+                           }
+                         }} 
+                         accept="image/*" 
+                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                         style={{ display: formData.principalImageUrl ? 'none' : 'block' }}
+                       />
+                     </div>
+                   </div>
+                   <div className="md:col-span-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Or Paste Portrait Image URL</label>
+                      <input 
+                        type="text" 
+                        name="principalImageUrl"
+                        value={formData.principalImageUrl || ''}
+                        onChange={handleChange}
+                        placeholder="e.g. https://images.unsplash.com/..."
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                      <p className="text-xs text-slate-400 mt-2.5 leading-relaxed">
+                        You can upload a local portrait photo directly or paste an external image link. The uploaded photograph will be displayed on the public Principal Message page.
+                      </p>
+                   </div>
                  </div>
                  <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Name</label>
