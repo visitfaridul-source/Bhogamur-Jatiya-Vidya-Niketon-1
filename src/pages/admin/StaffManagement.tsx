@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useWebsite, WebsiteStaffMember } from '../../context/WebsiteContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Briefcase, Mail, Phone, Link as LinkIcon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function StaffManagement() {
   const { settings, updateSettings } = useWebsite();
+  const { confirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -110,7 +112,14 @@ export default function StaffManagement() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to remove this staff member?')) {
+    const isConfirmed = await confirm({
+      title: 'Remove Staff Profile',
+      message: 'Are you sure you want to remove this staff member? This action will permanently remove their profile card from the website.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       const updatedStaff = staff.filter(s => s.id !== id);
       setPageError(null);
       try {

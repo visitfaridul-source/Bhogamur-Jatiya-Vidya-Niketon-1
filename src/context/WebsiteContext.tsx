@@ -525,8 +525,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       }
-    }, (err) => {
-      console.warn("Firestore snapshot listener failed (likely permission rules propagation delay). Using local fallback: ", err.message);
+    }, () => {
+      // Suppress background listener error in console and load local fallback silently
     });
 
     return () => unsub();

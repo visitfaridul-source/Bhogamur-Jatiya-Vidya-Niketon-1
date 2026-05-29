@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Shield, ShieldAlert, Plus, Edit, Trash2, CheckCircle2, XCircle, Search, Users, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 import { Navigate } from 'react-router-dom';
 
 interface RolePermission {
@@ -31,6 +32,7 @@ const availablePermissions = [
 
 export default function Roles() {
   const { user } = useAuth();
+  const { confirm } = useConfirm();
   const [roles, setRoles] = useState(defaultRoles);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RolePermission | null>(null);
@@ -63,8 +65,15 @@ export default function Roles() {
     setEditingRole(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this role?')) {
+  const handleDelete = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Role',
+      message: 'Are you sure you want to delete this role? Users assigned to this role might lose their permissions.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setRoles(roles.filter(r => r.id !== id));
     }
   };

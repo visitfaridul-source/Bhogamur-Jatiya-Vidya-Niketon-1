@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 import { Download, Check, X, Search, Filter, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function AdmissionData() {
   const { onlineAdmissions, setOnlineAdmissions, setStudents } = useSchool();
+  const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -71,14 +73,28 @@ export default function AdmissionData() {
     }
   };
 
-  const handleDeleteAdmission = (id: string) => {
-    if (window.confirm('Are you sure you want to permanently delete this admission request?')) {
+  const handleDeleteAdmission = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Admission Request',
+      message: 'Are you sure you want to permanently delete this admission request? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setOnlineAdmissions(prev => prev.filter(a => a.id !== id));
     }
   };
 
-  const handleClearAll = () => {
-    if (window.confirm('⚠️ WARNING: This will permanently delete ALL online admission request records! This action cannot be undone. Are you sure you want to proceed?')) {
+  const handleClearAll = async () => {
+    const isConfirmed = await confirm({
+      title: 'Clear All Admission Requests',
+      message: '⚠️ WARNING: All online admission request records will be permanently deleted! This action is irreversible and cannot be undone. Are you sure you want to proceed?',
+      variant: 'danger',
+      confirmLabel: 'Delete All',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setOnlineAdmissions([]);
     }
   };

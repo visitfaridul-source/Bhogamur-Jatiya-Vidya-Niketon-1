@@ -4,9 +4,11 @@ import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Download, Upload, IdC
 import { QRCodeSVG } from 'qrcode.react';
 import * as XLSX from 'xlsx';
 import { useSchool } from '../../context/SchoolContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 
 export default function Students() {
   const { students, setStudents } = useSchool();
+  const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
@@ -265,8 +267,15 @@ export default function Students() {
     XLSX.writeFile(wb, "Classwise_Students_List.xlsx");
   };
 
-  const handleDeleteStudent = (id: string) => {
-    if (confirm('Are you sure you want to delete this student?')) {
+  const handleDeleteStudent = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Student',
+      message: 'Are you sure you want to delete this student? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setStudents(prev => prev.filter(s => s.id !== id));
     }
   };
@@ -790,9 +799,16 @@ export default function Students() {
                   <p className="text-sm text-slate-500 mt-1">Copy rows from Excel or Google Sheets and paste (Ctrl+V) directly into any cell below. You can also edit manually.</p>
                </div>
                <button 
-                 onClick={() => {
+                 onClick={async () => {
                    if (parsedBulkStudents.length > 0) {
-                     if (confirm('Are you sure you want to close? Your pasted data will be lost.')) {
+                     const isConfirmed = await confirm({
+                       title: 'Discard Changes',
+                       message: 'Are you sure you want to close? Your pasted data will be lost.',
+                       variant: 'warning',
+                       confirmLabel: 'Close Anyway',
+                       cancelLabel: 'Keep Editing'
+                     });
+                     if (isConfirmed) {
                        setShowBulkPasteModal(false);
                      }
                    } else {
@@ -851,8 +867,15 @@ export default function Students() {
                       Add 15 Rows
                     </button>
                     <button 
-                      onClick={() => {
-                        if (confirm('Are you sure you want to clear the entry grid?')) {
+                      onClick={async () => {
+                        const isConfirmed = await confirm({
+                          title: 'Clear Grid',
+                          message: 'Are you sure you want to clear the entry grid?',
+                          variant: 'danger',
+                          confirmLabel: 'Clear',
+                          cancelLabel: 'Cancel'
+                        });
+                        if (isConfirmed) {
                           setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
                         }
                       }}
@@ -953,9 +976,16 @@ export default function Students() {
              {/* Footer */}
              <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0 rounded-b-3xl">
                <button 
-                 onClick={() => {
+                 onClick={async () => {
                    if (parsedBulkStudents.length > 0) {
-                     if (confirm('Are you sure you want to close? Your pasted data will be lost.')) {
+                     const isConfirmed = await confirm({
+                       title: 'Discard Changes',
+                       message: 'Are you sure you want to close? Your pasted data will be lost.',
+                       variant: 'warning',
+                       confirmLabel: 'Close Anyway',
+                       cancelLabel: 'Keep Editing'
+                     });
+                     if (isConfirmed) {
                        setShowBulkPasteModal(false);
                      }
                    } else {

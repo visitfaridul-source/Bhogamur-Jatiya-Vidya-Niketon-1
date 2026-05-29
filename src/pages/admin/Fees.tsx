@@ -4,11 +4,13 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSchool } from '@/context/SchoolContext';
 import { useWebsite } from '@/context/WebsiteContext';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const initialMockTransactions: any[] = [];
 
 export default function Fees() {
   const { settings } = useWebsite();
+  const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
   const { students } = useSchool();
@@ -57,8 +59,15 @@ export default function Fees() {
     setEditTx(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction record?')) {
+  const handleDelete = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Transaction Record',
+      message: 'Are you sure you want to delete this transaction record? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       const updated = transactions.filter((tx) => tx.id !== id);
       setTransactions(updated);
       localStorage.setItem('bhogamur_fees_transactions', JSON.stringify(updated));

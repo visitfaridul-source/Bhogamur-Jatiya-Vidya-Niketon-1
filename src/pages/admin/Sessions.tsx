@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useSchool } from '@/context/SchoolContext';
+import { useConfirm } from '@/context/ConfirmationContext';
 import { Plus, Edit2, CheckCircle, Trash2, Calendar, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Sessions() {
   const { sessions, setSessions } = useSchool();
+  const { confirm } = useConfirm();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -32,16 +34,33 @@ export default function Sessions() {
     setShowAddForm(false);
   };
 
-  const deleteSession = (id: string) => {
-    setSessions(sessions.filter(s => s.id !== id));
+  const deleteSession = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Session',
+      message: 'Are you sure you want to delete this session? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
+      setSessions(sessions.filter(s => s.id !== id));
+    }
   };
 
-  const makeActive = (id: string) => {
-    window.confirm('Are you sure you want to change the active session? This may affect currently displayed data across the application.');
-    setSessions(sessions.map(s => ({
-      ...s,
-      isActive: s.id === id
-    })));
+  const makeActive = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Change Active Session',
+      message: 'Are you sure you want to change the active session? This may affect currently displayed data across the application.',
+      variant: 'warning',
+      confirmLabel: 'Set Active',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
+      setSessions(sessions.map(s => ({
+        ...s,
+        isActive: s.id === id
+      })));
+    }
   };
 
   return (

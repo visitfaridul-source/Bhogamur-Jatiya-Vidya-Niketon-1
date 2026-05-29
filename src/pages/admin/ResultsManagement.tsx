@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSchool, StudentResult, SubjectMark } from '../../context/SchoolContext';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 import { Search, Plus, Edit2, Trash2, CheckCircle2, XCircle, FileSpreadsheet, ChevronDown, Download, Award, BookOpen, Printer, Sparkles, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
@@ -21,6 +22,7 @@ export default function ResultsManagement() {
   const { user } = useAuth();
   const isStudentOrParent = user?.role === 'Student' || user?.role === 'Parent';
   const { results, setResults, students } = useSchool();
+  const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -425,8 +427,15 @@ export default function ResultsManagement() {
     handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this result?')) {
+  const handleDelete = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Student Result',
+      message: 'Are you sure you want to delete this class results record? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setResults(results.filter(r => r.id !== id));
     }
   };
@@ -1106,8 +1115,15 @@ export default function ResultsManagement() {
 
                           {gridData[0].length > 1 && (
                             <button
-                              onClick={() => {
-                                if (window.confirm(`Delete column "${cell || ci + 1}"?`)) {
+                              onClick={async () => {
+                                const isConfirmed = await confirm({
+                                  title: 'Delete Column',
+                                  message: `Are you sure you want to delete column "${cell || ci + 1}"? This will delete all marks entered in this column.`,
+                                  variant: 'danger',
+                                  confirmLabel: 'Delete Column',
+                                  cancelLabel: 'Cancel'
+                                });
+                                if (isConfirmed) {
                                   const newGrid = gridData.map(r => {
                                     const newRow = [...r];
                                     newRow.splice(ci, 1);
@@ -1289,8 +1305,17 @@ export default function ResultsManagement() {
 
                 <div className="flex-1"></div>
                 <button
-                  onClick={() => {
-                    if(window.confirm('Clear all data?')) setGridData(initialGrid());
+                  onClick={async () => {
+                    const isConfirmed = await confirm({
+                      title: 'Clear Grid Data',
+                      message: 'Are you sure you want to clear all rows and columns in the entry grid? You will lose any unsaved data.',
+                      variant: 'danger',
+                      confirmLabel: 'Clear All',
+                      cancelLabel: 'Cancel'
+                    });
+                    if (isConfirmed) {
+                      setGridData(initialGrid());
+                    }
                   }}
                   className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors shrink-0"
                 >
@@ -1743,8 +1768,15 @@ export default function ResultsManagement() {
                         </div>
 
                         <button
-                          onClick={() => {
-                            if (window.confirm('This will wipe all currently unsaved modifications on this screen and restore database records. Proceed?')) {
+                          onClick={async () => {
+                            const isConfirmed = await confirm({
+                              title: 'Reset Modifications',
+                              message: 'This will wipe all currently unsaved modifications on this screen and restore database records. Do you want to proceed?',
+                              variant: 'warning',
+                              confirmLabel: 'Reset Grid',
+                              cancelLabel: 'Cancel'
+                            });
+                            if (isConfirmed) {
                               pullEntryData();
                             }
                           }}

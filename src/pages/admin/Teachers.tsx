@@ -2,9 +2,11 @@ import React, { useState, useRef } from 'react';
 import { Search, Plus, Filter, MoreVertical, Mail, Phone, BookOpen, UserPlus, X, Upload, PencilLine } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useSchool } from '../../context/SchoolContext';
+import { useConfirm } from '../../context/ConfirmationContext';
 
 export default function Teachers() {
   const { teachers, setTeachers } = useSchool();
+  const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddTeacherModalOpen, setIsAddTeacherModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any>(null);
@@ -73,8 +75,15 @@ export default function Teachers() {
     setPhotoPreview(null);
   };
 
-  const handleDeleteTeacher = (id: string) => {
-    if (confirm('Are you sure you want to delete this teacher?')) {
+  const handleDeleteTeacher = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Teacher',
+      message: 'Are you sure you want to delete this teacher? This action will remove their profile record.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setTeachers(prev => prev.filter(t => t.id !== id));
     }
   };

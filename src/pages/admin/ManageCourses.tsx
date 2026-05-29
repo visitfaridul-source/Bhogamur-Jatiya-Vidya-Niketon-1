@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, Link as LinkIcon, FileText, Video, Eye, Settings, BookOpen, Download } from 'lucide-react';
 import { useSchool, Course, CourseMaterial } from '@/context/SchoolContext';
 import { useAuth } from '@/context/AuthContext';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function ManageCourses() {
   const { user } = useAuth();
+  const { confirm } = useConfirm();
   const isStudentOrParent = user?.role === 'Student' || user?.role === 'Parent';
   const { courses, setCourses } = useSchool();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,8 +73,15 @@ export default function ManageCourses() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteCourse = (id: string) => {
-    if (confirm('Are you sure you want to delete this course?')) {
+  const handleDeleteCourse = async (id: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Course',
+      message: 'Are you sure you want to delete this course? This action will remove the course and all associated lessons and study materials.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setCourses(courses.filter(c => c.id !== id));
     }
   };
@@ -116,8 +125,15 @@ export default function ManageCourses() {
     setIsMaterialModalOpen(false);
   };
 
-  const handleDeleteMaterial = (courseId: string, materialId: string) => {
-    if (confirm('Are you sure you want to delete this material?')) {
+  const handleDeleteMaterial = async (courseId: string, materialId: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Material',
+      message: 'Are you sure you want to delete this study material?',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
       setCourses(courses.map(c => {
         if (c.id === courseId) {
           return { ...c, materials: c.materials.filter(m => m.id !== materialId) };

@@ -43,12 +43,14 @@ import OnlineClassesPage from './pages/OnlineClassesPage';
 import VirtualClassroom from './pages/VirtualClassroom';
 import FeeStructurePage from './pages/FeeStructurePage';
 import { AuthProvider } from './context/AuthContext';
+import { ConfirmationProvider } from './context/ConfirmationContext';
 
 export default function App() {
   return (
     <AuthProvider>
-      <WebsiteProvider>
-      <SchoolProvider>
+      <ConfirmationProvider>
+        <WebsiteProvider>
+        <SchoolProvider>
         <HashRouter>
           <Suspense fallback={<div className="flex h-screen w-full items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div></div>}>
             <Routes>
@@ -94,6 +96,7 @@ export default function App() {
         </HashRouter>
       </SchoolProvider>
     </WebsiteProvider>
+      </ConfirmationProvider>
     </AuthProvider>
   );
 }
