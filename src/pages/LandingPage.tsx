@@ -205,6 +205,53 @@ export default function LandingPage() {
               </button>
             </div>
 
+            {/* Principal & Vice Principal Quick Cards for Mobile/Tablet (Visible on < xl) */}
+            <div className="flex xl:hidden flex-wrap items-center justify-center lg:justify-start gap-4 mt-8 w-full border-t border-white/10 pt-6">
+              {/* Principal Card */}
+              <div 
+                onClick={() => navigate('/prospectus')}
+                className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-white/10 hover:border-amber-400/30 cursor-pointer active:scale-95 transition-all w-[240px] max-w-full text-left"
+              >
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-amber-400/50 shrink-0">
+                  <img 
+                    src={settings.principalHeroImage || settings.principalImageUrl || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200"} 
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover" 
+                    alt="Principal" 
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10.5px] font-bold text-amber-300 tracking-wider uppercase leading-none">Principal</p>
+                  <p className="text-xs font-black text-white/95 truncate leading-snug mt-1">{settings.principalHeroName || settings.principalName || "Dr. S. K. Sharma"}</p>
+                  <p className="text-[10px] text-white/60 font-bold flex items-center gap-1 mt-0.5">
+                    Prospectus PDF <Download className="w-3 h-3 text-amber-300" />
+                  </p>
+                </div>
+              </div>
+
+              {/* Vice Principal Card */}
+              <div 
+                onClick={() => navigate('/video')}
+                className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-white/10 hover:border-blue-400/30 cursor-pointer active:scale-95 transition-all w-[240px] max-w-full text-left"
+              >
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-blue-400/50 shrink-0">
+                  <img 
+                    src={settings.vicePrincipalHeroImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"} 
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover" 
+                    alt="Vice Principal" 
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10.5px] font-bold text-blue-300 tracking-wider uppercase leading-none">Vice Principal</p>
+                  <p className="text-xs font-black text-white/95 truncate leading-snug mt-1">{settings.vicePrincipalHeroName || "Pranjal Dutta"}</p>
+                  <p className="text-[10px] text-white/60 font-bold flex items-center gap-1 mt-0.5">
+                    Watch Video Tour <PlayCircle className="w-3 h-3 text-blue-300" />
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </motion.div>
 
           {/* Right Column: Hero Visuals / Gallery Grid */}
@@ -217,14 +264,29 @@ export default function LandingPage() {
             {/* Glowing Gallery Grid Section with Side Buttons integrated for desktop */}
             <div className="flex flex-row items-center justify-center gap-4 xl:gap-8 w-full z-10 relative">
               
-              {/* Left Button (Desktop) */}
+              {/* Left Button (Desktop) - Principal with Prospectus info */}
               <div className="hidden xl:flex flex-col items-center justify-center shrink-0 -mr-6 z-20">
-                <button onClick={() => navigate('/prospectus')} className="group flex flex-col items-center justify-center gap-3 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-5 rounded-3xl transition-all duration-500 shadow-2xl border border-white/20 hover:-translate-x-2">
-                   <div className="w-12 h-12 rounded-full bg-slate-900/40 flex items-center justify-center group-hover:bg-slate-900/60 transition-colors shadow-inner">
-                      <Download className="w-5 h-5 text-white" />
+                <div 
+                  onClick={() => navigate('/prospectus')} 
+                  className="group flex flex-col items-center justify-center gap-2.5 bg-slate-900/80 backdrop-blur-md hover:bg-slate-900/95 text-white p-4 rounded-[2rem] transition-all duration-500 shadow-2xl border border-white/15 hover:-translate-x-2 hover:border-amber-400/30 cursor-pointer w-[130px] text-center"
+                >
+                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/60 shadow-lg group-hover:scale-105 transition-all duration-500">
+                      <img 
+                        src={settings.principalHeroImage || settings.principalImageUrl || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300"} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover animate-fade-in" 
+                        alt="Principal" 
+                      />
                    </div>
-                   <span className="text-xs font-bold uppercase tracking-widest max-w-[100px] text-center leading-tight text-white/90">Get Prospectus</span>
-                </button>
+                   <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-bold text-amber-300 tracking-wide uppercase">Principal</span>
+                      <span className="text-[11px] font-black text-white/95 truncate max-w-[105px] leading-tight block">{settings.principalHeroName || settings.principalName || "Dr. S. K. Sharma"}</span>
+                   </div>
+                   <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-amber-400 group-hover:text-slate-900 text-amber-300 transition-all duration-300 shadow-inner">
+                      <Download className="w-4 h-4" />
+                   </div>
+                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/80 group-hover:text-amber-300 transition-colors">Prospectus</span>
+                </div>
               </div>
 
               {/* Elegant Gallery Container */}
@@ -279,7 +341,35 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Button (Desktop) */}
+              {/* Right Button (Desktop) - Vice Principal with Watch Video info */}
+              <div className="hidden xl:flex flex-col items-center justify-center shrink-0 -ml-6 z-20">
+                 <div 
+                   onClick={() => navigate('/video')} 
+                   className="group flex flex-col items-center justify-center gap-2.5 bg-slate-900/80 backdrop-blur-md hover:bg-slate-900/95 text-white p-4 rounded-[2rem] transition-all duration-500 shadow-2xl border border-white/15 hover:translate-x-2 hover:border-blue-400/30 cursor-pointer w-[130px] text-center"
+                 >
+                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-blue-400/60 shadow-lg group-hover:scale-105 transition-all duration-500 mx-auto">
+                      <img 
+                        src={settings.vicePrincipalHeroImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300"} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover animate-fade-in" 
+                        alt="Vice Principal" 
+                      />
+                   </div>
+                   <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-bold text-blue-300 tracking-wide uppercase leading-tight">Vice Principal</span>
+                      <span className="text-[11px] font-black text-white/95 truncate max-w-[105px] leading-tight block">{settings.vicePrincipalHeroName || "Pranjal Dutta"}</span>
+                   </div>
+                   <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-blue-400 group-hover:text-slate-900 text-blue-300 transition-all duration-300 shadow-inner mx-auto">
+                      <PlayCircle className="w-4 h-4" />
+                   </div>
+                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/80 group-hover:text-blue-300 transition-colors">Watch Tour</span>
+                 </div>
+              </div>
+
+            </div>
+
+            {/* Disabled Old Button */}
+            <div className="hidden">
               <div className="hidden xl:flex flex-col items-center justify-center shrink-0 -ml-6 z-20">
                  <button onClick={() => navigate('/video')} className="group flex flex-col items-center justify-center gap-3 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-5 rounded-3xl transition-all duration-500 shadow-2xl border border-white/20 hover:translate-x-2">
                    <div className="w-12 h-12 rounded-full bg-slate-900/40 flex items-center justify-center group-hover:bg-slate-900/60 transition-colors shadow-inner">

@@ -165,6 +165,12 @@ export interface WebsiteSettings {
   principalMessageQuote?: string;
   principalMessageBody?: string;
   
+  // Hero Profiles
+  principalHeroImage?: string;
+  principalHeroName?: string;
+  vicePrincipalHeroImage?: string;
+  vicePrincipalHeroName?: string;
+  
   // Login Sidebar
   watermarkUrl?: string;
   
@@ -382,6 +388,10 @@ const defaultSettings: WebsiteSettings = {
   galleryImages: [],
   principalImageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
   principalName: "Dr. S. K. Sharma",
+  principalHeroImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+  principalHeroName: "Dr. S. K. Sharma",
+  vicePrincipalHeroImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+  vicePrincipalHeroName: "Pranjal Dutta",
   principalTitle: "Principal",
   principalMessageTitle: "From the Principal's Desk",
   principalMessageQuote: "Education is not just about academic excellence, but about nurturing character, creativity, and compassion in every child.",

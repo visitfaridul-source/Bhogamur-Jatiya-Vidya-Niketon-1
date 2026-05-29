@@ -550,7 +550,84 @@ export default function Settings() {
                </div>
              </div>
 
-             {/* Updates & Notifications Section */}
+             {/* Hero Action Card Profiles (Principal & Vice Principal) */}
+                <div className="pt-6 mt-6 border-t border-slate-100">
+                  <h3 className="text-md font-bold text-slate-800 mb-2 flex items-center gap-2 font-sans">
+                    <div className="w-2 h-2 rounded-full bg-amber-500"></div> 
+                    Hero Action Card Profiles
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-4 font-medium font-sans">
+                    Customize the photographs and names of the Principal and Vice Principal shown inside the "Get Prospectus" and "Watch Tour" cards on the Hero Section.
+                  </p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Principal Hero Info */}
+                    <div className="bg-amber-50/40 p-5 rounded-2xl border border-amber-100 space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-amber-100 font-sans">
+                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                        <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wider">Principal Card (Left)</h4>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5 font-sans">Principal Display Name</label>
+                          <input 
+                            type="text" 
+                            name="principalHeroName"
+                            value={formData.principalHeroName || ''}
+                            onChange={handleChange}
+                            placeholder="e.g. Dr. S. K. Sharma"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5 font-sans">Principal Portrait Photo URL</label>
+                          <input 
+                            type="text" 
+                            name="principalHeroImage"
+                            value={formData.principalHeroImage || ''}
+                            onChange={handleChange}
+                            placeholder="Paste portrait image URL here..."
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vice Principal Hero Info */}
+                    <div className="bg-blue-50/40 p-5 rounded-2xl border border-blue-100 space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-blue-100 font-sans">
+                        <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <h4 className="text-sm font-bold text-blue-900 uppercase tracking-wider">Vice Principal Card (Right)</h4>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5 font-sans">Vice Principal Display Name</label>
+                          <input 
+                            type="text" 
+                            name="vicePrincipalHeroName"
+                            value={formData.vicePrincipalHeroName || ''}
+                            onChange={handleChange}
+                            placeholder="e.g. Mr. Pranjal Dutta"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5 font-sans">Vice Principal Portrait Photo URL</label>
+                          <input 
+                            type="text" 
+                            name="vicePrincipalHeroImage"
+                            value={formData.vicePrincipalHeroImage || ''}
+                            onChange={handleChange}
+                            placeholder="Paste portrait image URL here..."
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              {/* Updates & Notifications Section */}
              <div>
                <h3 className="text-md font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Updates & Notifications Section</h3>
                <div className="grid gap-6">
