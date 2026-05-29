@@ -372,7 +372,7 @@ export default function StaffManagement() {
                     className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition flex items-center gap-2"
                   >
                     {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />}
-                    {isSaving ? 'Saving Profile...' : 'Save Profile'}
+                    {isSaving ? (editingId ? 'Saving Changes...' : 'Saving Profile...') : (editingId ? 'Save Changes' : 'Save Profile')}
                   </button>
                 </div>
               </motion.div>
