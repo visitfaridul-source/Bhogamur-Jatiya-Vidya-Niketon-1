@@ -366,6 +366,18 @@ export default function AdminLayout() {
                             <span className="text-slate-500">Sessions & Courses:</span>
                             <span className="font-bold text-slate-800">{dbStats.sessions} S, {dbStats.courses} C</span>
                           </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Attendance:</span>
+                            <span className="font-bold text-slate-800">{dbStats.attendance || 0} Recs</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">Fee Receipts:</span>
+                            <span className="font-bold text-slate-800">{dbStats.fees || 0} Txns</span>
+                          </div>
+                          <div className="flex items-center justify-between col-span-2">
+                            <span className="text-slate-500">Calendar Events:</span>
+                            <span className="font-bold text-slate-800">{dbStats.events || 0} Scheduled</span>
+                          </div>
                         </div>
                       </div>
 

@@ -23,6 +23,15 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read, write: if true;
     }
+    match /attendance/{docId} {
+      allow read, write: if true;
+    }
+    match /fees/{docId} {
+      allow read, write: if true;
+    }
+    match /events/{docId} {
+      allow read, write: if true;
+    }
     match /users/{docId} {
       allow read, write: if true;
     }

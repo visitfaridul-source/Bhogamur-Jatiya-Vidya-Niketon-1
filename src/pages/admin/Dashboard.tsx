@@ -38,7 +38,14 @@ const historicalRevenueData = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { students, setStudents, teachers, onlineAdmissions, setOnlineAdmissions } = useSchool();
+  const { 
+    students, setStudents, teachers, onlineAdmissions, setOnlineAdmissions,
+    feesTransactions: transactions,
+    schoolEvents: events,
+    attendanceMap,
+    saveSchoolEvent,
+    deleteSchoolEvent
+  } = useSchool();
   const { settings } = useWebsite();
 
   // Selected Year for Chart Filter
@@ -49,40 +56,9 @@ export default function Dashboard() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAttendanceChoiceOpen, setIsAttendanceChoiceOpen] = useState(false);
 
-  // Load live fee transactions from localStorage, which matches the Fees billing system
-  const [transactions] = useState<any[]>(() => {
-    const saved = localStorage.getItem('bhogamur_fees_transactions');
-    try {
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      const mockIds = ['INV-2023-001', 'INV-2023-002', 'INV-2023-003', 'INV-2023-004', 'INV-2023-005'];
-      return parsed.filter((tx: any) => !mockIds.includes(tx.id));
-    } catch (e) {
-      return [];
-    }
-  });
-
-  // Dynamic school events state
-  const [events, setEvents] = useState<any[]>(() => {
-    const saved = localStorage.getItem('bhogamur_school_events');
-    try {
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
-
   // Dynamic Attendance week indicator chart calculation
   const dynamicAttendanceData = useMemo(() => {
-    const saved = localStorage.getItem('bhogamur_attendance_registry');
-    let registry: Record<string, any> = {};
-    if (saved) {
-      try {
-        registry = JSON.parse(saved);
-      } catch (e) {
-        // ignore
-      }
-    }
+    const registry = attendanceMap || {};
 
     const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
     const current = new Date();
@@ -115,7 +91,7 @@ export default function Dashboard() {
         absent: absentCount
       };
     });
-  }, [students, teachers]);
+  }, [students, teachers, attendanceMap]);
 
 
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -131,16 +107,12 @@ export default function Dashboard() {
       date: newEventDate,
       type: newEventType
     };
-    const updated = [...events, item];
-    setEvents(updated);
-    localStorage.setItem('bhogamur_school_events', JSON.stringify(updated));
+    saveSchoolEvent(item);
     setNewEventTitle('');
   };
 
   const handleDeleteEvent = (id: string) => {
-    const updated = events.filter(ev => ev.id !== id);
-    setEvents(updated);
-    localStorage.setItem('bhogamur_school_events', JSON.stringify(updated));
+    deleteSchoolEvent(id);
   };
 
   // Calculate dynamic fees totals

@@ -17,7 +17,7 @@ const initialMockAttendance = [
 type ActiveTab = 'overview' | 'qr' | 'face';
 
 export default function Attendance() {
-  const { students, teachers } = useSchool();
+  const { students, teachers, attendanceMap, saveAttendanceRecord } = useSchool();
   const { settings } = useWebsite();
   const [memberType, setMemberType] = useState<'Student' | 'Teacher' | 'Other Staff'>('Student');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -30,94 +30,24 @@ export default function Attendance() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<any>(null);
 
-  // Persistent daily manual attendance registry
-  const [attendanceMap, setAttendanceMap] = useState<Record<string, { status: 'Present' | 'Absent' | 'Late'; remarks: string }>>(() => {
-    const saved = localStorage.getItem('bhogamur_attendance_registry');
-    try {
-      return saved ? JSON.parse(saved) : {};
-    } catch (e) {
-      return {};
-    }
-  });
-
   const handleUpdateAttendanceStatus = (id: string, newStatus: 'Present' | 'Absent' | 'Late') => {
-    setAttendanceMap(prev => {
-      const key = `${date}:${id}`;
-      const record = prev[key] || { status: 'Present', remarks: '' };
-      const updated = {
-        ...prev,
-        [key]: {
-          ...record,
-          status: newStatus
-        }
-      };
-      localStorage.setItem('bhogamur_attendance_registry', JSON.stringify(updated));
-      return updated;
-    });
+    saveAttendanceRecord(id, date, { status: newStatus });
   };
 
   const handleUpdateRemarks = (id: string, text: string) => {
-    setAttendanceMap(prev => {
-      const key = `${date}:${id}`;
-      const record = prev[key] || { status: 'Present', remarks: '' };
-      const updated = {
-        ...prev,
-        [key]: {
-          ...record,
-          remarks: text
-        }
-      };
-      localStorage.setItem('bhogamur_attendance_registry', JSON.stringify(updated));
-      return updated;
-    });
+    saveAttendanceRecord(id, date, { remarks: text });
   };
 
   const handleUpdateInTime = (id: string, text: string) => {
-    setAttendanceMap(prev => {
-      const key = `${date}:${id}`;
-      const record = prev[key] || { status: 'Present', remarks: '', inTime: '', outTime: '', earlyOutReason: '' };
-      const updated = {
-        ...prev,
-        [key]: {
-          ...record,
-          inTime: text
-        }
-      };
-      localStorage.setItem('bhogamur_attendance_registry', JSON.stringify(updated));
-      return updated;
-    });
+    saveAttendanceRecord(id, date, { inTime: text });
   };
 
   const handleUpdateOutTime = (id: string, text: string) => {
-    setAttendanceMap(prev => {
-      const key = `${date}:${id}`;
-      const record = prev[key] || { status: 'Present', remarks: '', inTime: '', outTime: '', earlyOutReason: '' };
-      const updated = {
-        ...prev,
-        [key]: {
-          ...record,
-          outTime: text
-        }
-      };
-      localStorage.setItem('bhogamur_attendance_registry', JSON.stringify(updated));
-      return updated;
-    });
+    saveAttendanceRecord(id, date, { outTime: text });
   };
 
   const handleUpdateEarlyOutReason = (id: string, text: string) => {
-    setAttendanceMap(prev => {
-      const key = `${date}:${id}`;
-      const record = prev[key] || { status: 'Present', remarks: '', inTime: '', outTime: '', earlyOutReason: '' };
-      const updated = {
-        ...prev,
-        [key]: {
-          ...record,
-          earlyOutReason: text
-        }
-      };
-      localStorage.setItem('bhogamur_attendance_registry', JSON.stringify(updated));
-      return updated;
-    });
+    saveAttendanceRecord(id, date, { earlyOutReason: text });
   };
 
   const currentLevelStats = useMemo(() => {

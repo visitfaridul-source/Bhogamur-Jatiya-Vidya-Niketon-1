@@ -13,24 +13,8 @@ export default function Fees() {
   const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
-  const { students } = useSchool();
+  const { students, feesTransactions: transactions, saveFeeTransaction, deleteFeeTransaction } = useSchool();
   
-  const [transactions, setTransactions] = useState<any[]>(() => {
-    const saved = localStorage.getItem('bhogamur_fees_transactions');
-    try {
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      const mockIds = ['INV-2023-001', 'INV-2023-002', 'INV-2023-003', 'INV-2023-004', 'INV-2023-005'];
-      const filtered = parsed.filter((tx: any) => !mockIds.includes(tx.id));
-      if (filtered.length !== parsed.length) {
-        localStorage.setItem('bhogamur_fees_transactions', JSON.stringify(filtered));
-      }
-      return filtered;
-    } catch (e) {
-      return [];
-    }
-  });
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTx, setEditTx] = useState<any>(null);
 
@@ -44,17 +28,11 @@ export default function Fees() {
   };
 
   const saveEditModal = () => {
-    const updated = transactions.map((tx) => {
-      if (tx.id === editTx.id) {
-        return { 
-          ...editTx, 
-          amount: Number(editTx.amount) || 0 
-        };
-      }
-      return tx;
-    });
-    setTransactions(updated);
-    localStorage.setItem('bhogamur_fees_transactions', JSON.stringify(updated));
+    const updatedTx = {
+      ...editTx,
+      amount: Number(editTx.amount) || 0
+    };
+    saveFeeTransaction(updatedTx);
     setIsEditModalOpen(false);
     setEditTx(null);
   };
@@ -68,9 +46,7 @@ export default function Fees() {
       cancelLabel: 'Cancel'
     });
     if (isConfirmed) {
-      const updated = transactions.filter((tx) => tx.id !== id);
-      setTransactions(updated);
-      localStorage.setItem('bhogamur_fees_transactions', JSON.stringify(updated));
+      deleteFeeTransaction(id);
     }
   };
   
@@ -120,6 +96,7 @@ export default function Fees() {
       const newTx = {
         id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
         student: selectedStudent.name,
+        studentId: selectedStudent.id || '',
         class: selectedStudent.class,
         amount: totalFee,
         date: new Date().toISOString(),
@@ -127,9 +104,7 @@ export default function Fees() {
         status: 'Paid',
         mode: paymentMode
       };
-      const updated = [newTx, ...transactions];
-      setTransactions(updated);
-      localStorage.setItem('bhogamur_fees_transactions', JSON.stringify(updated));
+      saveFeeTransaction(newTx);
     }
     setReceiptGenerated(true);
   };

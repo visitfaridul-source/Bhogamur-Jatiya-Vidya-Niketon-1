@@ -132,7 +132,18 @@ interface SchoolContextType {
     results: number;
     sessions: number;
     courses: number;
+    attendance: number;
+    fees: number;
+    events: number;
   };
+  attendanceMap: Record<string, { status: 'Present' | 'Absent' | 'Late'; remarks: string; inTime?: string; outTime?: string; earlyOutReason?: string }>;
+  saveAttendanceRecord: (memberId: string, date: string, fields: { status?: 'Present' | 'Absent' | 'Late'; remarks?: string; inTime?: string; outTime?: string; earlyOutReason?: string }) => Promise<void>;
+  feesTransactions: any[];
+  saveFeeTransaction: (tx: any) => Promise<void>;
+  deleteFeeTransaction: (id: string) => Promise<void>;
+  schoolEvents: any[];
+  saveSchoolEvent: (event: any) => Promise<void>;
+  deleteSchoolEvent: (id: string) => Promise<void>;
 }
 
 const mockStudents: Student[] = [
@@ -216,6 +227,22 @@ const mockCourses: Course[] = [
   }
 ];
 
+const mockEvents = [
+  { id: '1', title: 'Summer Vacation Begins', date: '2026-06-01', type: 'Holiday' },
+  { id: '2', title: 'First Periodic Assessment', date: '2026-07-15', type: 'Academic' },
+  { id: '3', title: 'Annual Sports Meet 2026', date: '2026-11-20', type: 'Co-Curricular' }
+];
+
+const mockFees = [
+  { id: 'INV-2023-F01', studentId: 'ADM2023001', studentName: 'AARAV SHARMA', class: 'Class 10', type: 'Term Fee Collection', date: new Date().toISOString(), amount: 7500, method: 'UPI', status: 'Paid', mode: 'UPI' },
+  { id: 'INV-2023-F02', studentId: 'ADM2023002', studentName: 'SOPHIA CHEN', class: 'Class 10', type: 'Admission Processing', date: new Date().toISOString(), amount: 1500, method: 'Cash', status: 'Paid', mode: 'Cash' }
+];
+
+const mockAttendance = [
+  { id: 'ADM2023001', date: new Date().toISOString().split('T')[0], status: 'Present', remarks: 'Arrived early', inTime: '08:15', outTime: '14:30', earlyOutReason: '' },
+  { id: 'ADM2023002', date: new Date().toISOString().split('T')[0], status: 'Present', remarks: 'Signed in by parent', inTime: '08:20', outTime: '14:30', earlyOutReason: '' }
+];
+
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
 
 export function SchoolProvider({ children }: { children: ReactNode }) {
@@ -228,6 +255,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [results, setResultsState] = useState<StudentResult[]>([]);
   const [sessions, setSessionsState] = useState<AcademicSession[]>([]);
   const [courses, setCoursesState] = useState<Course[]>([]);
+  
+  const [attendanceMap, setAttendanceMapState] = useState<Record<string, { status: 'Present' | 'Absent' | 'Late'; remarks: string; inTime?: string; outTime?: string; earlyOutReason?: string }>>({});
+  const [feesTransactions, setFeesTransactionsState] = useState<any[]>([]);
+  const [schoolEvents, setSchoolEventsState] = useState<any[]>([]);
 
   // Track Firestore actual database statistics
   const [dbStats, setDbStats] = useState({
@@ -236,7 +267,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     onlineAdmissions: 0,
     results: 0,
     sessions: 0,
-    courses: 0
+    courses: 0,
+    attendance: 0,
+    fees: 0,
+    events: 0
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -336,6 +370,50 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       setCoursesState([]);
     });
 
+    // 7. Attendance
+    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snapshot) => {
+      const data: Record<string, any> = {};
+      snapshot.forEach(doc => {
+        const item = doc.data();
+        const key = `${item.date}:${item.id}`;
+        data[key] = {
+          status: item.status,
+          remarks: item.remarks || '',
+          inTime: item.inTime || '',
+          outTime: item.outTime || '',
+          earlyOutReason: item.earlyOutReason || ''
+        };
+      });
+      setDbStats(prev => ({ ...prev, attendance: snapshot.size }));
+      setAttendanceMapState(data);
+    }, () => {
+      setAttendanceMapState({});
+    });
+
+    // 8. Fees & Transactions
+    const unsubFees = onSnapshot(collection(db, 'fees'), (snapshot) => {
+      const data: any[] = [];
+      snapshot.forEach(doc => {
+        data.push(doc.data());
+      });
+      setDbStats(prev => ({ ...prev, fees: snapshot.size }));
+      setFeesTransactionsState(data);
+    }, () => {
+      setFeesTransactionsState([]);
+    });
+
+    // 9. School Events
+    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
+      const data: any[] = [];
+      snapshot.forEach(doc => {
+        data.push(doc.data());
+      });
+      setDbStats(prev => ({ ...prev, events: snapshot.size }));
+      setSchoolEventsState(data);
+    }, () => {
+      setSchoolEventsState([]);
+    });
+
     return () => {
       unsubStudents();
       unsubTeachers();
@@ -343,6 +421,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       unsubResults();
       unsubSessions();
       unsubCourses();
+      unsubAttendance();
+      unsubFees();
+      unsubEvents();
     };
   }, [user, isAdminUser]);
 
@@ -636,7 +717,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         onlineAdmissions: onlineAdmissions.length,
         results: results.length,
         sessions: sessions.length,
-        courses: courses.length
+        courses: courses.length,
+        attendance: 0,
+        fees: 0,
+        events: 0
       });
       
     } catch (e) {
@@ -644,6 +728,64 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       throw e;
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const saveAttendanceRecord = async (memberId: string, date: string, fields: { status?: 'Present' | 'Absent' | 'Late'; remarks?: string; inTime?: string; outTime?: string; earlyOutReason?: string }) => {
+    try {
+      const docId = `${date}_${memberId}`;
+      const docRef = doc(db, 'attendance', docId);
+
+      const currentMapKey = `${date}:${memberId}`;
+      const existing = attendanceMap[currentMapKey] || { status: 'Present', remarks: '', inTime: '', outTime: '', earlyOutReason: '' };
+
+      const updatedRecord = {
+        id: memberId,
+        date: date,
+        status: fields.status !== undefined ? fields.status : existing.status,
+        remarks: fields.remarks !== undefined ? fields.remarks : existing.remarks,
+        inTime: fields.inTime !== undefined ? fields.inTime : (existing.inTime || ''),
+        outTime: fields.outTime !== undefined ? fields.outTime : (existing.outTime || ''),
+        earlyOutReason: fields.earlyOutReason !== undefined ? fields.earlyOutReason : (existing.earlyOutReason || '')
+      };
+
+      await setDoc(docRef, updatedRecord);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `attendance/${date}_${memberId}`);
+    }
+  };
+
+  const saveFeeTransaction = async (tx: any) => {
+    try {
+      const docRef = doc(db, 'fees', tx.id);
+      await setDoc(docRef, tx);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `fees/${tx.id}`);
+    }
+  };
+
+  const deleteFeeTransaction = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'fees', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `fees/${id}`);
+    }
+  };
+
+  const saveSchoolEvent = async (event: any) => {
+    try {
+      const docRef = doc(db, 'events', event.id);
+      await setDoc(docRef, event);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `events/${event.id}`);
+    }
+  };
+
+  const deleteSchoolEvent = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'events', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `events/${id}`);
     }
   };
 
@@ -672,6 +814,28 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         try { await deleteDoc(doc(db, 'onlineAdmissions', a.id)); } catch {}
       }
 
+      // Also clean existing attendance, fees, and events collections dynamically
+      try {
+        const feesSnap = await getDocs(collection(db, 'fees'));
+        for (const d of feesSnap.docs) {
+          await deleteDoc(doc(db, 'fees', d.id));
+        }
+      } catch {}
+
+      try {
+        const eventsSnap = await getDocs(collection(db, 'events'));
+        for (const d of eventsSnap.docs) {
+          await deleteDoc(doc(db, 'events', d.id));
+        }
+      } catch {}
+
+      try {
+        const attendanceSnap = await getDocs(collection(db, 'attendance'));
+        for (const d of attendanceSnap.docs) {
+          await deleteDoc(doc(db, 'attendance', d.id));
+        }
+      } catch {}
+
       // Write mock data models
       for (const s of mockStudents) {
         await setDoc(doc(db, 'students', s.id), s);
@@ -690,6 +854,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       }
       for (const a of mockAdmissions) {
         await setDoc(doc(db, 'onlineAdmissions', a.id), a);
+      }
+
+      // Seed mock attendance, fees, and events
+      for (const ev of mockEvents) {
+        await setDoc(doc(db, 'events', ev.id), ev);
+      }
+      for (const f of mockFees) {
+        await setDoc(doc(db, 'fees', f.id), f);
+      }
+      for (const att of mockAttendance) {
+        const docId = `${att.date}_${att.id}`;
+        await setDoc(doc(db, 'attendance', docId), att);
       }
       
     } catch (e) {
@@ -713,7 +889,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       syncAllToFirebase,
       resetFirestoreToMock,
       firestoreDbEmpty,
-      dbStats
+      dbStats,
+      attendanceMap, saveAttendanceRecord,
+      feesTransactions, saveFeeTransaction, deleteFeeTransaction,
+      schoolEvents, saveSchoolEvent, deleteSchoolEvent
     }}>
       {children}
     </SchoolContext.Provider>

@@ -90,6 +90,47 @@
         "subject": { "type": "string" }
       }
     },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "An attendance entry for a student or staff in format date_id",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "remarks": { "type": "string" },
+        "inTime": { "type": "string" },
+        "outTime": { "type": "string" },
+        "earlyOutReason": { "type": "string" }
+      }
+    },
+    "FeeTransaction": {
+      "title": "FeeTransaction",
+      "description": "A student fee transaction payment receipt record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "class": { "type": "string" },
+        "type": { "type": "string" },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "SchoolEvent": {
+      "title": "SchoolEvent",
+      "description": "An event on the school calendar dynamic dashboard tracker",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string" }
+      }
+    },
     "WebsiteSettings": {
       "title": "WebsiteSettings",
       "description": "Live custom layout configurations and static page variables",
@@ -129,6 +170,18 @@
     "settings": {
       "schema": "WebsiteSettings",
       "description": "Generic website settings documents collection"
+    },
+    "attendance": {
+      "schema": "AttendanceRecord",
+      "description": "Attendance registry entries"
+    },
+    "fees": {
+      "schema": "FeeTransaction",
+      "description": "Fee payment transactions"
+    },
+    "events": {
+      "schema": "SchoolEvent",
+      "description": "School calendar events"
     }
   }
 }
