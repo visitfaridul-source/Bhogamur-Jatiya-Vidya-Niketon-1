@@ -285,7 +285,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
         const data: Student[] = [];
         snapshot.forEach(doc => {
-          data.push(doc.data() as Student);
+          data.push({ id: doc.id, ...doc.data() } as Student);
         });
         setDbStats(prev => ({ ...prev, students: snapshot.size }));
         setStudentsState(data);
@@ -302,7 +302,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       unsubTeachers = onSnapshot(collection(db, 'teachers'), (snapshot) => {
         const data: Teacher[] = [];
         snapshot.forEach(doc => {
-          data.push(doc.data() as Teacher);
+          data.push({ id: doc.id, ...doc.data() } as Teacher);
         });
         setDbStats(prev => ({ ...prev, teachers: snapshot.size }));
         setTeachersState(data);
@@ -319,7 +319,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       unsubAdmissions = onSnapshot(collection(db, 'onlineAdmissions'), (snapshot) => {
         const data: OnlineAdmissionForm[] = [];
         snapshot.forEach(doc => {
-          data.push(doc.data() as OnlineAdmissionForm);
+          data.push({ id: doc.id, ...doc.data() } as OnlineAdmissionForm);
         });
         setDbStats(prev => ({ ...prev, onlineAdmissions: snapshot.size }));
         setOnlineAdmissionsState(data);
@@ -335,7 +335,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const unsubResults = onSnapshot(collection(db, 'results'), (snapshot) => {
       const data: StudentResult[] = [];
       snapshot.forEach(doc => {
-        data.push(doc.data() as StudentResult);
+        data.push({ id: doc.id, ...doc.data() } as StudentResult);
       });
       setDbStats(prev => ({ ...prev, results: snapshot.size }));
       setResultsState(data);
@@ -348,7 +348,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const unsubSessions = onSnapshot(collection(db, 'sessions'), (snapshot) => {
       const data: AcademicSession[] = [];
       snapshot.forEach(doc => {
-        data.push(doc.data() as AcademicSession);
+        data.push({ id: doc.id, ...doc.data() } as AcademicSession);
       });
       setDbStats(prev => ({ ...prev, sessions: snapshot.size }));
       setSessionsState(data);
@@ -361,7 +361,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const unsubCourses = onSnapshot(collection(db, 'courses'), (snapshot) => {
       const data: Course[] = [];
       snapshot.forEach(doc => {
-        data.push(doc.data() as Course);
+        data.push({ id: doc.id, ...doc.data() } as Course);
       });
       setDbStats(prev => ({ ...prev, courses: snapshot.size }));
       setCoursesState(data);
@@ -375,7 +375,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       const data: Record<string, any> = {};
       snapshot.forEach(doc => {
         const item = doc.data();
-        const key = `${item.date}:${item.id}`;
+        const docId = item.id || doc.id.split('_')[1] || doc.id;
+        const key = `${item.date}:${docId}`;
         data[key] = {
           status: item.status,
           remarks: item.remarks || '',
@@ -394,7 +395,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const unsubFees = onSnapshot(collection(db, 'fees'), (snapshot) => {
       const data: any[] = [];
       snapshot.forEach(doc => {
-        data.push(doc.data());
+        data.push({ id: doc.id, ...doc.data() });
       });
       setDbStats(prev => ({ ...prev, fees: snapshot.size }));
       setFeesTransactionsState(data);
@@ -406,7 +407,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
       const data: any[] = [];
       snapshot.forEach(doc => {
-        data.push(doc.data());
+        data.push({ id: doc.id, ...doc.data() });
       });
       setDbStats(prev => ({ ...prev, events: snapshot.size }));
       setSchoolEventsState(data);
