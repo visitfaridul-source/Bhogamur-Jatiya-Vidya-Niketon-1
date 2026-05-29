@@ -254,13 +254,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           data.push(doc.data() as Student);
         });
         setDbStats(prev => ({ ...prev, students: snapshot.size }));
-        setStudentsState(data.length > 0 ? data : mockStudents);
+        setStudentsState(data);
       }, () => {
         // Suppress background listener error in console
-        setStudentsState(mockStudents);
+        setStudentsState([]);
       });
     } else {
-      setStudentsState(mockStudents);
+      setStudentsState([]);
     }
 
     // 2. Teachers - only if logged in
@@ -271,13 +271,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           data.push(doc.data() as Teacher);
         });
         setDbStats(prev => ({ ...prev, teachers: snapshot.size }));
-        setTeachersState(data.length > 0 ? data : mockTeachers);
+        setTeachersState(data);
       }, () => {
         // Suppress background listener error in console
-        setTeachersState(mockTeachers);
+        setTeachersState([]);
       });
     } else {
-      setTeachersState(mockTeachers);
+      setTeachersState([]);
     }
 
     // 3. Online Admissions - only if Admin user
@@ -288,10 +288,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           data.push(doc.data() as OnlineAdmissionForm);
         });
         setDbStats(prev => ({ ...prev, onlineAdmissions: snapshot.size }));
-        setOnlineAdmissionsState(data.length > 0 ? data : mockAdmissions);
+        setOnlineAdmissionsState(data);
       }, () => {
         // Suppress background listener error in console
-        setOnlineAdmissionsState(mockAdmissions);
+        setOnlineAdmissionsState([]);
       });
     } else {
       setOnlineAdmissionsState([]);
@@ -304,10 +304,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         data.push(doc.data() as StudentResult);
       });
       setDbStats(prev => ({ ...prev, results: snapshot.size }));
-      setResultsState(data.length > 0 ? data : mockResults);
+      setResultsState(data);
     }, () => {
       // Suppress background listener error in console and load fallback
-      setResultsState(mockResults);
+      setResultsState([]);
     });
 
     // 5. Academic Sessions
@@ -317,10 +317,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         data.push(doc.data() as AcademicSession);
       });
       setDbStats(prev => ({ ...prev, sessions: snapshot.size }));
-      setSessionsState(data.length > 0 ? data : mockSessions);
+      setSessionsState(data);
     }, () => {
       // Suppress background listener error in console and load fallback
-      setSessionsState(mockSessions);
+      setSessionsState([]);
     });
 
     // 6. Courses
@@ -330,10 +330,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         data.push(doc.data() as Course);
       });
       setDbStats(prev => ({ ...prev, courses: snapshot.size }));
-      setCoursesState(data.length > 0 ? data : mockCourses);
+      setCoursesState(data);
     }, () => {
       // Suppress background listener error in console and load fallback
-      setCoursesState(mockCourses);
+      setCoursesState([]);
     });
 
     return () => {
@@ -346,79 +346,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
   }, [user, isAdminUser]);
 
-  // Admin-triggered one-time bootstrapping of Firestore with initial mock template datasets
+  // Admin-triggered one-time bootstrapping disabled to prevent mock data from automatically uploading to Firestore
   useEffect(() => {
-    if (!isAdminUser) return;
-    const isBootstrapped = localStorage.getItem('bhogamur_school_bootstrapped_v2');
-    if (!isBootstrapped) {
-      console.log("Admin logged in. Bootstrapping default mock dataset to Firestore collections...");
-      
-      const bootstrapCollection = async () => {
-        // Bootstrap sessions
-        try {
-          const sessionsSnap = await getDocs(collection(db, 'sessions'));
-          if (sessionsSnap.empty) {
-            for (const s of mockSessions) {
-              await setDoc(doc(db, 'sessions', s.id), s);
-            }
-          }
-        } catch (e) {
-          console.error("Bootstrapping sessions failed: ", e);
-        }
-
-        // Bootstrap students
-        try {
-          const studentsSnap = await getDocs(collection(db, 'students'));
-          if (studentsSnap.empty) {
-            for (const s of mockStudents) {
-              await setDoc(doc(db, 'students', s.id), s);
-            }
-          }
-        } catch (e) {
-          console.error("Bootstrapping students failed: ", e);
-        }
-
-        // Bootstrap teachers
-        try {
-          const teachersSnap = await getDocs(collection(db, 'teachers'));
-          if (teachersSnap.empty) {
-            for (const t of mockTeachers) {
-              await setDoc(doc(db, 'teachers', t.id), t);
-            }
-          }
-        } catch (e) {
-          console.error("Bootstrapping teachers failed: ", e);
-        }
-
-        // Bootstrap results
-        try {
-          const resultsSnap = await getDocs(collection(db, 'results'));
-          if (resultsSnap.empty) {
-            for (const r of mockResults) {
-              await setDoc(doc(db, 'results', r.id), r);
-            }
-          }
-        } catch (e) {
-          console.error("Bootstrapping results failed: ", e);
-        }
-
-        // Bootstrap courses
-        try {
-          const coursesSnap = await getDocs(collection(db, 'courses'));
-          if (coursesSnap.empty) {
-            for (const c of mockCourses) {
-              await setDoc(doc(db, 'courses', c.id), c);
-            }
-          }
-        } catch (e) {
-          console.error("Bootstrapping courses failed: ", e);
-        }
-
-        localStorage.setItem('bhogamur_school_bootstrapped_v2', 'true');
-      };
-
-      bootstrapCollection();
-    }
+    // Left empty intentionally to prevent static mock data from saving to Firebase.
+    // Real data is saved exclusively via admin manual entries.
+    localStorage.setItem('bhogamur_school_bootstrapped_v2', 'true');
     localStorage.setItem('bhogamur_school_bootstrapped', 'true');
   }, [isAdminUser]);
 
