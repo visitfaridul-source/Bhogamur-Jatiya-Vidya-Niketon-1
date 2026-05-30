@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { db, handleFirestoreError, OperationType, auth } from '../firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
@@ -466,6 +466,7 @@ const removeUndefined = (obj: any): any => {
 };
 
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
+  const saveTimeoutRef = useRef<any>(null);
   const [settings, setSettings] = useState<WebsiteSettings>(() => {
     try {
       const local = localStorage.getItem('bjvn_website_settings');
@@ -543,30 +544,35 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateSettings = async (newSettings: Partial<WebsiteSettings>) => {
-    const nextSettings = { ...settings, ...newSettings };
+    setSettings((prev) => {
+      const nextSettings = { ...prev, ...newSettings };
 
-    // Optimistic update
-    setSettings(nextSettings);
+      // Save to local storage immediately
+      try {
+        localStorage.setItem('bjvn_website_settings', JSON.stringify(nextSettings));
+      } catch (e) {
+        console.error("Local storage save failed:", e);
+      }
 
-    // Save to local storage immediately
-    try {
-      localStorage.setItem('bjvn_website_settings', JSON.stringify(nextSettings));
-    } catch (e) {
-      console.error("Local storage save failed:", e);
-    }
+      // Debounce the Firestore write to avoid hitting resource limits and preventing UI lag
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
 
-    // Save to Firestore
-    try {
-      const sanitizedSettings = removeUndefined(nextSettings);
-      await setDoc(doc(db, 'settings', 'website'), sanitizedSettings, { merge: true });
-    } catch (err: any) {
-      // NOTE: We DO NOT revert settings back if Firestore fails, because we want local browser storage
-      // to keep the saved state successfully. We just warn in the console cleanly.
-      console.warn(
-        "Firestore write did not sync, but settings are saved successfully in your local browser storage: ", 
-        err.message || String(err)
-      );
-    }
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          const sanitizedSettings = removeUndefined(nextSettings);
+          await setDoc(doc(db, 'settings', 'website'), sanitizedSettings, { merge: true });
+        } catch (err: any) {
+          console.warn(
+            "Firestore write did not sync, but settings are saved successfully in your local browser storage: ", 
+            err.message || String(err)
+          );
+        }
+      }, 1000); // 1 second debounce for DB write
+
+      return nextSettings;
+    });
   };
 
   return (

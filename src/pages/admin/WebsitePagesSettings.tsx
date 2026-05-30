@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Plus, Trash2, Check } from 'lucide-react';
 import { useWebsite, TimetableSlot, OnlineClassEvent, FeeStructureTier, FeeStructureItem } from '@/context/WebsiteContext';
 
 export default function WebsitePagesSettings() {
@@ -9,14 +9,69 @@ export default function WebsitePagesSettings() {
   const [timetableSlots, setTimetableSlots] = useState<TimetableSlot[]>(settings.timetableSlots || []);
   const [onlineClasses, setOnlineClasses] = useState<OnlineClassEvent[]>(settings.onlineClasses || []);
   const [feeStructures, setFeeStructures] = useState<FeeStructureTier[]>(settings.feeStructures || []);
+  const [saved, setSaved] = useState(false);
+
+  const lastSettingsRef = useRef({
+    timetableSlots: settings.timetableSlots || [],
+    onlineClasses: settings.onlineClasses || [],
+    feeStructures: settings.feeStructures || [],
+  });
+
+  const isDirtyRef = useRef(false);
+
+  // Sync settings -> local states if not actively modified by user
+  useEffect(() => {
+    if (!isDirtyRef.current) {
+      lastSettingsRef.current = {
+        timetableSlots: settings.timetableSlots || [],
+        onlineClasses: settings.onlineClasses || [],
+        feeStructures: settings.feeStructures || [],
+      };
+      setTimetableSlots(settings.timetableSlots || []);
+      setOnlineClasses(settings.onlineClasses || []);
+      setFeeStructures(settings.feeStructures || []);
+    }
+  }, [settings]);
+
+  // Auto-sync local state changes back to parent context with debounce
+  useEffect(() => {
+    const baseline = lastSettingsRef.current;
+    const isDifferent = 
+      JSON.stringify(timetableSlots) !== JSON.stringify(baseline.timetableSlots) ||
+      JSON.stringify(onlineClasses) !== JSON.stringify(baseline.onlineClasses) ||
+      JSON.stringify(feeStructures) !== JSON.stringify(baseline.feeStructures);
+
+    if (isDifferent) {
+      isDirtyRef.current = true;
+      const timer = setTimeout(() => {
+        updateSettings({
+          timetableSlots,
+          onlineClasses,
+          feeStructures,
+        });
+        // Sync reference baseline to prevent duplicate sync loops
+        lastSettingsRef.current = {
+          timetableSlots,
+          onlineClasses,
+          feeStructures,
+        };
+      }, 500); // 500ms debounce
+      return () => clearTimeout(timer);
+    }
+  }, [timetableSlots, onlineClasses, feeStructures, updateSettings]);
 
   const handleSave = () => {
-    updateSettings({
+    isDirtyRef.current = false;
+    const nextVal = {
       timetableSlots,
       onlineClasses,
       feeStructures,
-    });
-    alert('Settings saved successfully!');
+    };
+    updateSettings(nextVal);
+    lastSettingsRef.current = nextVal;
+    
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -28,10 +83,14 @@ export default function WebsitePagesSettings() {
         </div>
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition ${
+            saved 
+              ? 'bg-emerald-500 text-white shadow-emerald-500/10' 
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/10'
+          }`}
         >
-          <Save size={20} />
-          Save Changes
+          {saved ? <Check size={20} /> : <Save size={20} />}
+          {saved ? 'Saved!' : 'Save Changes'}
         </button>
       </div>
 

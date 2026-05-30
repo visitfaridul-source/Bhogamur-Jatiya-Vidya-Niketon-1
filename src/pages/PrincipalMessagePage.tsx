@@ -63,11 +63,11 @@ export default function PrincipalMessagePage() {
                 <div className="flex justify-center mb-10">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white">
+                    <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-2xl border-4 border-white shadow-2xl overflow-hidden bg-slate-50 p-1 flex items-center justify-center">
                       <img 
                         src={settings.principalImageUrl} 
                         alt="Principal" 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                   </div>

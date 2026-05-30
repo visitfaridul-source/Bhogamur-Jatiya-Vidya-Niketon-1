@@ -14,6 +14,31 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [activeCategory, setActiveCategory] = useState(categoryParam);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const lastSettingsRef = useRef(settings);
+  const isDirtyRef = useRef(false);
+
+  useEffect(() => {
+    // If settings change from outside, and we haven't modified the form, update it safely
+    if (!isDirtyRef.current) {
+      lastSettingsRef.current = settings;
+      setFormData(settings);
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    // Detect if user modified formData locally compared to last known baseline settings
+    const isUserModified = JSON.stringify(formData) !== JSON.stringify(lastSettingsRef.current);
+    if (isUserModified) {
+      isDirtyRef.current = true;
+      const timer = setTimeout(() => {
+        updateSettings(formData);
+        // Sync our reference baseline to match so we don't loop or trigger again unnecessarily
+        lastSettingsRef.current = formData;
+      }, 500); // 500ms typing pause debounce for real-time preview sync
+      return () => clearTimeout(timer);
+    }
+  }, [formData, updateSettings]);
 
   useEffect(() => {
     if (categoryParam !== activeCategory) {
@@ -28,12 +53,15 @@ export default function Settings() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    isDirtyRef.current = true;
     setFormData(prev => ({ ...prev, [name]: value }));
     setSaved(false);
   };
 
   const handleSave = () => {
+    isDirtyRef.current = false;
     updateSettings(formData);
+    lastSettingsRef.current = formData;
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -1004,7 +1032,7 @@ export default function Settings() {
                      <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white relative overflow-hidden group transition-colors aspect-square max-h-[140px] w-full">
                        {formData.principalImageUrl ? (
                          <div className="relative w-full h-full flex items-center justify-center">
-                           <img src={formData.principalImageUrl} alt="Principal" className="w-full h-full object-cover rounded-xl" />
+                           <img src={formData.principalImageUrl} alt="Principal" className="w-full h-full object-contain rounded-xl p-1 bg-slate-50" />
                            <button 
                              type="button"
                              onClick={() => { setFormData(prev => ({...prev, principalImageUrl: ''})); setSaved(false); }} 

@@ -212,11 +212,11 @@ export default function LandingPage() {
                 onClick={() => navigate('/prospectus')}
                 className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-white/10 hover:border-amber-400/30 cursor-pointer active:scale-95 transition-all w-[240px] max-w-full text-left"
               >
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-amber-400/50 shrink-0">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-amber-400/50 shrink-0 bg-slate-950 p-0.5 flex items-center justify-center">
                   <img 
                     src={settings.principalHeroImage || settings.principalImageUrl || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200"} 
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain" 
                     alt="Principal" 
                   />
                 </div>
@@ -234,11 +234,11 @@ export default function LandingPage() {
                 onClick={() => navigate('/video')}
                 className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-white/10 hover:border-blue-400/30 cursor-pointer active:scale-95 transition-all w-[240px] max-w-full text-left"
               >
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-blue-400/50 shrink-0">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-blue-400/50 shrink-0 bg-slate-950 p-0.5 flex items-center justify-center">
                   <img 
                     src={settings.vicePrincipalHeroImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"} 
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain" 
                     alt="Vice Principal" 
                   />
                 </div>
@@ -270,11 +270,11 @@ export default function LandingPage() {
                   onClick={() => navigate('/prospectus')} 
                   className="group flex flex-col items-center justify-center gap-2.5 bg-slate-900/80 backdrop-blur-md hover:bg-slate-900/95 text-white p-4 rounded-[2rem] transition-all duration-500 shadow-2xl border border-white/15 hover:-translate-x-2 hover:border-amber-400/30 cursor-pointer w-[130px] text-center"
                 >
-                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/60 shadow-lg group-hover:scale-105 transition-all duration-500">
+                   <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-amber-400/60 shadow-lg group-hover:scale-105 transition-all duration-500 bg-slate-950 p-0.5 flex items-center justify-center">
                       <img 
                         src={settings.principalHeroImage || settings.principalImageUrl || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300"} 
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover animate-fade-in" 
+                        className="w-full h-full object-contain animate-fade-in" 
                         alt="Principal" 
                       />
                    </div>
@@ -347,11 +347,11 @@ export default function LandingPage() {
                    onClick={() => navigate('/video')} 
                    className="group flex flex-col items-center justify-center gap-2.5 bg-slate-900/80 backdrop-blur-md hover:bg-slate-900/95 text-white p-4 rounded-[2rem] transition-all duration-500 shadow-2xl border border-white/15 hover:translate-x-2 hover:border-blue-400/30 cursor-pointer w-[130px] text-center"
                  >
-                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-blue-400/60 shadow-lg group-hover:scale-105 transition-all duration-500 mx-auto">
+                   <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-blue-400/60 shadow-lg group-hover:scale-105 transition-all duration-500 mx-auto bg-slate-950 p-0.5 flex items-center justify-center">
                       <img 
                         src={settings.vicePrincipalHeroImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300"} 
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover animate-fade-in" 
+                        className="w-full h-full object-contain animate-fade-in" 
                         alt="Vice Principal" 
                       />
                    </div>
@@ -781,8 +781,8 @@ function NotificationCard({ update }: any) {
 function TopperCard({ topper }: any) {
   return (
     <div className="group relative bg-slate-800 border border-slate-700/50 rounded-2xl shadow-sm overflow-hidden hover:bg-slate-700/50 hover:border-slate-600 transition-all duration-300 p-4 sm:p-5 flex gap-4 w-full">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden shadow-md aspect-square bg-slate-900 border border-slate-600/50">
-          <img src={topper.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${topper.name}`} alt={topper.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden shadow-md aspect-square bg-slate-950 border border-slate-600/50 p-1 flex items-center justify-center">
+          <img src={topper.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${topper.name}`} alt={topper.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
       </div>
       
       <div className="flex-1 min-w-0 flex flex-col justify-center">

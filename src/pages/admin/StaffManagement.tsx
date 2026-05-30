@@ -171,11 +171,13 @@ export default function StaffManagement() {
                </button>
             </div>
             
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center">
                {member.imageUrl ? (
-                   <img src={member.imageUrl} alt={member.name} className="w-24 h-24 rounded-full object-cover border-4 border-slate-50 shadow-sm" />
+                   <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 p-1 flex items-center justify-center">
+                       <img src={member.imageUrl} alt={member.name} className="w-full h-full object-contain" />
+                   </div>
                ) : (
-                   <div className="w-24 h-24 rounded-full bg-blue-50 border-4 border-slate-50 flex items-center justify-center text-blue-300 shadow-sm">
+                   <div className="w-24 h-24 rounded-2xl bg-blue-50 border-2 border-slate-100 flex items-center justify-center text-blue-300 shadow-sm">
                        <Briefcase className="w-10 h-10" />
                    </div>
                )}
@@ -245,9 +247,9 @@ export default function StaffManagement() {
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Profile Photo</label>
                         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                           <div className="w-16 h-16 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center relative group">
+                           <div className="w-16 h-16 rounded-2xl bg-slate-50 flex-shrink-0 overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center relative group p-1">
                               {formData.imageUrl ? (
-                                <img src={formData.imageUrl} alt="preview" className="w-full h-full object-cover" />
+                                <img src={formData.imageUrl} alt="preview" className="w-full h-full object-contain" />
                               ) : (
                                 <Camera className="w-6 h-6 text-slate-300" />
                               )}

@@ -67,23 +67,23 @@ export default function StaffPage() {
                         >
                             {/* Image Container with Neon animated border */}
                             <div 
-                              className="relative h-56 overflow-hidden bg-slate-900 p-[3px] cursor-pointer"
+                              className="relative aspect-square overflow-hidden bg-slate-900 p-[3px] cursor-pointer"
                               onClick={() => staff.imageUrl && setSelectedImage(staff.imageUrl)}
                             >
                                 {/* Neon Gradient Spinners */}
                                 <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#0ea5e9_360deg)] animate-[spin_3s_linear_infinite]" />
                                 <div className="absolute inset-[-100%] bg-[conic-gradient(from_180deg,transparent_0_340deg,#e879f9_360deg)] animate-[spin_3s_linear_infinite]" />
                                 
-                                <div className="relative h-full w-full rounded-[calc(1.5rem-3px)] rounded-b-none overflow-hidden shadow-inner isolate bg-slate-100 flex items-center justify-center">
+                                <div className="relative h-full w-full rounded-[calc(1.5rem-3px)] rounded-b-none overflow-hidden shadow-inner isolate bg-slate-50 flex items-center justify-center p-2">
                                     {staff.imageUrl ? (
                                         <>
                                           <img 
                                               src={staff.imageUrl} 
                                               alt={staff.name} 
-                                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                              className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                                           />
                                           {/* Overlay prompt to click */}
-                                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                          <div className="absolute inset-x-2 inset-y-2 rounded-xl bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                             <span className="text-white text-xs font-bold uppercase tracking-widest border border-white/30 backdrop-blur-sm px-3 py-1 rounded-full">View</span>
                                           </div>
                                         </>
