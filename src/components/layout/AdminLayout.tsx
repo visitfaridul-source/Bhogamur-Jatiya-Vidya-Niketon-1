@@ -462,12 +462,12 @@ export default function AdminLayout() {
                         <button
                           disabled={isSyncing}
                           onClick={async () => {
-                            if (confirm("WARNING: This will completely overwrite all remote documents in Firebase with original mock student templates. Are you sure you want to perform a full database reset?")) {
+                            if (confirm("WARNING: This will permanently delete all documents in Firestore and clear the database completely. This action CANNOT be undone. Are you sure you want to perform a hard data purge?")) {
                               setActionSuccessMessage(null);
                               setActionErrorMessage(null);
                               try {
                                 await resetFirestoreToMock();
-                                setActionSuccessMessage("✓ Database schema has been reset to mockup templates!");
+                                setActionSuccessMessage("✓ All remote documents have been purged and database is now 100% clean!");
                                 setTimeout(() => setActionSuccessMessage(null), 5000);
                               } catch (e: any) {
                                 const errStr = e.message || String(e);
@@ -479,10 +479,10 @@ export default function AdminLayout() {
                               }
                             }
                           }}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200/60 disabled:opacity-50"
+                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
-                          Restore Clean Mock Data
+                          Clear All (Hard Reset)
                         </button>
                       </div>
 

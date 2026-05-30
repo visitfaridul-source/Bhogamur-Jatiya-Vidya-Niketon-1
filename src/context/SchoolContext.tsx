@@ -306,16 +306,16 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         });
         setDbStats(prev => ({ ...prev, students: snapshot.size }));
         if (snapshot.size === 0) {
-          setStudentsState(mockStudents);
+          setStudentsState([]);
         } else {
           setStudentsState(data);
         }
       }, () => {
-        // Suppress background listener error in console & use fallback
-        setStudentsState(mockStudents);
+        // Suppress background listener error in console
+        setStudentsState([]);
       });
     } else {
-      setStudentsState(mockStudents);
+      setStudentsState([]);
     }
 
     // 2. Teachers - only if logged in
@@ -327,16 +327,16 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         });
         setDbStats(prev => ({ ...prev, teachers: snapshot.size }));
         if (snapshot.size === 0) {
-          setTeachersState(mockTeachers);
+          setTeachersState([]);
         } else {
           setTeachersState(data);
         }
       }, () => {
-        // Suppress background listener error in console & use fallback
-        setTeachersState(mockTeachers);
+        // Suppress background listener error in console
+        setTeachersState([]);
       });
     } else {
-      setTeachersState(mockTeachers);
+      setTeachersState([]);
     }
 
     // 3. Online Admissions - only if Admin user
@@ -348,16 +348,16 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         });
         setDbStats(prev => ({ ...prev, onlineAdmissions: snapshot.size }));
         if (snapshot.size === 0) {
-          setOnlineAdmissionsState(mockAdmissions);
+          setOnlineAdmissionsState([]);
         } else {
           setOnlineAdmissionsState(data);
         }
       }, () => {
-        // Suppress background listener error in console & use fallback
-        setOnlineAdmissionsState(mockAdmissions);
+        // Suppress background listener error in console
+        setOnlineAdmissionsState([]);
       });
     } else {
-      setOnlineAdmissionsState(mockAdmissions);
+      setOnlineAdmissionsState([]);
     }
 
     // 4. Results
@@ -368,13 +368,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, results: snapshot.size }));
       if (snapshot.size === 0) {
-        setResultsState(mockResults);
+        setResultsState([]);
       } else {
         setResultsState(data);
       }
     }, () => {
-      // Suppress background listener error in console and load fallback
-      setResultsState(mockResults);
+      // Suppress background listener error in console
+      setResultsState([]);
     });
 
     // 5. Academic Sessions
@@ -385,13 +385,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, sessions: snapshot.size }));
       if (snapshot.size === 0) {
-        setSessionsState(mockSessions);
+        setSessionsState([]);
       } else {
         setSessionsState(data);
       }
     }, () => {
-      // Suppress background listener error in console and load fallback
-      setSessionsState(mockSessions);
+      // Suppress background listener error in console
+      setSessionsState([]);
     });
 
     // 6. Courses
@@ -402,13 +402,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, courses: snapshot.size }));
       if (snapshot.size === 0) {
-        setCoursesState(mockCourses);
+        setCoursesState([]);
       } else {
         setCoursesState(data);
       }
     }, () => {
-      // Suppress background listener error in console and load fallback
-      setCoursesState(mockCourses);
+      // Suppress background listener error in console
+      setCoursesState([]);
     });
 
     // 7. Attendance
@@ -428,34 +428,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, attendance: snapshot.size }));
       if (snapshot.size === 0) {
-        const fallbackMap: Record<string, any> = {};
-        mockAttendance.forEach(item => {
-          const key = `${item.date}:${item.id}`;
-          fallbackMap[key] = {
-            status: item.status,
-            remarks: item.remarks,
-            inTime: item.inTime,
-            outTime: item.outTime,
-            earlyOutReason: item.earlyOutReason
-          };
-        });
-        setAttendanceMapState(fallbackMap);
+        setAttendanceMapState({});
       } else {
         setAttendanceMapState(data);
       }
     }, () => {
-      const fallbackMap: Record<string, any> = {};
-      mockAttendance.forEach(item => {
-        const key = `${item.date}:${item.id}`;
-        fallbackMap[key] = {
-          status: item.status,
-          remarks: item.remarks,
-          inTime: item.inTime,
-          outTime: item.outTime,
-          earlyOutReason: item.earlyOutReason
-        };
-      });
-      setAttendanceMapState(fallbackMap);
+      setAttendanceMapState({});
     });
 
     // 8. Fees & Transactions
@@ -466,12 +444,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, fees: snapshot.size }));
       if (snapshot.size === 0) {
-        setFeesTransactionsState(mockFees);
+        setFeesTransactionsState([]);
       } else {
         setFeesTransactionsState(data);
       }
     }, () => {
-      setFeesTransactionsState(mockFees);
+      setFeesTransactionsState([]);
     });
 
     // 9. School Events
@@ -482,12 +460,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
       setDbStats(prev => ({ ...prev, events: snapshot.size }));
       if (snapshot.size === 0) {
-        setSchoolEventsState(mockEvents);
+        setSchoolEventsState([]);
       } else {
         setSchoolEventsState(data);
       }
     }, () => {
-      setSchoolEventsState(mockEvents);
+      setSchoolEventsState([]);
     });
 
     return () => {
@@ -868,7 +846,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const resetFirestoreToMock = async () => {
     setIsSyncing(true);
     try {
-      console.log("Resetting all Firestore documents to default Mockup values...");
+      console.log("Purging all Firestore documents and states to a completely clean database...");
       
       // Clean existing state lists in firestore first
       for (const s of students) {
@@ -912,37 +890,16 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         }
       } catch {}
 
-      // Write mock data models
-      for (const s of mockStudents) {
-        await setDoc(doc(db, 'students', s.id), s);
-      }
-      for (const t of mockTeachers) {
-        await setDoc(doc(db, 'teachers', t.id), t);
-      }
-      for (const r of mockResults) {
-        await setDoc(doc(db, 'results', r.id), r);
-      }
-      for (const s of mockSessions) {
-        await setDoc(doc(db, 'sessions', s.id), s);
-      }
-      for (const c of mockCourses) {
-        await setDoc(doc(db, 'courses', c.id), c);
-      }
-      for (const a of mockAdmissions) {
-        await setDoc(doc(db, 'onlineAdmissions', a.id), a);
-      }
-
-      // Seed mock attendance, fees, and events
-      for (const ev of mockEvents) {
-        await setDoc(doc(db, 'events', ev.id), ev);
-      }
-      for (const f of mockFees) {
-        await setDoc(doc(db, 'fees', f.id), f);
-      }
-      for (const att of mockAttendance) {
-        const docId = `${att.date}_${att.id}`;
-        await setDoc(doc(db, 'attendance', docId), att);
-      }
+      // Clear local states
+      setStudentsState([]);
+      setTeachersState([]);
+      setOnlineAdmissionsState([]);
+      setResultsState([]);
+      setSessionsState([]);
+      setCoursesState([]);
+      setAttendanceMapState({});
+      setFeesTransactionsState([]);
+      setSchoolEventsState([]);
       
     } catch (e) {
       console.error("Database hard reset failed:", e);
