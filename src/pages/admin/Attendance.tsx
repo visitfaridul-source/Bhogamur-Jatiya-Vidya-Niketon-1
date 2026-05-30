@@ -21,6 +21,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSchool } from "@/context/SchoolContext";
 import { useWebsite } from "@/context/WebsiteContext";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 
 const QRScanner = lazy(() => import("@/components/attendance/QRScanner"));
 const FaceScanner = lazy(() => import("@/components/attendance/FaceScanner"));
@@ -67,9 +69,22 @@ export default function Attendance() {
   const { students, teachers, attendanceMap, saveAttendanceRecord } =
     useSchool();
   const { settings } = useWebsite();
+  const { user } = useAuth();
   const [memberType, setMemberType] = useState<
     "Student" | "Teacher" | "Other Staff"
   >("Student");
+
+  useEffect(() => {
+    if (user?.attendanceScope) {
+      if (user.attendanceScope === "Only Students") {
+        setMemberType("Student");
+      } else if (user.attendanceScope === "Teachers") {
+        setMemberType("Teacher");
+      } else if (user.attendanceScope === "Staff") {
+        setMemberType("Other Staff");
+      }
+    }
+  }, [user]);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
@@ -1041,53 +1056,59 @@ export default function Attendance() {
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
               {/* Member Type Selection Tabs */}
               <div className="flex border-b border-slate-200 p-4 gap-2 bg-white flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMemberType("Student");
-                    setViewMode("detailed");
-                  }}
-                  className={cn(
-                    "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                    memberType === "Student"
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                  )}
-                >
-                  👥 Students List ({students.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMemberType("Teacher");
-                    setViewMode("detailed");
-                    setSelectedClass("");
-                  }}
-                  className={cn(
-                    "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                    memberType === "Teacher"
-                      ? "bg-purple-600 text-white shadow-md shadow-purple-500/10"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                  )}
-                >
-                  🎓 Teachers List ({teachers.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMemberType("Other Staff");
-                    setViewMode("detailed");
-                    setSelectedClass("");
-                  }}
-                  className={cn(
-                    "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                    memberType === "Other Staff"
-                      ? "bg-amber-600 text-white shadow-md shadow-amber-500/10"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                  )}
-                >
-                  💼 Other Staff List ({settings.staffMembers?.length || 0})
-                </button>
+                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Only Students") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberType("Student");
+                      setViewMode("detailed");
+                    }}
+                    className={cn(
+                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+                      memberType === "Student"
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
+                    )}
+                  >
+                    👥 Students List ({students.length})
+                  </button>
+                )}
+                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Teachers") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberType("Teacher");
+                      setViewMode("detailed");
+                      setSelectedClass("");
+                    }}
+                    className={cn(
+                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+                      memberType === "Teacher"
+                        ? "bg-purple-600 text-white shadow-md shadow-purple-500/10"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
+                    )}
+                  >
+                    🎓 Teachers List ({teachers.length})
+                  </button>
+                )}
+                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Staff") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberType("Other Staff");
+                      setViewMode("detailed");
+                      setSelectedClass("");
+                    }}
+                    className={cn(
+                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+                      memberType === "Other Staff"
+                        ? "bg-amber-600 text-white shadow-md shadow-amber-500/10"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
+                    )}
+                  >
+                    💼 Other Staff List ({settings.staffMembers?.length || 0})
+                  </button>
+                )}
               </div>
 
               <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between gap-4 bg-slate-50/50">

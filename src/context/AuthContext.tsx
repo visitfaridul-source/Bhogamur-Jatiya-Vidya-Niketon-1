@@ -10,6 +10,7 @@ interface User {
   name: string;
   username?: string;
   uid?: string;
+  attendanceScope?: 'All' | 'Only Students' | 'Teachers' | 'Staff';
 }
 
 export interface AdminCredential {
@@ -143,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               uid: firebaseUser.uid,
               name: userData.name || firebaseUser.displayName || 'User',
               role: role,
-              username: firebaseUser.email || undefined
+              username: firebaseUser.email || undefined,
+              attendanceScope: userData.attendanceScope || 'All'
             };
             setUser(activeUser);
             try {
@@ -209,7 +211,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       uid: 'direct-super-admin-session-id',
       name: name,
       role: 'Super Admin',
-      username: email
+      username: email,
+      attendanceScope: 'All'
     };
     setUser(directUser);
     try {

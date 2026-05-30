@@ -55,6 +55,7 @@ export default function ManageAdmins() {
     username: '',
     password: '',
     role: 'Teacher' as UserRole,
+    attendanceScope: 'All' as 'All' | 'Only Students' | 'Teachers' | 'Staff',
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -62,6 +63,7 @@ export default function ManageAdmins() {
     name: '',
     email: '',
     role: 'Teacher' as UserRole,
+    attendanceScope: 'All' as 'All' | 'Only Students' | 'Teachers' | 'Staff',
   });
 
   // Self Profile states
@@ -135,6 +137,7 @@ export default function ManageAdmins() {
           name: formData.name,
           email: formData.username, // Save username/email so it's searchable and editable!
           role: formData.role,
+          attendanceScope: formData.attendanceScope,
           createdAt: new Date().toISOString()
         }, { merge: true });
       } catch (err) {
@@ -143,7 +146,7 @@ export default function ManageAdmins() {
       
       setSuccessMsg(`Successfully created user: ${formData.name}`);
       setIsAddModalOpen(false);
-      setFormData({ name: '', username: '', password: '', role: 'Teacher' });
+      setFormData({ name: '', username: '', password: '', role: 'Teacher', attendanceScope: 'All' });
       fetchUsers();
     } catch (err: any) {
       console.error("Error creating user:", err);
@@ -174,6 +177,7 @@ export default function ManageAdmins() {
           name: editFormData.name,
           email: editFormData.email,
           role: editFormData.role,
+          attendanceScope: editFormData.attendanceScope,
           updatedAt: new Date().toISOString()
         }, { merge: true });
       } catch (err) {
@@ -317,7 +321,7 @@ export default function ManageAdmins() {
         
         <button 
           onClick={() => {
-            setFormData({ name: '', username: '', password: '', role: 'Teacher' });
+            setFormData({ name: '', username: '', password: '', role: 'Teacher', attendanceScope: 'All' });
             setErrorMsg('');
             setSuccessMsg('');
             setIsAddModalOpen(true);
@@ -380,15 +384,22 @@ export default function ManageAdmins() {
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold uppercase ring-1 ${
-                            usr.role === 'Super Admin' ? 'bg-amber-50 text-amber-700 ring-amber-600/10' : 
-                            usr.role === 'Admin' ? 'bg-rose-50 text-rose-700 ring-rose-600/10' : 
-                            usr.role === 'Teacher' ? 'bg-indigo-50 text-indigo-700 ring-indigo-600/10' : 
-                            usr.role === 'Student' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' : 
-                            'bg-purple-50 text-purple-700 ring-purple-600/10'
-                          }`}>
-                            {usr.role || 'Unassigned'}
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold uppercase ring-1 ${
+                              usr.role === 'Super Admin' ? 'bg-amber-50 text-amber-700 ring-amber-600/10' : 
+                              usr.role === 'Admin' ? 'bg-rose-50 text-rose-700 ring-rose-600/10' : 
+                              usr.role === 'Teacher' ? 'bg-indigo-50 text-indigo-700 ring-indigo-600/10' : 
+                              usr.role === 'Student' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' : 
+                              'bg-purple-50 text-purple-700 ring-purple-600/10'
+                            }`}>
+                              {usr.role || 'Unassigned'}
+                            </span>
+                            {(usr.role === 'Super Admin' || usr.role === 'Admin' || usr.role === 'Teacher') && (
+                              <span className="text-[10px] text-slate-500 font-medium">
+                                Take Attendance: <strong className="text-indigo-600 font-semibold bg-indigo-50/50 px-1 py-0.2 rounded border border-indigo-100">{usr.attendanceScope || 'All'}</strong>
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="p-4 text-slate-400 font-mono text-xs">{usr.uid}</td>
                         <td className="p-4 pr-6">
@@ -399,7 +410,8 @@ export default function ManageAdmins() {
                                   uid: usr.uid,
                                   name: usr.name || '',
                                   email: usr.email || '',
-                                  role: usr.role || 'Teacher'
+                                  role: usr.role || 'Teacher',
+                                  attendanceScope: usr.attendanceScope || 'All'
                                 });
                                 setErrorMsg('');
                                 setSuccessMsg('');
@@ -552,6 +564,23 @@ export default function ManageAdmins() {
                 </select>
               </div>
 
+              {(formData.role === 'Super Admin' || formData.role === 'Admin' || formData.role === 'Teacher') && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 uppercase">Take Attendance Permission</label>
+                  <select 
+                    value={formData.attendanceScope}
+                    onChange={e => setFormData({...formData, attendanceScope: e.target.value as any})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-500 text-indigo-700 font-semibold"
+                    required
+                  >
+                    <option value="All">All (Students, Teachers & Staff)</option>
+                    <option value="Only Students">Only Students</option>
+                    <option value="Teachers">Teachers</option>
+                    <option value="Staff">Staff (Other Staff)</option>
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 uppercase">User's Full Name</label>
                 <input 
@@ -642,6 +671,23 @@ export default function ManageAdmins() {
                   <option value="Parent">Parent</option>
                 </select>
               </div>
+
+              {(editFormData.role === 'Super Admin' || editFormData.role === 'Admin' || editFormData.role === 'Teacher') && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 uppercase">Take Attendance Permission</label>
+                  <select 
+                    value={editFormData.attendanceScope}
+                    onChange={e => setEditFormData({...editFormData, attendanceScope: e.target.value as any})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-500 text-indigo-700 font-semibold"
+                    required
+                  >
+                    <option value="All">All (Students, Teachers & Staff)</option>
+                    <option value="Only Students">Only Students</option>
+                    <option value="Teachers">Teachers</option>
+                    <option value="Staff">Staff (Other Staff)</option>
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 uppercase">User's Full Name</label>
