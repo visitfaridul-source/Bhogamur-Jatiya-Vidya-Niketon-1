@@ -6,6 +6,75 @@ import * as XLSX from 'xlsx';
 import { useSchool } from '../../context/SchoolContext';
 import { useConfirm } from '../../context/ConfirmationContext';
 
+const ensureDDMMYYYY = (dateVal: string | Date | undefined | null) => {
+  if (!dateVal) return '-';
+  if (typeof dateVal === 'object' && dateVal instanceof Date) {
+    const d = dateVal.getDate().toString().padStart(2, '0');
+    const m = (dateVal.getMonth() + 1).toString().padStart(2, '0');
+    const y = dateVal.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  const dateStr = String(dateVal).trim();
+  if (!dateStr || dateStr === '-') return '-';
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  
+  // if format is YYYY-MM-DD
+  const matchesYMD = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (matchesYMD) {
+    return `${matchesYMD[3].padStart(2, '0')}/${matchesYMD[2].padStart(2, '0')}/${matchesYMD[1]}`;
+  }
+  
+  // if format is YYYY/MM/DD
+  const parts = dateStr.split('/');
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+  }
+
+  // check if it's an Excel serial number
+  const serial = Number(dateStr);
+  if (!isNaN(serial) && serial > 20000 && serial < 60000) {
+    const dateObj = new Date((serial - 25569) * 86400 * 1000);
+    const d = dateObj.getDate().toString().padStart(2, '0');
+    const m = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const y = dateObj.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  // Try parsing in native JS Date parser
+  try {
+    const dObj = new Date(dateStr);
+    if (!isNaN(dObj.getTime())) {
+      const d = dObj.getDate().toString().padStart(2, '0');
+      const m = (dObj.getMonth() + 1).toString().padStart(2, '0');
+      const y = dObj.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+  } catch (err) {}
+
+  return dateStr;
+};
+
+const formatDateForInput = (dateStr: string) => {
+  return ensureDDMMYYYY(dateStr);
+};
+
+const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); // strip non-digits
+  if (value.length > 8) value = value.slice(0, 8);
+  
+  let formatted = "";
+  if (value.length > 0) {
+    formatted += value.slice(0, 2);
+  }
+  if (value.length > 2) {
+    formatted += "/" + value.slice(2, 4);
+  }
+  if (value.length > 4) {
+    formatted += "/" + value.slice(4, 8);
+  }
+  e.target.value = formatted;
+};
+
 export default function Students() {
   const { students, setStudents } = useSchool();
   const { confirm } = useConfirm();
@@ -34,8 +103,8 @@ export default function Students() {
     "Mother's Name", 
     "Gender",
     "Mobile No", 
-    "D.O.B (YYYY-MM-DD)", 
-    "Admission Date", 
+    "D.O.B (DD/MM/YYYY)", 
+    "Admission Date (DD/MM/YYYY)", 
     "Residential Address", 
     "Aadhaar No.", 
     "PEN No.", 
@@ -77,8 +146,8 @@ export default function Students() {
         const motherName = row[6]?.trim()?.toUpperCase() || '-';
         const gender = row[7]?.trim() || 'Male';
         const phone = row[8]?.trim() || '-';
-        const dob = row[9]?.trim() || '-';
-        const admissionDate = row[10]?.trim() || new Date().toISOString().split('T')[0];
+        const dob = ensureDDMMYYYY(row[9]?.trim());
+        const admissionDate = ensureDDMMYYYY(row[10]?.trim()) || ensureDDMMYYYY(new Date());
         const address = row[11]?.trim()?.toUpperCase() || '-';
         const aadhaar = row[12]?.trim()?.toUpperCase() || '-';
         const pen = row[13]?.trim()?.toUpperCase() || '-';
@@ -203,8 +272,8 @@ export default function Students() {
           gender: row['Gender'] || row['gender'] || 'Male',
           class: row['Class'] || 'N/A',
           section: row['Section'] || 'N/A',
-          admissionDate: row['Date of Admission'] || '',
-          dob: row['DOB'] || '',
+          admissionDate: ensureDDMMYYYY(row['Date of Admission']),
+          dob: ensureDDMMYYYY(row['DOB']),
           parentName: row["Father's Name"] || row["Father's name"] || 'N/A',
           motherName: row["Mother's Name"] || row["Mother's name"] || '',
           address: row['Address'] || '',
@@ -244,12 +313,12 @@ export default function Students() {
     Object.entries(studentsByClass).forEach(([className, classStudentsList]) => {
       const formattedData = (classStudentsList as any[]).map(s => ({
         'Admission Id': s.id,
-        'Date of Admission': s.admissionDate || '',
+        'Date of Admission': ensureDDMMYYYY(s.admissionDate),
         'Class': s.class,
         'Section': s.section,
         'Name': s.name,
         'Gender': s.gender || 'Male',
-        'DOB': s.dob || '',
+        'DOB': ensureDDMMYYYY(s.dob),
         'Mobile No': s.phone,
         "Father's Name": s.parentName,
         "Mother's Name": s.motherName || '',
@@ -683,8 +752,8 @@ export default function Students() {
             parentName: (formData.get('fatherName') as string || '-').trim().toUpperCase(),
             phone: (formData.get('mobile') as string || '-').trim(),
             status: (formData.get('status') as string || 'Active'),
-            admissionDate: (formData.get('admissionDate') as string || new Date().toISOString().split('T')[0]),
-            dob: (formData.get('dob') as string || '-'),
+            admissionDate: ensureDDMMYYYY(formData.get('admissionDate') as string || new Date().toISOString().split('T')[0]),
+            dob: ensureDDMMYYYY(formData.get('dob') as string || '-'),
             motherName: (formData.get('motherName') as string || '-').trim().toUpperCase(),
             address: (formData.get('address') as string || '-').trim().toUpperCase(),
             aadhaar: (formData.get('aadhaar') as string || '-').trim().toUpperCase(),
@@ -716,7 +785,15 @@ export default function Students() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Date of Admission</label>
-                        <input type="date" name="admissionDate" defaultValue={editingStudent?.admissionDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
+                        <input 
+                          type="text" 
+                          name="admissionDate" 
+                          maxLength={10}
+                          placeholder="DD/MM/YYYY"
+                          defaultValue={editingStudent?.admissionDate ? formatDateForInput(editingStudent.admissionDate) : formatDateForInput(new Date().toISOString().split('T')[0])} 
+                          onChange={handleDateInputChange}
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" 
+                        />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-sm font-semibold text-slate-700">Class</label>
@@ -776,7 +853,15 @@ export default function Students() {
                          </div>
                          <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">Date of Birth (D.O.B)</label>
-                           <input type="date" name="dob" defaultValue={editingStudent?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
+                           <input 
+                             type="text" 
+                             name="dob" 
+                             maxLength={10}
+                             placeholder="DD/MM/YYYY" 
+                             defaultValue={editingStudent?.dob ? formatDateForInput(editingStudent.dob) : ""} 
+                             onChange={handleDateInputChange}
+                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" 
+                           />
                          </div>
                          <div className="space-y-1.5 md:col-span-2">
                            <label className="text-sm font-semibold text-slate-700">Mobile Number</label>

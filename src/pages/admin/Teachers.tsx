@@ -4,6 +4,65 @@ import { createPortal } from 'react-dom';
 import { useSchool } from '../../context/SchoolContext';
 import { useConfirm } from '../../context/ConfirmationContext';
 
+const ensureDDMMYYYY = (dateVal: string | Date | undefined | null) => {
+  if (!dateVal) return '-';
+  if (typeof dateVal === 'object' && dateVal instanceof Date) {
+    const d = dateVal.getDate().toString().padStart(2, '0');
+    const m = (dateVal.getMonth() + 1).toString().padStart(2, '0');
+    const y = dateVal.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  const dateStr = String(dateVal).trim();
+  if (!dateStr || dateStr === '-') return '-';
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  
+  // if format is YYYY-MM-DD
+  const matchesYMD = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (matchesYMD) {
+    return `${matchesYMD[3].padStart(2, '0')}/${matchesYMD[2].padStart(2, '0')}/${matchesYMD[1]}`;
+  }
+  
+  // if format is YYYY/MM/DD
+  const parts = dateStr.split('/');
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+  }
+
+  // Try parsing in native JS Date parser
+  try {
+    const dObj = new Date(dateStr);
+    if (!isNaN(dObj.getTime())) {
+      const d = dObj.getDate().toString().padStart(2, '0');
+      const m = (dObj.getMonth() + 1).toString().padStart(2, '0');
+      const y = dObj.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+  } catch (err) {}
+
+  return dateStr;
+};
+
+const formatDateForInput = (dateStr: string) => {
+  return ensureDDMMYYYY(dateStr);
+};
+
+const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); // strip non-digits
+  if (value.length > 8) value = value.slice(0, 8);
+  
+  let formatted = "";
+  if (value.length > 0) {
+    formatted += value.slice(0, 2);
+  }
+  if (value.length > 2) {
+    formatted += "/" + value.slice(2, 4);
+  }
+  if (value.length > 4) {
+    formatted += "/" + value.slice(4, 8);
+  }
+  e.target.value = formatted;
+};
+
 export default function Teachers() {
   const { teachers, setTeachers } = useSchool();
   const { confirm } = useConfirm();
@@ -58,8 +117,8 @@ export default function Teachers() {
       status: (formData.get('status') as string || 'Present').trim(),
       avatar: photoPreview || editingTeacher?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawFullName}`,
       fatherName: (formData.get('fatherName') as string || '-').trim().toUpperCase(),
-      dob: (formData.get('dob') as string || '-').trim(),
-      joiningDate: (formData.get('joiningDate') as string || new Date().toISOString().split('T')[0]).trim(),
+      dob: ensureDDMMYYYY(formData.get('dob') as string || '-'),
+      joiningDate: ensureDDMMYYYY(formData.get('joiningDate') as string || new Date().toISOString().split('T')[0]),
       aadhaar: (formData.get('aadhaar') as string || '-').trim().toUpperCase(),
       pan: (formData.get('pan') as string || '-').trim().toUpperCase(),
       address: (formData.get('address') as string || '-').trim().toUpperCase(),
@@ -318,7 +377,15 @@ export default function Teachers() {
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
-                              <input type="date" name="dob" defaultValue={editingTeacher?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
+                              <input 
+                                type="text" 
+                                name="dob" 
+                                maxLength={10}
+                                placeholder="DD/MM/YYYY"
+                                defaultValue={editingTeacher?.dob ? formatDateForInput(editingTeacher.dob) : ""} 
+                                onChange={handleDateInputChange}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" 
+                              />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Mobile No</label>
@@ -326,7 +393,15 @@ export default function Teachers() {
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Date of Joining</label>
-                              <input type="date" name="joiningDate" defaultValue={editingTeacher?.joiningDate} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
+                              <input 
+                                type="text" 
+                                name="joiningDate" 
+                                maxLength={10}
+                                placeholder="DD/MM/YYYY"
+                                defaultValue={editingTeacher?.joiningDate ? formatDateForInput(editingTeacher.joiningDate) : formatDateForInput(new Date().toISOString().split('T')[0])} 
+                                onChange={handleDateInputChange}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" 
+                              />
                             </div>
                          </div>
                       </div>

@@ -4,6 +4,44 @@ import { useConfirm } from '../../context/ConfirmationContext';
 import { Download, Check, X, Search, Filter, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+const ensureDDMMYYYY = (dateVal: string | Date | undefined | null) => {
+  if (!dateVal) return '-';
+  if (typeof dateVal === 'object' && dateVal instanceof Date) {
+    const d = dateVal.getDate().toString().padStart(2, '0');
+    const m = (dateVal.getMonth() + 1).toString().padStart(2, '0');
+    const y = dateVal.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  const dateStr = String(dateVal).trim();
+  if (!dateStr || dateStr === '-') return '-';
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  
+  // if format is YYYY-MM-DD
+  const matchesYMD = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (matchesYMD) {
+    return `${matchesYMD[3].padStart(2, '0')}/${matchesYMD[2].padStart(2, '0')}/${matchesYMD[1]}`;
+  }
+  
+  // if format is YYYY/MM/DD
+  const parts = dateStr.split('/');
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+  }
+
+  // Try parsing in native JS Date parser
+  try {
+    const dObj = new Date(dateStr);
+    if (!isNaN(dObj.getTime())) {
+      const d = dObj.getDate().toString().padStart(2, '0');
+      const m = (dObj.getMonth() + 1).toString().padStart(2, '0');
+      const y = dObj.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+  } catch (err) {}
+
+  return dateStr;
+};
+
 export default function AdmissionData() {
   const { onlineAdmissions, setOnlineAdmissions, setStudents } = useSchool();
   const { confirm } = useConfirm();
@@ -20,11 +58,11 @@ export default function AdmissionData() {
   const handleExportExcel = () => {
     const formattedData = filteredAdmissions.map(a => ({
       'Request ID': a.id,
-      'Submit Date': new Date(a.submitDate).toLocaleString(),
+      'Submit Date': ensureDDMMYYYY(a.submitDate),
       'Name': a.name,
       'Gender': a.gender || 'Male',
       'Class Applied': a.class,
-      'DOB': a.dob,
+      'DOB': ensureDDMMYYYY(a.dob),
       'Mobile No': a.phone,
       "Father's Name": a.parentName,
       "Mother's Name": a.motherName,
@@ -60,8 +98,8 @@ export default function AdmissionData() {
           parentName: admission.parentName,
           phone: admission.phone,
           status: 'Active',
-          admissionDate: new Date().toISOString().split('T')[0],
-          dob: admission.dob,
+          admissionDate: ensureDDMMYYYY(new Date()),
+          dob: ensureDDMMYYYY(admission.dob),
           motherName: admission.motherName,
           address: admission.address,
           aadhaar: admission.aadhaar,
@@ -181,7 +219,7 @@ export default function AdmissionData() {
                 filteredAdmissions.map((admission) => (
                   <tr key={admission.id} className="hover:bg-slate-50/50 transition-colors uppercase">
                     <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-700">{admission.id}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">{new Date(admission.submitDate).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">{ensureDDMMYYYY(admission.submitDate)}</td>
                     <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-800">{admission.name}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
@@ -193,7 +231,7 @@ export default function AdmissionData() {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">{admission.class}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">{admission.dob}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">{ensureDDMMYYYY(admission.dob)}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">{admission.phone}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">{admission.parentName}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
