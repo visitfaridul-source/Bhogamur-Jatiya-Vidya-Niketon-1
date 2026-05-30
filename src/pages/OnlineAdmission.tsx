@@ -21,6 +21,7 @@ export default function OnlineAdmission() {
       id: `REQ-${Date.now().toString().slice(-6)}`,
       submitDate: new Date().toISOString(),
       name: formData.get('fullName') as string,
+      gender: (formData.get('gender') as string || 'Male'),
       class: formData.get('class') as string,
       dob: formData.get('dob') as string,
       parentName: formData.get('fatherName') as string,
@@ -86,6 +87,10 @@ export default function OnlineAdmission() {
                   <div className="col-span-2 sm:col-span-1">
                     <p className="text-xs text-slate-500 font-semibold uppercase">Student Name</p>
                     <p className="text-slate-800 font-medium border-b border-slate-200 pb-1">{submittedData.name}</p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-xs text-slate-500 font-semibold uppercase">Gender</p>
+                    <p className="text-slate-800 font-medium border-b border-slate-200 pb-1">{submittedData.gender || 'Male'}</p>
                   </div>
                   <div className="col-span-2 sm:col-span-1">
                     <p className="text-xs text-slate-500 font-semibold uppercase">Admission Class</p>
@@ -192,10 +197,18 @@ export default function OnlineAdmission() {
                     <input type="text" name="fullName" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Student's Legal Name" required />
                   </div>
                   <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700">Gender *</label>
+                    <select name="gender" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">Date of Birth (D.O.B) *</label>
                     <input type="date" name="dob" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" required />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">Mobile Number *</label>
                     <input type="tel" name="mobile" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="e.g. 9876543210" required />
                   </div>

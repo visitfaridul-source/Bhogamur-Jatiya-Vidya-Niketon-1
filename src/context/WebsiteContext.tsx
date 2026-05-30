@@ -5,6 +5,7 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 export interface WebsiteStaffMember {
   id: string;
   name: string;
+  gender?: string;
   role: string;
   bio: string;
   imageUrl: string;

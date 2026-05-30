@@ -60,6 +60,7 @@ export default function AdminLayout() {
   const { 
     isSyncing, 
     syncStatus, 
+    isOnline,
     syncAllToFirebase, 
     resetFirestoreToMock, 
     firestoreDbEmpty, 
@@ -315,11 +316,26 @@ export default function AdminLayout() {
             <div className="relative">
               <button 
                 onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
-                className="flex items-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer"
+                className={cn(
+                  "flex items-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm font-bold transition-all shrink-0 cursor-pointer border",
+                  isOnline 
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200 animate-pulse"
+                )}
               >
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span className="hidden sm:inline">Firebase Connected</span>
-                <span className="sm:hidden">Ready</span>
+                {isOnline ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 animate-pulse" />
+                    <span className="hidden sm:inline">Firebase Connected</span>
+                    <span className="sm:hidden">Ready</span>
+                  </>
+                ) : (
+                  <>
+                    <CloudOff className="w-4 h-4 text-amber-500" />
+                    <span className="hidden sm:inline">Offline Mode</span>
+                    <span className="sm:hidden">Offline</span>
+                  </>
+                )}
               </button>
 
               <AnimatePresence>
@@ -388,6 +404,14 @@ export default function AdminLayout() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Check if offline */}
+                      {!isOnline && (
+                        <div className="p-2.5 bg-amber-50 text-amber-800 border border-amber-100 rounded-xl text-left text-[11px] leading-relaxed">
+                          <p className="font-bold mb-1">🔌 Offline Mode Active</p>
+                          <p className="opacity-90">Firestore is currently unreachable. Your application has automatically triggered seamless local cached mode. You can continue reading and preparing data safely!</p>
+                        </div>
+                      )}
 
                       {/* Check if user is in bypass login mode and show warning */}
                       {!auth.currentUser && (

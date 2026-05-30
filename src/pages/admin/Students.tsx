@@ -32,6 +32,7 @@ export default function Students() {
     "Class", "Section", 
     "Father's Name *", 
     "Mother's Name", 
+    "Gender",
     "Mobile No", 
     "D.O.B (YYYY-MM-DD)", 
     "Admission Date", 
@@ -42,7 +43,7 @@ export default function Students() {
   ];
 
   const [bulkGridData, setBulkGridData] = useState<string[][]>(() => 
-    Array.from({ length: 15 }, () => Array(14).fill(''))
+    Array.from({ length: 15 }, () => Array(15).fill(''))
   );
 
   const [parsedBulkStudents, setParsedBulkStudents] = useState<any[]>([]);
@@ -74,17 +75,19 @@ export default function Students() {
         const sec = row[4]?.trim()?.toUpperCase() || bulkSection || 'A';
         const parentName = row[5]?.trim()?.toUpperCase() || '-';
         const motherName = row[6]?.trim()?.toUpperCase() || '-';
-        const phone = row[7]?.trim() || '-';
-        const dob = row[8]?.trim() || '-';
-        const admissionDate = row[9]?.trim() || new Date().toISOString().split('T')[0];
-        const address = row[10]?.trim()?.toUpperCase() || '-';
-        const aadhaar = row[11]?.trim()?.toUpperCase() || '-';
-        const pen = row[12]?.trim()?.toUpperCase() || '-';
-        const apaar = row[13]?.trim()?.toUpperCase() || '-';
+        const gender = row[7]?.trim() || 'Male';
+        const phone = row[8]?.trim() || '-';
+        const dob = row[9]?.trim() || '-';
+        const admissionDate = row[10]?.trim() || new Date().toISOString().split('T')[0];
+        const address = row[11]?.trim()?.toUpperCase() || '-';
+        const aadhaar = row[12]?.trim()?.toUpperCase() || '-';
+        const pen = row[13]?.trim()?.toUpperCase() || '-';
+        const apaar = row[14]?.trim()?.toUpperCase() || '-';
 
         newStudents.push({
           id,
           name,
+          gender,
           roll,
           class: cls,
           section: sec,
@@ -164,7 +167,7 @@ export default function Students() {
 
     setStudents(prev => [...resolvedStudents, ...prev]);
     setShowBulkPasteModal(false);
-    setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+    setBulkGridData(Array.from({ length: 15 }, () => Array(15).fill('')));
     alert(`Successfully enrolled ${resolvedStudents.length} students class-wise!`);
   };
 
@@ -197,6 +200,7 @@ export default function Students() {
         const importedStudents = data.map((row: any, index) => ({
           id: row['Admission Id'] || row['Adm Id'] || `IMP${Date.now()}${index}`,
           name: row['Name'] || 'Unknown',
+          gender: row['Gender'] || row['gender'] || 'Male',
           class: row['Class'] || 'N/A',
           section: row['Section'] || 'N/A',
           admissionDate: row['Date of Admission'] || '',
@@ -244,6 +248,7 @@ export default function Students() {
         'Class': s.class,
         'Section': s.section,
         'Name': s.name,
+        'Gender': s.gender || 'Male',
         'DOB': s.dob || '',
         'Mobile No': s.phone,
         "Father's Name": s.parentName,
@@ -366,7 +371,7 @@ export default function Students() {
           />
           <button 
             onClick={() => {
-              setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+              setBulkGridData(Array.from({ length: 15 }, () => Array(15).fill('')));
               setShowBulkPasteModal(true);
             }}
             className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-200 shadow-sm"
@@ -448,6 +453,7 @@ export default function Students() {
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Adm Id</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Name</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Class</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Gender</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Mobile</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Father's Name</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Status</th>
@@ -478,6 +484,15 @@ export default function Students() {
                   <td className="px-6 py-4 text-slate-900 font-bold">{student.name}</td>
                   <td className="px-6 py-4 text-slate-600 font-medium">
                     {student.class} {student.section && `- ${student.section}`}
+                  </td>
+                  <td className="px-6 py-4">
+                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                      student.gender === 'Female' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' : 
+                      student.gender === 'Other' ? 'bg-slate-50 text-slate-700 border-slate-200' : 
+                      'bg-sky-50 text-sky-700 border-sky-200'
+                    }`}>
+                      {student.gender || 'Male'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-slate-600 font-medium">{student.phone}</td>
                   <td className="px-6 py-4 text-slate-600 font-medium">{student.parentName}</td>
@@ -661,6 +676,7 @@ export default function Students() {
           const newStudent = {
             id: admId,
             name: (formData.get('fullName') as string || 'UNKNOWN STUDENT').trim().toUpperCase(),
+            gender: (formData.get('gender') as string || 'Male'),
             class: (formData.get('class') as string || 'Class 1'),
             section: (formData.get('section') as string || 'A').toUpperCase(),
             roll: (formData.get('roll') as string || editingStudent?.roll || '-').trim().toUpperCase(),
@@ -751,10 +767,18 @@ export default function Students() {
                            <input type="text" name="fullName" defaultValue={editingStudent?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="Student's Legal Name" />
                          </div>
                          <div className="space-y-1.5">
+                           <label className="text-sm font-semibold text-slate-700">Gender</label>
+                           <select name="gender" defaultValue={editingStudent?.gender || "Male"} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase">
+                             <option value="Male">Male</option>
+                             <option value="Female">Female</option>
+                             <option value="Other">Other</option>
+                           </select>
+                         </div>
+                         <div className="space-y-1.5">
                            <label className="text-sm font-semibold text-slate-700">Date of Birth (D.O.B)</label>
                            <input type="date" name="dob" defaultValue={editingStudent?.dob} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" />
                          </div>
-                         <div className="space-y-1.5">
+                         <div className="space-y-1.5 md:col-span-2">
                            <label className="text-sm font-semibold text-slate-700">Mobile Number</label>
                            <input type="tel" name="mobile" defaultValue={editingStudent?.phone} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="+1 (___) ___-____" />
                          </div>
@@ -937,7 +961,7 @@ export default function Students() {
 
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => setBulkGridData(prev => [...prev, ...Array.from({ length: 15 }, () => Array(14).fill(''))])}
+                      onClick={() => setBulkGridData(prev => [...prev, ...Array.from({ length: 15 }, () => Array(15).fill(''))])}
                       className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5 text-slate-500" />
@@ -953,7 +977,7 @@ export default function Students() {
                           cancelLabel: 'Cancel'
                         });
                         if (isConfirmed) {
-                          setBulkGridData(Array.from({ length: 15 }, () => Array(14).fill('')));
+                          setBulkGridData(Array.from({ length: 15 }, () => Array(15).fill('')));
                         }
                       }}
                       className="px-3 py-1.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
@@ -995,7 +1019,7 @@ export default function Students() {
                                     value={cell}
                                     onChange={(e) => updateGridCell(ri, ci, e.target.value)}
                                     onPaste={(e) => handleGridPaste(e, ri, ci)}
-                                    placeholder={ci === 0 ? "John Doe" : ci === 5 ? "Father Name" : ""}
+                                    placeholder={ci === 0 ? "John Doe" : ci === 5 ? "Father Name" : ci === 7 ? "Male" : ""}
                                   />
                                 </td>
                               ))}

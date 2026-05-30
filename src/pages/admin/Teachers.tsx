@@ -50,6 +50,7 @@ export default function Teachers() {
     const newTeacher = {
       id: teacherId,
       name: rawFullName,
+      gender: (formData.get('gender') as string || 'Male'),
       subject: (formData.get('subject') as string || editingTeacher?.subject || 'GENERAL').trim().toUpperCase(),
       qualification: (formData.get('qualification') as string || editingTeacher?.qualification || 'B.ED').trim().toUpperCase(),
       phone: (formData.get('mobile') as string || '-').trim(),
@@ -165,7 +166,16 @@ export default function Teachers() {
               </div>
               
               <div>
-                <h3 className="text-lg font-bold text-slate-900 uppercase">{teacher.name}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-slate-900 uppercase">{teacher.name}</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    teacher.gender === 'Female' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100' : 
+                    teacher.gender === 'Other' ? 'bg-slate-50 text-slate-700 border-slate-200' : 
+                    'bg-sky-50 text-sky-700 border-sky-100'
+                  }`}>
+                    {teacher.gender || 'Male'}
+                  </span>
+                </div>
                 <p className="text-sm font-bold text-blue-600 mb-4">{teacher.subject} • <span className="text-slate-500 font-medium">{teacher.qualification}</span></p>
                 
                 <div className="space-y-3 mb-6">
@@ -277,6 +287,14 @@ export default function Teachers() {
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Full Name</label>
                               <input type="text" name="fullName" defaultValue={editingTeacher?.name} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase" placeholder="JOHN DOE" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-semibold text-slate-700">Gender</label>
+                              <select name="gender" defaultValue={editingTeacher?.gender || 'Male'} className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm uppercase">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                              </select>
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-sm font-semibold text-slate-700">Father's Name</label>

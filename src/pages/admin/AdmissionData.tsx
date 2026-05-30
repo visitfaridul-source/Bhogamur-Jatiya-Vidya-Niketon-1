@@ -22,6 +22,7 @@ export default function AdmissionData() {
       'Request ID': a.id,
       'Submit Date': new Date(a.submitDate).toLocaleString(),
       'Name': a.name,
+      'Gender': a.gender || 'Male',
       'Class Applied': a.class,
       'DOB': a.dob,
       'Mobile No': a.phone,
@@ -52,6 +53,7 @@ export default function AdmissionData() {
         const newStudent = {
           id: `ADM${new Date().getFullYear()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
           name: admission.name,
+          gender: admission.gender || 'Male',
           class: admission.class,
           section: 'A', // Default to section A
           roll: '-',
@@ -159,6 +161,7 @@ export default function AdmissionData() {
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">Request ID</th>
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">Submitted On</th>
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">Name</th>
+                <th className="px-4 py-4 font-semibold whitespace-nowrap">Gender</th>
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">Class (Applied)</th>
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">DOB</th>
                 <th className="px-4 py-4 font-semibold whitespace-nowrap">Mobile No</th>
@@ -180,6 +183,15 @@ export default function AdmissionData() {
                     <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-700">{admission.id}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-600">{new Date(admission.submitDate).toLocaleDateString()}</td>
                     <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-800">{admission.name}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
+                        admission.gender === 'Female' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100' : 
+                        admission.gender === 'Other' ? 'bg-slate-50 text-slate-700 border-slate-200' : 
+                        'bg-sky-50 text-sky-700 border-sky-100'
+                      }`}>
+                        {admission.gender || 'Male'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">{admission.class}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-600">{admission.dob}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">{admission.phone}</td>

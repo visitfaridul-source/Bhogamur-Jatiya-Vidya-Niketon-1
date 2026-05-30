@@ -17,6 +17,7 @@ export default function StaffManagement() {
   const [formData, setFormData] = useState<Partial<WebsiteStaffMember>>({
     name: '',
     role: '',
+    gender: 'Male',
     bio: '',
     imageUrl: '',
     email: '',
@@ -37,6 +38,7 @@ export default function StaffManagement() {
       setFormData({
         name: '',
         role: '',
+        gender: 'Male',
         bio: '',
         imageUrl: '',
         email: '',
@@ -187,7 +189,16 @@ export default function StaffManagement() {
                <div className="inline-block px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wider rounded border border-amber-100 mb-2">
                  {member.role}
                </div>
-               <h3 className="font-bold text-slate-800 text-lg mb-1">{member.name}</h3>
+               <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-slate-800 text-lg uppercase">{member.name}</h3>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  member.gender === 'Female' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100' : 
+                  member.gender === 'Other' ? 'bg-slate-50 text-slate-705 border-slate-200' : 
+                  'bg-sky-50 text-sky-700 border-sky-100'
+                }`}>
+                  {member.gender || 'Male'}
+                </span>
+              </div>
                <p className="text-sm text-slate-500 line-clamp-2 mb-4">{member.bio}</p>
             </div>
             
@@ -291,7 +302,7 @@ export default function StaffManagement() {
                         </div>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="grid sm:grid-cols-3 gap-6">
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
                         <input 
@@ -300,6 +311,18 @@ export default function StaffManagement() {
                           onChange={e => setFormData({...formData, name: e.target.value})}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Gender</label>
+                        <select 
+                          value={formData.gender || 'Male'} 
+                          onChange={e => setFormData({...formData, gender: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase font-sans text-sm"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Role/Position</label>
