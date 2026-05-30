@@ -18,6 +18,8 @@ export default function Students() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+
   // Bulk Excel copy-paste sheet states
   const [showBulkPasteModal, setShowBulkPasteModal] = useState(false);
   const [bulkClass, setBulkClass] = useState('Class 1');
@@ -288,6 +290,44 @@ export default function Students() {
     });
     if (isConfirmed) {
       setStudents(prev => prev.filter(s => s.id !== id));
+      setSelectedStudentIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allIds = new Set(filteredStudents.map(s => s.id));
+      setSelectedStudentIds(allIds);
+    } else {
+      setSelectedStudentIds(new Set());
+    }
+  };
+
+  const handleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedStudentIds.size === 0) return;
+    const isConfirmed = await confirm({
+      title: 'Delete Selected Students',
+      message: `Are you sure you want to delete ${selectedStudentIds.size} student(s)? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete All',
+      cancelLabel: 'Cancel'
+    });
+    if (isConfirmed) {
+      setStudents(prev => prev.filter(s => !selectedStudentIds.has(s.id)));
+      setSelectedStudentIds(new Set());
     }
   };
 
@@ -308,6 +348,15 @@ export default function Students() {
           <p className="text-slate-500 text-sm mt-1 font-medium">Manage enrollments, profiles, and ID cards.</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          {selectedStudentIds.size > 0 && (
+            <button 
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 bg-rose-50 text-rose-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-100 transition-colors border border-rose-200 shadow-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete {selectedStudentIds.size}
+            </button>
+          )}
           <input 
             type="file" 
             accept=".xlsx, .xls" 
@@ -387,6 +436,14 @@ export default function Students() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-100 text-slate-600 border-b border-slate-200">
               <tr>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs w-10">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                    checked={filteredStudents.length > 0 && selectedStudentIds.size === filteredStudents.length}
+                    onChange={handleSelectAll}
+                  />
+                </th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Photo</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Adm Id</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Name</th>
@@ -400,6 +457,14 @@ export default function Students() {
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
+                  <td className="px-6 py-4">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      checked={selectedStudentIds.has(student.id)}
+                      onChange={() => handleSelectStudent(student.id)}
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="w-12 h-12 rounded-full border border-slate-200 overflow-hidden shrink-0 bg-white">
                        {(student as any).photoUrl ? (
