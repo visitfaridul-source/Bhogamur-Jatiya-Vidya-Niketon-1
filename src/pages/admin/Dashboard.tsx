@@ -36,6 +36,38 @@ const historicalRevenueData = [
   { name: 'Jul', total: 0 },
 ];
 
+export const parseDateSafely = (dateStr: any): Date => {
+  if (!dateStr) return new Date();
+  if (dateStr instanceof Date) return dateStr;
+  const str = String(dateStr).trim();
+  
+  // check if format is DD/MM/YYYY
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 0-based
+    const year = parseInt(parts[2], 10);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+
+  // if format is YYYY-MM-DD
+  const matchesYMD = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (matchesYMD) {
+    const d = new Date(parseInt(matchesYMD[1], 10), parseInt(matchesYMD[2], 10) - 1, parseInt(matchesYMD[3], 10));
+    if (!isNaN(d.getTime())) return d;
+  }
+  
+  // Try fallback in native JS Date parser
+  const dObj = new Date(str);
+  if (!isNaN(dObj.getTime())) {
+    return dObj;
+  }
+  return new Date();
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { 
@@ -397,7 +429,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">{student.name}</p>
-                    <p className="text-[11px] font-semibold text-slate-500 mt-0.5">{student.class} • {format(new Date(student.date), 'MMM d, yyyy')}</p>
+                    <p className="text-[11px] font-semibold text-slate-500 mt-0.5">{student.class} • {format(parseDateSafely(student.date), 'MMM d, yyyy')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -695,7 +727,7 @@ export default function Dashboard() {
                           <div>
                             <p className="font-bold text-slate-800 leading-tight">{ev.title}</p>
                             <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                              📅 {format(new Date(ev.date), 'MMM dd, yyyy')} • 
+                              📅 {format(parseDateSafely(ev.date), 'MMM dd, yyyy')} • 
                               <span className={`inline-block ml-1 px-1 rounded-sm text-[9px] font-bold ${
                                 ev.type === 'Holiday' ? 'text-rose-600 bg-rose-50' :
                                 ev.type === 'Exam' ? 'text-amber-600 bg-amber-50' :
