@@ -224,7 +224,7 @@ export default function Students() {
 
     // Group students by class
     const studentsByClass = students.reduce((acc, student) => {
-      const className = student.class || 'Unassigned';
+      const className = (student.class || 'Unassigned').toUpperCase();
       if (!acc[className]) {
         acc[className] = [];
       }
@@ -232,6 +232,8 @@ export default function Students() {
       return acc;
     }, {} as Record<string, typeof students>);
 
+    const usedSheetNames = new Set<string>();
+    
     // Create a sheet for each class
     Object.entries(studentsByClass).forEach(([className, classStudentsList]) => {
       const formattedData = (classStudentsList as any[]).map(s => ({
@@ -256,7 +258,16 @@ export default function Students() {
       let safeSheetName = className.substring(0, 31).replace(/[\\/?*[\]]/g, ' ').trim();
       if (!safeSheetName) safeSheetName = 'Students';
       
-      XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
+      let finalSheetName = safeSheetName;
+      let counter = 1;
+      while (usedSheetNames.has(finalSheetName.toUpperCase())) {
+        const suffix = ` (${counter})`;
+        finalSheetName = safeSheetName.substring(0, 31 - suffix.length) + suffix;
+        counter++;
+      }
+      usedSheetNames.add(finalSheetName.toUpperCase());
+      
+      XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
     });
 
     if (Object.keys(studentsByClass).length === 0) {
@@ -384,7 +395,7 @@ export default function Students() {
                   s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   (s.roll && s.roll.toLowerCase().includes(searchTerm.toLowerCase()))
                 )
-                .filter(s => selectedClassFilter ? s.class === selectedClassFilter : true)
+                .filter(s => selectedClassFilter ? (s.class || '').toLowerCase() === selectedClassFilter.toLowerCase() : true)
                 .filter(s => selectedStatusFilter ? s.status === selectedStatusFilter : true)
                 .map((student) => (
                 <tr key={student.id} className="hover:bg-slate-50 transition-colors group">

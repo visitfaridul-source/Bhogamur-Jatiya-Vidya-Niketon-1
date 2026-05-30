@@ -358,7 +358,7 @@ export default function ResultsManagement() {
   };
 
   const filteredResults = results.filter(r => 
-    (selectedClassFilter === '' || r.className === selectedClassFilter) &&
+    (selectedClassFilter === '' || (r.className || '').toLowerCase() === selectedClassFilter.toLowerCase()) &&
     (r.studentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
      r.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
      r.examName.toLowerCase().includes(searchTerm.toLowerCase()))
