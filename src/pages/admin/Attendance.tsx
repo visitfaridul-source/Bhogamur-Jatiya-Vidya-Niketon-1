@@ -484,7 +484,7 @@ export default function Attendance() {
             @media print {
               @page {
                 size: landscape;
-                margin: 6mm 10mm 6mm 10mm;
+                margin: 5mm 8mm 5mm 8mm;
               }
               body {
                 -webkit-print-color-adjust: exact;
@@ -506,191 +506,238 @@ export default function Attendance() {
             .header-container {
               display: flex;
               justify-content: space-between;
-              align-items: flex-start;
-              margin-bottom: 12px;
-              border-bottom: 2px solid #0f172a;
-              padding-bottom: 8px;
+              align-items: center;
+              margin-bottom: 15px;
+              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+              padding: 15px 20px;
+              border-radius: 12px;
+              color: white;
+              box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15);
             }
             .school-title {
-              font-size: 18px;
+              font-size: 20px;
               font-weight: 800;
               text-transform: uppercase;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.75px;
               margin: 0;
-              color: #0f172a;
+              color: #ffffff;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.15);
             }
             .register-subtitle {
-              font-size: 12px;
+              font-size: 13px;
               font-weight: 600;
-              margin: 2px 0 0 0;
-              color: #475569;
+              margin: 4px 0 0 0;
+              color: #93c5fd;
               text-transform: uppercase;
+              letter-spacing: 0.5px;
             }
             .meta-info {
-              font-size: 10px;
+              font-size: 11px;
               font-weight: 700;
               display: flex;
               gap: 15px;
-              margin-top: 4px;
+              margin-top: 8px;
             }
             .meta-info-item {
-              background: #f8fafc;
-              padding: 3px 8px;
-              border-radius: 4px;
-              border: 1px solid #cbd5e1;
+              background: rgba(255, 255, 255, 0.15);
+              backdrop-filter: blur(4px);
+              padding: 4px 12px;
+              border-radius: 6px;
+              border: 1px solid rgba(255, 255, 255, 0.25);
+              color: #ffffff;
             }
             .meta-info-item span {
-              color: #64748b;
+              color: #bfdbfe;
               font-weight: 500;
-              margin-right: 4px;
+              margin-right: 6px;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 8px;
+              margin-top: 12px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+              border-radius: 8px;
+              overflow: hidden;
+              border: 1.5px solid #1e3a8a;
             }
             th, td {
-              border: 1px solid #334155;
-              padding: 3px 2px;
+              border: 1px solid #94a3b8;
+              padding: 4px 2px;
               text-align: center;
               font-size: 8.5px;
               line-height: 1.2;
             }
             th {
-              background-color: #f1f5f9;
-              font-weight: bold;
-              color: #1e293b;
+              background-color: #1e3a8a;
+              font-weight: 800;
+              color: #ffffff;
               text-transform: uppercase;
               font-size: 8px;
+              border: 1px solid #1e40af;
+              letter-spacing: 0.2px;
             }
             .main-head {
               font-size: 9px;
+              padding: 6px 3px;
             }
             .name-col {
               text-align: left;
-              padding-left: 6px;
-              font-weight: 600;
+              padding-left: 8px;
+              font-weight: 700;
               white-space: nowrap;
-              min-width: 140px;
-              color: #020617;
+              min-width: 150px;
+              color: #0f172a;
+              background-color: #ffffff;
+              border-right: 2.5px solid #1e3a8a !important;
+            }
+            tr:nth-child(even) .name-col {
+              background-color: #f8fafc;
             }
             .roll-col {
-              font-weight: 700;
-              min-width: 35px;
-              background-color: #f8fafc;
-            }
-            .p-cell {
-              color: #16a34a;
               font-weight: 800;
-              background-color: #f0fdf4 !important;
+              min-width: 40px;
+              background-color: #f1f5f9;
+              color: #1e3a8a;
+              border-right: 1.5px solid #cbd5e1;
+            }
+            /* Colors highlighting style for symbols */
+            .p-cell {
+              color: #14532d !important;
+              font-weight: 950;
+              background-color: #bbf7d0 !important; /* High-vibrant green background */
+              font-size: 10px;
+              border: 1.2px solid #86efac !important;
             }
             .a-cell {
-              color: #dc2626;
-              font-weight: 800;
-              background-color: #fef2f2 !important;
+              color: #7f1d1d !important;
+              font-weight: 950;
+              background-color: #fecaca !important; /* High-vibrant red background */
+              font-size: 10px;
+              border: 1.2px solid #fca5a5 !important;
             }
             .l-cell {
-              color: #d97706;
-              font-weight: 800;
-              background-color: #fffbeb !important;
+              color: #7c2d12 !important;
+              font-weight: 950;
+              background-color: #fde68a !important; /* High-vibrant amber background */
+              font-size: 10px;
+              border: 1.2px solid #fcd34d !important;
             }
             .sunday-col {
-              background-color: #e2e8f0 !important;
-              color: #475569;
-              font-size: 8px;
+              background-color: #dbeafe !important; /* Vibrant soft ocean blue background */
+              color: #1e40af !important;
+              font-size: 9px;
               font-weight: bold;
+              border: 1px solid #bfdbfe !important;
             }
             .sunday-header {
-              background-color: #cbd5e1 !important;
-              color: #0f172a;
+              background-color: #2563eb !important;
+              color: #ffffff !important;
+              border: 1px solid #1d4ed8;
             }
             .total-col {
-              font-weight: 800;
-              min-width: 25px;
-              background-color: #f8fafc;
-              font-size: 9px;
+              font-weight: 900;
+              min-width: 38px;
+              font-size: 9.5px;
+              border-left: 1.5px solid #475569;
             }
             .p-total {
-              color: #16a34a;
-              background-color: #f0fdf4;
+              color: #15803d !important;
+              background-color: #dcfce7 !important; /* Pastel Green summary */
+              border-left: 2.5px solid #22c55e !important;
             }
             .a-total {
-              color: #dc2626;
-              background-color: #fef2f2;
+              color: #b91c1c !important;
+              background-color: #fee2e2 !important; /* Pastel Red summary */
+              border-left: 2.5px solid #ef4444 !important;
             }
             .l-total {
-              color: #d97706;
-              background-color: #fffbeb;
+              color: #b45309 !important;
+              background-color: #fef3c7 !important; /* Pastel Amber summary */
+              border-left: 2.5px solid #f59e0b !important;
             }
             .footer-sign {
               display: flex;
               justify-content: space-between;
-              margin-top: 35px;
-              padding: 0 30px;
+              margin-top: 40px;
+              padding: 0 40px;
             }
             .signature-box {
-              border-top: 1px solid #475569;
-              width: 160px;
+              border-top: 2px solid #1e3a8a;
+              width: 180px;
               text-align: center;
-              padding-top: 5px;
-              font-size: 10px;
-              font-weight: 600;
-              color: #475569;
+              padding-top: 6px;
+              font-size: 11px;
+              font-weight: 700;
+              color: #1e3a8a;
             }
             .print-btn-bar {
-              background: #f8fafc;
-              padding: 10px 15px;
-              border-bottom: 1px solid #e2e8f0;
+              background: #f1f5f9;
+              padding: 12px 20px;
+              border-bottom: 2px solid #cbd5e1;
               display: flex;
-              gap: 10px;
+              gap: 12px;
               justify-content: flex-end;
               align-items: center;
               font-family: sans-serif;
+              border-radius: 8px;
+              margin-bottom: 15px;
             }
             .action-btn {
-              background: #4f46e5;
+              background: #2563eb;
               color: white;
               border: none;
-              padding: 6px 12px;
-              border-radius: 6px;
-              font-size: 12px;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 12.5px;
               font-weight: bold;
               cursor: pointer;
+              box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+              transition: all 0.2s;
             }
             .action-btn:hover {
-              background: #4338ca;
+              background: #1d4ed8;
+              transform: translateY(-1px);
             }
             .close-btn {
               background: white;
               color: #475569;
-              border: 1px solid #e2e8f0;
+              border: 1px solid #cbd5e1;
+              box-shadow: none;
             }
             .close-btn:hover {
-              background: #f1f5f9;
+              background: #e2e8f0;
+              color: #0f172a;
+            }
+            /* Row zebra coloring */
+            tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            tr:hover {
+              background-color: #f1f5f9;
             }
           </style>
         </head>
         <body>
           <div class="print-btn-bar no-print">
-            <span style="font-size: 12px; color: #64748b; margin-right: auto; font-weight: 500;">
-              Landscape Orientation Recommended in print options!
+            <span style="font-size: 13px; color: #1e40af; margin-right: auto; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+              🌈 Printable Landscape Attendance Ledger Sheet
             </span>
-            <button class="action-btn close-btn" onclick="window.close()">Close Window</button>
-            <button class="action-btn" onclick="window.print()">Print / Save PDF</button>
+            <button class="action-btn close-btn" onclick="window.close()">Close</button>
+            <button class="action-btn" onclick="window.print()">Print Ledger / Save as PDF</button>
           </div>
           
           <div class="header-container">
             <div>
               <h1 class="school-title">${displaySchoolName}</h1>
-              <h2 class="register-subtitle">Monthly Attendance Register</h2>
+              <h2 class="register-subtitle">Monthly Attendance Register Ledger</h2>
               
               <div class="meta-info">
                 <div class="meta-info-item"><span>Month:</span>${monthName} ${yearVal}</div>
-                <div class="meta-info-item"><span>T. Name:</span>${teacherName || "N/A"}</div>
-                <div class="meta-info-item"><span>Category / Subject:</span>${titleSubject}</div>
+                ${targetType === "Teacher" ? "" : `<div class="meta-info-item"><span>T. Name:</span>${teacherName || "N/A"}</div>`}
+                <div class="meta-info-item"><span>Category / Section:</span>${titleSubject}</div>
               </div>
             </div>
-            ${logoImgUrl ? `<img src="${logoImgUrl}" alt="School Logo" style="height: 42px; object-fit: contain; margin-top: 2px;" onerror="this.style.display='none'" />` : ''}
+            ${logoImgUrl ? `<img src="${logoImgUrl}" alt="School Logo" style="height: 48px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));" onerror="this.style.display='none'" />` : ''}
           </div>
 
           <table>
@@ -713,8 +760,8 @@ export default function Attendance() {
           </table>
 
           <div class="footer-sign">
-            <div class="signature-box">Class Teacher / T. Name Signature</div>
-            <div class="signature-box">Principal / Registrar Signature</div>
+            <div class="signature-box">Verified By Signature</div>
+            <div class="signature-box">Principal / Auth. Signature</div>
           </div>
         </body>
       </html>
@@ -755,7 +802,7 @@ export default function Attendance() {
     csvContent += `T. Name,${teacherName || "N/A"}\n`;
     csvContent += `Category / Subject,${targetType === "Student" ? "Class " + classVal : targetType}\n\n`;
 
-    const row1 = [targetType === "Student" ? "Roll No" : "ID", targetType === "Student" ? "Student Name" : "Name"];
+    const row1 = [targetType === "Student" ? "Roll No" : "ID", targetType === "Student" ? "Student Name" : targetType === "Teacher" ? "T. Name" : "Name"];
     daysArray.forEach(d => row1.push(String(d.num)));
     row1.push("Total Present", "Total Absent", "Total Late");
     csvContent += row1.map(cell => `"${cell}"`).join(",") + "\n";
@@ -1792,10 +1839,10 @@ export default function Attendance() {
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div>
                 <h3 className="font-bold text-xl text-slate-800">
-                  Generate Monthly Register
+                  {memberType === "Teacher" ? "Teacher Monthly Register (Payroll/Salary)" : "Generate Monthly Register"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Design & print school-standard landscape sheets
+                  {memberType === "Teacher" ? "Custom landscape sheet to calculate present days & calculate salary" : "Design & print school-standard landscape sheets"}
                 </p>
               </div>
               <button
