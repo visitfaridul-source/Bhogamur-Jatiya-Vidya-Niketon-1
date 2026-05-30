@@ -618,7 +618,7 @@ export default function Attendance() {
                                       onChange={(e) => handleUpdateEarlyOutReason(student.id, e.target.value)}
                                       className="px-2 py-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
-                                    {record?.outTime && record?.outTime < "14:00" && !record?.earlyOutReason && status !== 'Absent' && (
+                                    {record?.outTime && record?.outTime < "14:30" && !record?.earlyOutReason && status !== 'Absent' && (
                                       <span className="text-[10px] text-rose-600 font-bold animate-pulse">⚠️ Early leave? Provide reason</span>
                                     )}
                                   </div>
@@ -729,7 +729,7 @@ export default function Attendance() {
                                       onChange={(e) => handleUpdateEarlyOutReason(teacher.id, e.target.value)}
                                       className="px-2 py-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
-                                    {record?.outTime && record?.outTime < "14:00" && !record?.earlyOutReason && status !== 'Absent' && (
+                                    {record?.outTime && record?.outTime < "14:30" && !record?.earlyOutReason && status !== 'Absent' && (
                                       <span className="text-[10px] text-rose-600 font-bold animate-pulse">⚠️ Early leave? Provide reason</span>
                                     )}
                                   </div>
@@ -840,7 +840,7 @@ export default function Attendance() {
                                       onChange={(e) => handleUpdateEarlyOutReason(staff.id, e.target.value)}
                                       className="px-2 py-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
-                                    {record?.outTime && record?.outTime < "14:00" && !record?.earlyOutReason && status !== 'Absent' && (
+                                    {record?.outTime && record?.outTime < "14:30" && !record?.earlyOutReason && status !== 'Absent' && (
                                       <span className="text-[10px] text-rose-600 font-bold animate-pulse">⚠️ Early leave? Provide reason</span>
                                     )}
                                   </div>

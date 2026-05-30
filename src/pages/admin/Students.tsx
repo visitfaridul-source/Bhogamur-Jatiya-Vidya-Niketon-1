@@ -291,6 +291,15 @@ export default function Students() {
     }
   };
 
+  const filteredStudents = students
+    .filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.roll && s.roll.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .filter(s => selectedClassFilter ? (s.class || '').toLowerCase().replace(/\s+/g, '') === selectedClassFilter.toLowerCase().replace(/\s+/g, '') : true)
+    .filter(s => selectedStatusFilter ? s.status === selectedStatusFilter : true);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -389,15 +398,7 @@ export default function Students() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {students
-                .filter(s => 
-                  s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                  s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (s.roll && s.roll.toLowerCase().includes(searchTerm.toLowerCase()))
-                )
-                .filter(s => selectedClassFilter ? (s.class || '').toLowerCase() === selectedClassFilter.toLowerCase() : true)
-                .filter(s => selectedStatusFilter ? s.status === selectedStatusFilter : true)
-                .map((student) => (
+              {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="w-12 h-12 rounded-full border border-slate-200 overflow-hidden shrink-0 bg-white">
@@ -453,7 +454,7 @@ export default function Students() {
         </div>
         
         <div className="p-5 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500 bg-slate-50/50">
-          <p className="font-medium">Showing {students.length} students</p>
+          <p className="font-medium">Showing {filteredStudents.length} students {selectedClassFilter ? `in ${selectedClassFilter}` : ''}</p>
           <div className="flex gap-2">
             <button className="px-4 py-2 border border-slate-200 bg-white rounded-xl font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors">Previous</button>
             <button className="px-4 py-2 bg-blue-600 font-bold text-white rounded-xl shadow-sm">1</button>

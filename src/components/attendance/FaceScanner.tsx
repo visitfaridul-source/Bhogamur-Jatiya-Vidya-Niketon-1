@@ -7,10 +7,11 @@ import { useWebsite } from '@/context/WebsiteContext';
 import * as faceapi from '@vladmandic/face-api';
 
 export default function FaceScanner({ onExit }: { onExit?: () => void }) {
-  const { students, teachers } = useSchool();
+  const { students, teachers, saveAttendanceRecord } = useSchool();
   const { settings } = useWebsite();
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [attendanceCategory, setAttendanceCategory] = useState<'All' | 'Students' | 'Teachers' | 'Other Staff'>('All');
+  const [scannerMode, setScannerMode] = useState<'Entry' | 'Exit'>('Entry');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -24,6 +25,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   const latestStaff = useRef(settings.staffMembers || []);
   const latestSelectedClass = useRef(selectedClass);
   const latestCategory = useRef(attendanceCategory);
+  const latestScannerMode = useRef(scannerMode);
   const detectionInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -45,6 +47,10 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   useEffect(() => {
     latestCategory.current = attendanceCategory;
   }, [attendanceCategory]);
+
+  useEffect(() => {
+    latestScannerMode.current = scannerMode;
+  }, [scannerMode]);
 
   // Load FaceAPI Models from CDN
   useEffect(() => {
@@ -160,14 +166,37 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
           
           setDetectedFaces([faceData]);
           
+          const now = new Date();
+          const scanTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+          const curScannerMode = latestScannerMode.current;
+          const todayDate = now.toISOString().split('T')[0];
+          
           setLogs(prev => {
-            const isDuplicate = prev.some(l => l.id === matchedPerson.id);
-            if (!isDuplicate) {
+            const isRecentDuplicate = prev.slice(0, 10).some(l => l.id === matchedPerson.id && l.mode === curScannerMode);
+            
+            if (!isRecentDuplicate) {
               if (soundEnabled) {
                 const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
                 audio.play().catch(e => console.log('Audio play failed:', e));
               }
-              return [{ ...faceData, time: new Date().toLocaleTimeString(), status: 'Present', device: 'This Device' }, ...prev];
+              
+              if (curScannerMode === 'Entry') {
+                const isLate = scanTimeStr > "09:30";
+                saveAttendanceRecord(matchedPerson.id, todayDate, { 
+                  status: isLate ? 'Late' : 'Present',
+                  inTime: scanTimeStr
+                }).catch(e => console.error("Failed to save entry attendance:", e));
+                
+                return [{ ...faceData, time: scanTimeStr, mode: curScannerMode, status: isLate ? 'LATE' : 'PRESENT', device: 'This Device' }, ...prev.slice(0, 49)];
+              } else {
+                const isEarlyLeave = scanTimeStr < "14:30";
+                saveAttendanceRecord(matchedPerson.id, todayDate, {
+                  outTime: scanTimeStr,
+                  ...(isEarlyLeave ? { earlyOutReason: 'Early Leave (Auto)' } : {})
+                }).catch(e => console.error("Failed to save exit attendance:", e));
+                
+                return [{ ...faceData, time: scanTimeStr, mode: curScannerMode, status: isEarlyLeave ? 'EARLY LEAVE' : 'LEFT', device: 'This Device' }, ...prev.slice(0, 49)];
+              }
             }
             return prev;
           });
@@ -193,6 +222,27 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                <p className="text-sm text-slate-500">Auto-detect and mark attendance natively</p>
              </div>
              <div className="flex flex-wrap gap-2 items-center w-full md:w-auto md:justify-end">
+               <div className="bg-slate-100 p-1 rounded-xl flex items-center z-10 relative">
+                 <button
+                   onClick={() => setScannerMode('Entry')}
+                   className={cn(
+                     "px-4 py-1.5 text-sm font-bold rounded-lg transition-colors",
+                     scannerMode === 'Entry' ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                   )}
+                 >
+                   Time In (Entry)
+                 </button>
+                 <button
+                   onClick={() => setScannerMode('Exit')}
+                   className={cn(
+                     "px-4 py-1.5 text-sm font-bold rounded-lg transition-colors",
+                     scannerMode === 'Exit' ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                   )}
+                 >
+                   Time Out (Leave)
+                 </button>
+               </div>
+
                <select 
                  className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 z-10 relative cursor-pointer hover:border-slate-300"
                  value={attendanceCategory}
