@@ -11,13 +11,12 @@ interface RolePermission {
   description: string;
   permissions: string[];
   isSystem?: boolean;
+  attendanceScope?: 'All' | 'Only Students' | 'Teachers' | 'Staff';
 }
 
 const defaultRoles: RolePermission[] = [
   { id: '1', name: 'Super Admin', description: 'Full system access', permissions: ['all'], isSystem: true },
   { id: '2', name: 'Admin', description: 'General administration', permissions: ['view_dashboard', 'manage_students', 'manage_teachers', 'manage_fees'], isSystem: true },
-  { id: '3', name: 'Teacher', description: 'Class management', permissions: ['view_dashboard', 'take_attendance', 'manage_results'], isSystem: true },
-  { id: '4', name: 'Accountant', description: 'Fee management', permissions: ['view_dashboard', 'manage_fees'] },
 ];
 
 const availablePermissions = [
@@ -36,6 +35,7 @@ export default function Roles() {
   const [roles, setRoles] = useState(defaultRoles);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RolePermission | null>(null);
+  const [hasTakeAttendance, setHasTakeAttendance] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   if (user?.role !== 'Super Admin') {
@@ -47,6 +47,7 @@ export default function Roles() {
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
+    const attendanceScope = formData.get('attendanceScope') as any;
     
     const selectedPermissions: string[] = [];
     availablePermissions.forEach(p => {
@@ -56,9 +57,9 @@ export default function Roles() {
     });
 
     if (editingRole) {
-      setRoles(roles.map(r => r.id === editingRole.id ? { ...r, name, description, permissions: selectedPermissions } : r));
+      setRoles(roles.map(r => r.id === editingRole.id ? { ...r, name, description, permissions: selectedPermissions, attendanceScope: selectedPermissions.includes('take_attendance') ? attendanceScope : undefined } : r));
     } else {
-      setRoles([...roles, { id: Date.now().toString(), name, description, permissions: selectedPermissions }]);
+      setRoles([...roles, { id: Date.now().toString(), name, description, permissions: selectedPermissions, attendanceScope: selectedPermissions.includes('take_attendance') ? attendanceScope : undefined }]);
     }
     
     setIsModalOpen(false);
@@ -94,7 +95,7 @@ export default function Roles() {
           <p className="text-slate-500 text-sm mt-1 font-medium">Manage user roles and system access levels.</p>
         </div>
         <button 
-          onClick={() => { setEditingRole(null); setIsModalOpen(true); }}
+          onClick={() => { setEditingRole(null); setHasTakeAttendance(false); setIsModalOpen(true); }}
           className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Role
@@ -162,7 +163,7 @@ export default function Roles() {
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                        <button 
-                         onClick={() => { setEditingRole(role); setIsModalOpen(true); }}
+                         onClick={() => { setEditingRole(role); setHasTakeAttendance(role.permissions.includes('take_attendance')); setIsModalOpen(true); }}
                          disabled={role.isSystem && role.name === 'Super Admin'}
                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                          title="Edit Role"
@@ -257,15 +258,37 @@ export default function Roles() {
                       {availablePermissions.map(perm => {
                         const isChecked = editingRole?.permissions.includes(perm.id);
                         return (
-                          <label key={perm.id} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-300 transition-colors">
-                            <input 
-                              type="checkbox" 
-                              name={`perm_${perm.id}`}
-                              defaultChecked={isChecked}
-                              className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
-                            />
-                            <span className="text-sm font-medium text-slate-700">{perm.label}</span>
-                          </label>
+                          <div key={perm.id} className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-300 transition-colors">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                name={`perm_${perm.id}`}
+                                defaultChecked={isChecked}
+                                onChange={(e) => {
+                                  if (perm.id === 'take_attendance') {
+                                    setHasTakeAttendance(e.target.checked);
+                                  }
+                                }}
+                                className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                              />
+                              <span className="text-sm font-medium text-slate-700">{perm.label}</span>
+                            </label>
+                            {perm.id === 'take_attendance' && hasTakeAttendance && (
+                              <div className="pl-8 pt-1">
+                                <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Attendance Scope</label>
+                                <select 
+                                  name="attendanceScope" 
+                                  defaultValue={editingRole?.attendanceScope || 'All'}
+                                  className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20"
+                                >
+                                  <option value="All">All (Students, Teachers & Staff)</option>
+                                  <option value="Only Students">Only Students</option>
+                                  <option value="Teachers">Teachers</option>
+                                  <option value="Staff">Staff (Other Staff)</option>
+                                </select>
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
