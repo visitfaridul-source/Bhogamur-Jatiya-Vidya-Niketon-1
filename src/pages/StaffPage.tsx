@@ -65,58 +65,70 @@ export default function StaffPage() {
                            transition={{ delay: index * 0.1 }}
                            className="group relative bg-white rounded-[1.5rem] overflow-hidden shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col"
                         >
-                            {/* Elegant and Warm Image/Profile Container */}
+                            {/* Glowing Neon animated border for high-fidelity photo frames */}
                             <div 
-                              className="relative aspect-square overflow-hidden bg-slate-50 cursor-pointer border-b border-slate-100"
+                              className="relative aspect-square overflow-hidden bg-slate-950 p-[3px] cursor-pointer border-b border-slate-950"
                               onClick={() => staff.imageUrl && setSelectedImage(staff.imageUrl)}
                             >
-                                {staff.imageUrl ? (
-                                    <div className="relative h-full w-full bg-gradient-to-tr from-slate-100 to-white flex items-center justify-center overflow-hidden">
-                                      <img 
-                                          src={staff.imageUrl} 
-                                          alt={staff.name} 
-                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                      />
-                                      
-                                      {/* Clean warm subtle gradient overlay on hover */}
-                                      <div className="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                                      
-                                      {/* Sleek expandable badge prompt */}
-                                      <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                        <span className="text-white text-xs font-bold uppercase tracking-wider bg-indigo-600/90 shadow-lg px-4 py-2 rounded-full transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                                          Expand Photo
-                                        </span>
-                                      </div>
-                                    </div>
-                                ) : (
-                                    /* High-End, Warm Academic Portrait Placeholder */
-                                    <div className="relative h-full w-full bg-gradient-to-br from-indigo-50/80 via-blue-50/60 to-slate-100/50 flex flex-col items-center justify-center p-6 select-none">
-                                      {/* Decorative subtle background icon for texture */}
-                                      <div className="absolute -right-6 -bottom-6 text-slate-200/40 w-24 h-24 stroke-1 pointer-events-none">
-                                        <BookOpen className="w-full h-full opacity-35" />
-                                      </div>
-                                      
-                                      {/* Stylized rounded circular badge for user display */}
-                                      <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-white border border-slate-150 shadow-md group-hover:border-blue-500/30 group-hover:shadow-[0_4px_12px_rgba(59,130,246,0.15)] transition-all duration-300">
-                                        <User className="w-7 h-7 text-indigo-500/80 group-hover:text-blue-500 transition-colors" />
-                                        
-                                        {/* Stylized tiny gold badge overlay */}
-                                        <div className="absolute -top-1 -right-0.5 bg-amber-400 text-white rounded-full p-1 shadow-sm border border-white">
-                                          <GraduationCap className="w-3 h-3" />
+                                {/* Neon Gradient Spinners */}
+                                <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-[spin_4s_linear_infinite]" />
+                                <div className="absolute inset-[-100%] bg-[conic-gradient(from_180deg,transparent_0_340deg,#e879f9_360deg)] animate-[spin_4s_linear_infinite]" />
+                                
+                                <div className="relative h-full w-full rounded-[calc(1.5rem-3px)] rounded-b-none overflow-hidden bg-slate-900 flex items-center justify-center p-1.5 isolate">
+                                    {staff.imageUrl ? (
+                                        <div className="relative h-full w-full bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center">
+                                          <img 
+                                              src={staff.imageUrl} 
+                                              alt={staff.name} 
+                                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                          />
+                                          
+                                          {/* Sleek diagonal glass flash sweep scan effect */}
+                                          <div className="absolute inset-y-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none group-hover:animate-[shimmer_1s_ease-in-out] z-20" />
+                                          
+                                          {/* Clean warm subtle gradient overlay on hover */}
+                                          <div className="absolute inset-0 bg-indigo-950/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
+                                          
+                                          {/* Sleek expandable badge prompt */}
+                                          <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] z-30">
+                                            <span className="text-white text-[10px] font-black uppercase tracking-wider bg-indigo-600 shadow-lg px-4 py-2 rounded-full transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                              Expand Photo
+                                            </span>
+                                          </div>
                                         </div>
-                                      </div>
-                                      
-                                      {/* Staff details abbreviation key label */}
-                                      <div className="mt-4 text-center">
-                                        <span className="text-xs font-bold text-indigo-950/80 tracking-wide font-sans block max-w-[140px] truncate">
-                                          {staff.name}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">
-                                          {staff.role}
-                                        </span>
-                                      </div>
-                                    </div>
-                                )}
+                                    ) : (
+                                        /* High-End, Warm Academic Portrait Placeholder with glowing spinners and shimmers */
+                                        <div className="relative h-full w-full rounded-lg overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 flex flex-col items-center justify-center p-6 select-none">
+                                          {/* Sleek diagonal glass flash sweep scan effect */}
+                                          <div className="absolute inset-y-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none group-hover:animate-[shimmer_1.2s_ease-in-out] z-20" />
+                                          
+                                          {/* Decorative subtle background icon for texture */}
+                                          <div className="absolute -right-6 -bottom-6 text-white/5 w-24 h-24 stroke-1 pointer-events-none">
+                                            <BookOpen className="w-full h-full opacity-20" />
+                                          </div>
+                                          
+                                          {/* Stylized rounded circular badge for user display */}
+                                          <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-slate-900/90 border border-slate-750 shadow-md group-hover:border-blue-500/35 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] transition-all duration-300 z-10">
+                                            <User className="w-7 h-7 text-indigo-400 group-hover:text-blue-400 transition-colors" />
+                                            
+                                            {/* Stylized tiny gold badge overlay */}
+                                            <div className="absolute -top-1 -right-0.5 bg-amber-500 text-white rounded-full p-1 shadow-sm border border-slate-900">
+                                              <GraduationCap className="w-3 h-3" />
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Staff details abbreviation key label */}
+                                          <div className="mt-4 text-center z-10">
+                                            <span className="text-xs font-bold text-white/90 tracking-wide font-sans block max-w-[140px] truncate">
+                                              {staff.name}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest block mt-0.5">
+                                              {staff.role}
+                                            </span>
+                                          </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             
                             {/* Content */}
