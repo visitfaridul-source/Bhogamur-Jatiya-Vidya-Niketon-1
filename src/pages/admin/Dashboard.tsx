@@ -17,7 +17,9 @@ import {
   Trash2, 
   ShieldAlert, 
   Bookmark,
-  Clock
+  Clock,
+  UserX,
+  UserMinus
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { format } from 'date-fns';
@@ -225,6 +227,35 @@ export default function Dashboard() {
       .reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
   }, [filteredTransactions]);
 
+  // Today's date string formatted as yyyy-MM-dd
+  const todayDateStr = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
+  // Today's absent students count
+  const absentStudentsCount = useMemo(() => {
+    let count = 0;
+    const today = format(new Date(), 'yyyy-MM-dd');
+    filteredStudents.forEach(student => {
+      const record = attendanceMap[`${today}:${student.id}`];
+      if (record && record.status === 'Absent') {
+        count++;
+      }
+    });
+    return count;
+  }, [filteredStudents, attendanceMap]);
+
+  // Today's absent teachers count
+  const absentTeachersCount = useMemo(() => {
+    let count = 0;
+    const today = format(new Date(), 'yyyy-MM-dd');
+    filteredTeachers.forEach(teacher => {
+      const record = attendanceMap[`${today}:${teacher.id}`];
+      if (record && record.status === 'Absent') {
+        count++;
+      }
+    });
+    return count;
+  }, [filteredTeachers, attendanceMap]);
+
   // Dynamic Revenue Selector Chart Data
   const dynamicRevenueData = useMemo(() => {
     if (selectedChartPeriod === 'Last Year') {
@@ -398,20 +429,20 @@ export default function Dashboard() {
           lightColors="bg-sky-50 text-sky-600 border-sky-100"
         />
         <StatCard 
-          title="Fees Collected" 
-          value={formatCurrency(totalPaidSum)} 
-          icon={Wallet} 
-          trend={`${transactions.filter(t => t.status === 'Paid').length} paid receipts`}
-          trendUp={true}
-          lightColors="bg-emerald-50 text-emerald-600 border-emerald-100"
+          title="Students Absent Today" 
+          value={absentStudentsCount.toLocaleString()} 
+          icon={UserX} 
+          trend={absentStudentsCount > 0 ? `${absentStudentsCount} absent today` : "100% Present"}
+          trendUp={absentStudentsCount === 0}
+          lightColors={absentStudentsCount > 0 ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"}
         />
         <StatCard 
-          title="Total Outstanding" 
-          value={formatCurrency(totalOutstandingSum)} 
-          icon={IndianRupee} 
-          trend={`${transactions.filter(t => t.status !== 'Paid').length} invoices unpaid`}
-          trendUp={false}
-          lightColors="bg-rose-50 text-rose-600 border-rose-100"
+          title="Teachers Absent Today" 
+          value={absentTeachersCount.toLocaleString()} 
+          icon={UserMinus} 
+          trend={absentTeachersCount > 0 ? `${absentTeachersCount} absent today` : "All Faculty Present"}
+          trendUp={absentTeachersCount === 0}
+          lightColors={absentTeachersCount > 0 ? "bg-amber-50 text-amber-600 border-amber-150" : "bg-indigo-50 text-indigo-600 border-indigo-100"}
         />
       </div>
 
