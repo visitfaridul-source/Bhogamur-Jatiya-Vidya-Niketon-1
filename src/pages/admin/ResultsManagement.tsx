@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSchool, StudentResult, SubjectMark } from '../../context/SchoolContext';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmationContext';
-import { Search, Plus, Edit2, Trash2, CheckCircle2, XCircle, FileSpreadsheet, ChevronDown, Download, Award, BookOpen, Printer, Sparkles, TrendingUp } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, CheckCircle2, XCircle, FileSpreadsheet, ChevronDown, Download, Award, BookOpen, Printer, Sparkles, TrendingUp, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import html2pdf from 'html2pdf.js';
@@ -621,6 +621,13 @@ export default function ResultsManagement() {
           <p className="text-slate-500">Manage student exam results</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => window.open('/#/result', '_blank')}
+            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2 rounded-xl transition-colors font-bold shadow-xs text-sm border border-slate-200"
+          >
+            <ExternalLink className="w-5 h-5" />
+            <span className="hidden sm:inline">View Public Portal</span>
+          </button>
           {!isStudentOrParent && (
             <>
               <button
