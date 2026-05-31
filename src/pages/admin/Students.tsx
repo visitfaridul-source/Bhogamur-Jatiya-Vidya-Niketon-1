@@ -80,6 +80,7 @@ export default function Students() {
   const { confirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState('');
+  const [selectedSectionFilter, setSelectedSectionFilter] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
   const [selectedStudentForID, setSelectedStudentForID] = useState<any>(null);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -297,20 +298,23 @@ export default function Students() {
   const handleExportExcel = () => {
     const wb = XLSX.utils.book_new();
 
-    // Group students by class
-    const studentsByClass = students.reduce((acc, student) => {
+    // Group students by Class and Section uniquely
+    const studentsByGroup = filteredStudents.reduce((acc, student) => {
       const className = (student.class || 'Unassigned').toUpperCase();
-      if (!acc[className]) {
-        acc[className] = [];
+      const sectionName = (student.section || '').toUpperCase();
+      const groupKey = sectionName ? `${className} - SEC ${sectionName}` : className;
+
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
       }
-      acc[className].push(student);
+      acc[groupKey].push(student);
       return acc;
     }, {} as Record<string, typeof students>);
 
     const usedSheetNames = new Set<string>();
     
-    // Create a sheet for each class
-    Object.entries(studentsByClass).forEach(([className, classStudentsList]) => {
+    // Create a sheet for each class-section combination
+    Object.entries(studentsByGroup).forEach(([groupName, classStudentsList]) => {
       const formattedData = (classStudentsList as any[]).map(s => ({
         'Admission Id': s.id,
         'Date of Admission': ensureDDMMYYYY(s.admissionDate),
@@ -331,7 +335,7 @@ export default function Students() {
 
       const ws = XLSX.utils.json_to_sheet(formattedData);
       // Valid sheet names cannot exceed 31 chars and no special chars
-      let safeSheetName = className.substring(0, 31).replace(/[\\/?*[\]]/g, ' ').trim();
+      let safeSheetName = groupName.substring(0, 31).replace(/[\\/?*[\]]/g, ' ').trim();
       if (!safeSheetName) safeSheetName = 'Students';
       
       let finalSheetName = safeSheetName;
@@ -346,12 +350,12 @@ export default function Students() {
       XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
     });
 
-    if (Object.keys(studentsByClass).length === 0) {
+    if (Object.keys(studentsByGroup).length === 0) {
       const ws = XLSX.utils.json_to_sheet([]);
       XLSX.utils.book_append_sheet(wb, ws, "Students");
     }
 
-    XLSX.writeFile(wb, "Classwise_Students_List.xlsx");
+    XLSX.writeFile(wb, "Sectionwise_Students_List.xlsx");
   };
 
   const handleDeleteStudent = async (id: string) => {
@@ -405,6 +409,19 @@ export default function Students() {
     }
   };
 
+  const availableSectionsFilter = React.useMemo(() => {
+    if (!selectedClassFilter) return [];
+    const sections = new Set<string>();
+    students.forEach((s) => {
+      const clsNormalized = (s.class || '').toLowerCase().replace(/\s+/g, '');
+      const filterNormalized = selectedClassFilter.toLowerCase().replace(/\s+/g, '');
+      if (clsNormalized === filterNormalized && s.section) {
+        sections.add(s.section.toUpperCase().trim());
+      }
+    });
+    return Array.from(sections).sort();
+  }, [students, selectedClassFilter]);
+
   const filteredStudents = students
     .filter(s => 
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -412,6 +429,7 @@ export default function Students() {
       (s.roll && s.roll.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .filter(s => selectedClassFilter ? (s.class || '').toLowerCase().replace(/\s+/g, '') === selectedClassFilter.toLowerCase().replace(/\s+/g, '') : true)
+    .filter(s => selectedSectionFilter ? (s.section || '').toUpperCase().trim() === selectedSectionFilter.toUpperCase().trim() : true)
     .filter(s => selectedStatusFilter ? s.status === selectedStatusFilter : true);
 
   return (
@@ -498,11 +516,24 @@ export default function Students() {
             <select 
               className="bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 shadow-sm min-w-[140px]"
               value={selectedClassFilter}
-              onChange={(e) => setSelectedClassFilter(e.target.value)}
+              onChange={(e) => {
+                setSelectedClassFilter(e.target.value);
+                setSelectedSectionFilter('');
+              }}
             >
               <option value="">All Classes</option>
               {['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
+            {selectedClassFilter && availableSectionsFilter.length > 0 && (
+              <select 
+                className="bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 shadow-sm min-w-[140px]"
+                value={selectedSectionFilter}
+                onChange={(e) => setSelectedSectionFilter(e.target.value)}
+              >
+                <option value="">All Sections</option>
+                {availableSectionsFilter.map(s => <option key={s} value={s}>Section {s}</option>)}
+              </select>
+            )}
           </div>
         </div>
 

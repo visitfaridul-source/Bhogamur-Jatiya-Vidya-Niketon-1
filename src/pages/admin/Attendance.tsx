@@ -87,6 +87,7 @@ export default function Attendance() {
   }, [user]);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedSection, setSelectedSection] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
   const [viewMode, setViewMode] = useState<"detailed" | "summary">("detailed");
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,6 +101,21 @@ export default function Attendance() {
   const [registerYear, setRegisterYear] = useState<number>(new Date().getFullYear());
   const [registerTeacher, setRegisterTeacher] = useState<string>("");
   const [registerClass, setRegisterClass] = useState<string>(selectedClass || "Class 10");
+  const [registerSection, setRegisterSection] = useState<string>("");
+
+  const availableRegisterSections = useMemo(() => {
+    if (!registerClass) return [];
+    const sections = new Set<string>();
+    students.forEach((s) => {
+      if (
+        s.class.toLowerCase().trim() === registerClass.toLowerCase().trim() &&
+        s.section
+      ) {
+        sections.add(s.section.toUpperCase().trim());
+      }
+    });
+    return Array.from(sections).sort();
+  }, [students, registerClass]);
 
   const handleUpdateAttendanceStatus = (
     id: string,
@@ -225,10 +241,27 @@ export default function Attendance() {
     "Class 12",
   ];
 
+  const availableSections = useMemo(() => {
+    if (!selectedClass) return [];
+    const sections = new Set<string>();
+    students.forEach((s) => {
+      if (
+        s.class.toLowerCase().trim() === selectedClass.toLowerCase().trim() &&
+        s.section
+      ) {
+        sections.add(s.section.toUpperCase().trim());
+      }
+    });
+    return Array.from(sections).sort();
+  }, [students, selectedClass]);
+
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
       const matchesClass = selectedClass
         ? s.class.toLowerCase().trim() === selectedClass.toLowerCase().trim()
+        : true;
+      const matchesSection = selectedSection
+        ? (s.section || "").toUpperCase().trim() === selectedSection.toUpperCase().trim()
         : true;
       const matchesSearch = searchQuery
         ? s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -237,9 +270,9 @@ export default function Attendance() {
             s.class.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (s.roll && s.roll.toLowerCase().includes(searchQuery.toLowerCase()))
         : true;
-      return matchesClass && matchesSearch;
+      return matchesClass && matchesSection && matchesSearch;
     });
-  }, [students, selectedClass, searchQuery]);
+  }, [students, selectedClass, selectedSection, searchQuery]);
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((t) => {
@@ -391,7 +424,7 @@ export default function Attendance() {
     }
   };
 
-  const printMonthlyRegister = (monthVal: number, yearVal: number, teacherName: string, classVal: string, targetType: "Student" | "Teacher" | "Other Staff") => {
+  const printMonthlyRegister = (monthVal: number, yearVal: number, teacherName: string, classVal: string, sectionVal: string, targetType: "Student" | "Teacher" | "Other Staff") => {
     const totalDays = new Date(yearVal, monthVal + 1, 0).getDate();
     const weekdayShorts = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
     
@@ -413,17 +446,17 @@ export default function Attendance() {
     ];
     const monthName = monthNames[monthVal];
 
-    let membersList = [];
+    let membersList: any[] = [];
     let titleSubject = "";
     if (targetType === "Student") {
-      membersList = students.filter((s) => s.class === classVal);
+      membersList = students.filter((s) => s.class === classVal && (!sectionVal || s.section === sectionVal));
       membersList.sort((a, b) => {
         const rA = parseInt(a.roll) || 999;
         const rB = parseInt(b.roll) || 999;
         if (rA !== rB) return rA - rB;
         return a.name.localeCompare(b.name);
       });
-      titleSubject = `Class: ${classVal}`;
+      titleSubject = `Class: ${classVal}${sectionVal ? ' - Section ' + sectionVal : ''}`;
     } else if (targetType === "Teacher") {
       membersList = [...teachers].sort((a,b) => a.name.localeCompare(b.name));
       titleSubject = "Faculty / Teachers";
@@ -522,27 +555,23 @@ export default function Attendance() {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 15px;
-              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-              padding: 15px 20px;
-              border-radius: 12px;
-              color: white;
-              box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15);
+              margin-bottom: 20px;
+              border-bottom: 2px solid #cbd5e1;
+              padding-bottom: 12px;
             }
             .school-title {
-              font-size: 20px;
+              font-size: 22px;
               font-weight: 800;
               text-transform: uppercase;
-              letter-spacing: 0.75px;
+              letter-spacing: 0.5px;
               margin: 0;
-              color: #ffffff;
-              text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+              color: #0f172a;
             }
             .register-subtitle {
-              font-size: 13px;
+              font-size: 14px;
               font-weight: 600;
               margin: 4px 0 0 0;
-              color: #93c5fd;
+              color: #475569;
               text-transform: uppercase;
               letter-spacing: 0.5px;
             }
@@ -551,139 +580,118 @@ export default function Attendance() {
               font-weight: 700;
               display: flex;
               gap: 15px;
-              margin-top: 8px;
+              margin-top: 10px;
             }
             .meta-info-item {
-              background: rgba(255, 255, 255, 0.15);
-              backdrop-filter: blur(4px);
-              padding: 4px 12px;
-              border-radius: 6px;
-              border: 1px solid rgba(255, 255, 255, 0.25);
-              color: #ffffff;
+              padding: 4px 10px;
+              border-radius: 4px;
+              border: 1px solid #e2e8f0;
+              background-color: #f8fafc;
+              color: #334155;
             }
             .meta-info-item span {
-              color: #bfdbfe;
-              font-weight: 500;
+              color: #64748b;
+              font-weight: 600;
               margin-right: 6px;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 12px;
-              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-              border-radius: 8px;
-              overflow: hidden;
-              border: 1.5px solid #1e3a8a;
+              margin-top: 15px;
+              border: 1px solid #cbd5e1;
             }
             th, td {
-              border: 1px solid #94a3b8;
+              border: 1px solid #cbd5e1;
               padding: 4px 2px;
               text-align: center;
               font-size: 8.5px;
               line-height: 1.2;
             }
             th {
-              background-color: #1e3a8a;
-              font-weight: 800;
-              color: #ffffff;
+              background-color: #f1f5f9;
+              font-weight: 700;
+              color: #1e293b;
               text-transform: uppercase;
               font-size: 8px;
-              border: 1px solid #1e40af;
-              letter-spacing: 0.2px;
             }
             .main-head {
               font-size: 9px;
               padding: 6px 3px;
+              background-color: #e2e8f0;
             }
             .name-col {
               text-align: left;
               padding-left: 8px;
-              font-weight: 700;
+              font-weight: 600;
               white-space: nowrap;
               min-width: 150px;
               color: #0f172a;
-              background-color: #ffffff;
-              border-right: 2.5px solid #1e3a8a !important;
-            }
-            tr:nth-child(even) .name-col {
-              background-color: #f8fafc;
+              border-right: 2px solid #cbd5e1 !important;
             }
             .roll-col {
-              font-weight: 800;
+              font-weight: 700;
               min-width: 40px;
-              background-color: #f1f5f9;
-              color: #1e3a8a;
-              border-right: 1.5px solid #cbd5e1;
+              background-color: #f8fafc;
+              border-right: 1.5px solid #e2e8f0;
             }
             /* Colors highlighting style for symbols */
             .p-cell {
-              color: #14532d !important;
-              font-weight: 950;
-              background-color: #bbf7d0 !important; /* High-vibrant green background */
+              color: #15803d !important;
+              font-weight: 800;
               font-size: 10px;
-              border: 1.2px solid #86efac !important;
             }
             .a-cell {
-              color: #7f1d1d !important;
-              font-weight: 950;
-              background-color: #fecaca !important; /* High-vibrant red background */
+              color: #b91c1c !important;
+              font-weight: 800;
               font-size: 10px;
-              border: 1.2px solid #fca5a5 !important;
+              background-color: #fef2f2 !important;
             }
             .l-cell {
-              color: #7c2d12 !important;
-              font-weight: 950;
-              background-color: #fde68a !important; /* High-vibrant amber background */
+              color: #b45309 !important;
+              font-weight: 800;
               font-size: 10px;
-              border: 1.2px solid #fcd34d !important;
             }
             .sunday-col {
-              background-color: #dbeafe !important; /* Vibrant soft ocean blue background */
-              color: #1e40af !important;
+              background-color: #f8fafc !important; 
+              color: #64748b !important;
               font-size: 9px;
-              font-weight: bold;
-              border: 1px solid #bfdbfe !important;
             }
             .sunday-header {
-              background-color: #2563eb !important;
-              color: #ffffff !important;
-              border: 1px solid #1d4ed8;
+              background-color: #e2e8f0 !important;
+              color: #475569 !important;
             }
             .total-col {
-              font-weight: 900;
+              font-weight: 800;
               min-width: 38px;
               font-size: 9.5px;
-              border-left: 1.5px solid #475569;
+              border-left: 1.5px solid #cbd5e1;
             }
             .p-total {
               color: #15803d !important;
-              background-color: #dcfce7 !important; /* Pastel Green summary */
-              border-left: 2.5px solid #22c55e !important;
+              background-color: #f0fdf4 !important;
             }
             .a-total {
               color: #b91c1c !important;
-              background-color: #fee2e2 !important; /* Pastel Red summary */
-              border-left: 2.5px solid #ef4444 !important;
+              background-color: #fef2f2 !important;
             }
             .l-total {
               color: #b45309 !important;
-              background-color: #fef3c7 !important; /* Pastel Amber summary */
-              border-left: 2.5px solid #f59e0b !important;
+              background-color: #fffbeb !important;
             }
             .footer-sign {
               display: flex;
               justify-content: space-between;
-              margin-top: 40px;
+              margin-top: 50px;
               padding: 0 40px;
             }
             .signature-box {
-              border-top: 2px solid #1e3a8a;
+              border-top: 1px solid #475569;
               width: 180px;
               text-align: center;
               padding-top: 6px;
               font-size: 11px;
-              font-weight: 700;
-              color: #1e3a8a;
+              font-weight: 600;
+              color: #334155;
             }
             .print-btn-bar {
               background: #f1f5f9;
@@ -792,7 +800,7 @@ export default function Attendance() {
     }
   };
 
-  const exportMonthlyRegisterCSV = (monthVal: number, yearVal: number, teacherName: string, classVal: string, targetType: "Student" | "Teacher" | "Other Staff") => {
+  const exportMonthlyRegisterCSV = (monthVal: number, yearVal: number, teacherName: string, classVal: string, sectionVal: string, targetType: "Student" | "Teacher" | "Other Staff") => {
     const totalDays = new Date(yearVal, monthVal + 1, 0).getDate();
     const weekdayShorts = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
     
@@ -815,7 +823,11 @@ export default function Attendance() {
     let csvContent = `MONTHLY ATTENDANCE REGISTER - ${monthName.toUpperCase()} ${yearVal}\n`;
     csvContent += `School Name,${settings.schoolName || "Bhogamur Jatiya Vidya Niketon"}\n`;
     csvContent += `T. Name,${teacherName || "N/A"}\n`;
-    csvContent += `Category / Subject,${targetType === "Student" ? "Class " + classVal : targetType}\n\n`;
+    if (targetType === "Student") {
+        csvContent += `Category / Subject,Class ${classVal}${sectionVal ? ' - Section ' + sectionVal : ''}\n\n`;
+    } else {
+        csvContent += `Category / Subject,${targetType}\n\n`;
+    }
 
     const row1 = [targetType === "Student" ? "Roll No" : "ID", targetType === "Student" ? "Student Name" : targetType === "Teacher" ? "T. Name" : "Name"];
     daysArray.forEach(d => row1.push(String(d.num)));
@@ -827,9 +839,9 @@ export default function Attendance() {
     row2.push("", "", "");
     csvContent += row2.map(cell => `"${cell}"`).join(",") + "\n";
 
-    let membersList = [];
+    let membersList: any[] = [];
     if (targetType === "Student") {
-      membersList = students.filter((s) => s.class === classVal);
+      membersList = students.filter((s) => s.class === classVal && (!sectionVal || s.section === sectionVal));
       membersList.sort((a, b) => (parseInt(a.roll) || 999) - (parseInt(b.roll) || 999));
     } else if (targetType === "Teacher") {
       membersList = [...teachers].sort((a,b) => a.name.localeCompare(b.name));
@@ -1120,6 +1132,7 @@ export default function Attendance() {
                         value={selectedClass}
                         onChange={(e) => {
                           setSelectedClass(e.target.value);
+                          setSelectedSection("");
                           if (e.target.value) {
                             setViewMode("detailed");
                           }
@@ -1129,6 +1142,22 @@ export default function Attendance() {
                         {classes.map((c) => (
                           <option key={c} value={c}>
                             {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {memberType === "Student" && selectedClass && availableSections.length > 0 && (
+                    <div className="relative min-w-[150px]">
+                      <select
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                        value={selectedSection}
+                        onChange={(e) => setSelectedSection(e.target.value)}
+                      >
+                        <option value="">All Sections</option>
+                        {availableSections.map((sec) => (
+                          <option key={sec} value={sec}>
+                            {sec}
                           </option>
                         ))}
                       </select>
@@ -1930,23 +1959,45 @@ export default function Attendance() {
                 </div>
               </div>
 
-              {/* Class selection (only if memberType is Student) */}
+              {/* Class and Section selection (only if memberType is Student) */}
               {memberType === "Student" && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                    Target Class
-                  </label>
-                  <select
-                    value={registerClass}
-                    onChange={(e) => setRegisterClass(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                  >
-                    {classes.map((cls) => (
-                      <option key={cls} value={cls}>
-                        {cls}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                      Target Class
+                    </label>
+                    <select
+                      value={registerClass}
+                      onChange={(e) => {
+                        setRegisterClass(e.target.value);
+                        setRegisterSection("");
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      {classes.map((cls) => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                      Target Section
+                    </label>
+                    <select
+                      value={registerSection}
+                      onChange={(e) => setRegisterSection(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value="">All Sections</option>
+                      {availableRegisterSections.map((sec) => (
+                        <option key={sec} value={sec}>
+                          {sec}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               )}
 
@@ -1998,6 +2049,7 @@ export default function Attendance() {
                     registerYear,
                     registerTeacher,
                     registerClass,
+                    registerSection,
                     memberType
                   );
                 }}
@@ -2013,6 +2065,7 @@ export default function Attendance() {
                     registerYear,
                     registerTeacher,
                     registerClass,
+                    registerSection,
                     memberType
                   );
                 }}
