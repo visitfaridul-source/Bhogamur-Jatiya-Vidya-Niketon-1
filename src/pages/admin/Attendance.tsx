@@ -16,6 +16,7 @@ import {
   Loader2,
   Download,
   Printer,
+  UserX,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ export default function Attendance() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
   const [viewMode, setViewMode] = useState<"detailed" | "summary">("detailed");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAbsenteesOnly, setShowAbsenteesOnly] = useState(false);
 
   const [attendanceData, setAttendanceData] = useState(initialMockAttendance);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -270,9 +272,14 @@ export default function Attendance() {
             s.class.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (s.roll && s.roll.toLowerCase().includes(searchQuery.toLowerCase()))
         : true;
-      return matchesClass && matchesSection && matchesSearch;
+      let matchesAbsent = true;
+      if (showAbsenteesOnly) {
+         const record = attendanceMap[`${date}:${s.id}`];
+         matchesAbsent = getCalculatedStatus(record, date) === "Absent";
+      }
+      return matchesClass && matchesSection && matchesSearch && matchesAbsent;
     });
-  }, [students, selectedClass, selectedSection, searchQuery]);
+  }, [students, selectedClass, selectedSection, searchQuery, showAbsenteesOnly, attendanceMap, date]);
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((t) => {
@@ -282,9 +289,14 @@ export default function Attendance() {
           (t.subject &&
             t.subject.toLowerCase().includes(searchQuery.toLowerCase()))
         : true;
-      return matchesSearch;
+      let matchesAbsent = true;
+      if (showAbsenteesOnly) {
+         const record = attendanceMap[`${date}:${t.id}`];
+         matchesAbsent = getCalculatedStatus(record, date) === "Absent";
+      }
+      return matchesSearch && matchesAbsent;
     });
-  }, [teachers, searchQuery]);
+  }, [teachers, searchQuery, showAbsenteesOnly, attendanceMap, date]);
 
   const filteredStaff = useMemo(() => {
     return (settings.staffMembers || []).filter((st: any) => {
@@ -293,9 +305,14 @@ export default function Attendance() {
           st.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (st.role && st.role.toLowerCase().includes(searchQuery.toLowerCase()))
         : true;
-      return matchesSearch;
+      let matchesAbsent = true;
+      if (showAbsenteesOnly) {
+         const record = attendanceMap[`${date}:${st.id}`];
+         matchesAbsent = getCalculatedStatus(record, date) === "Absent";
+      }
+      return matchesSearch && matchesAbsent;
     });
-  }, [settings.staffMembers, searchQuery]);
+  }, [settings.staffMembers, searchQuery, showAbsenteesOnly, attendanceMap, date]);
 
   const filteredAttendanceData = useMemo(() => {
     return attendanceData.filter((record) => {
@@ -358,6 +375,51 @@ export default function Attendance() {
     link.setAttribute(
       "download",
       `Attendance_${selectedClass ? selectedClass : "Overview"}_${date}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportAbsentList = () => {
+    let csvHeader = "Roll No/ID,Name,Type/Class,Section,Status\n";
+    let csvRows = [];
+
+    let membersToFilter: any[] = [];
+    if (memberType === "Student") {
+       membersToFilter = selectedClass ? students.filter(s => s.class === selectedClass && (!selectedSection || s.section === selectedSection)) : students;
+    } else if (memberType === "Teacher") {
+       membersToFilter = teachers;
+    } else {
+       membersToFilter = settings.staffMembers || [];
+    }
+
+    const absentees = membersToFilter.filter(member => {
+        const record = attendanceMap[`${date}:${member.id}`];
+        const status = getCalculatedStatus(record, date);
+        return status === "Absent";
+    });
+
+    if (absentees.length === 0) {
+      alert("No absentees found for the selected criteria.");
+      return;
+    }
+
+    absentees.forEach((member) => {
+      const displayId = memberType === "Student" ? (member.roll || "") : (member.id || "");
+      const typeLabel = memberType === "Student" ? member.class : (memberType === "Teacher" ? (member.subject || "Teacher") : (member.role || "Staff"));
+      csvRows.push(
+        `${displayId},"${member.name}","${typeLabel}","${member.section || ""}","Absent"`,
+      );
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvHeader + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `Absent_List_${memberType}_${selectedClass ? selectedClass : "All"}_${date}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -960,6 +1022,13 @@ export default function Attendance() {
             <FileSpreadsheet className="w-4 h-4" />
             <span className="hidden sm:inline">Export Report</span>
           </button>
+          <button
+            onClick={exportAbsentList}
+            className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors shadow-sm cursor-pointer"
+          >
+            <UserX className="w-4 h-4" />
+            <span className="hidden sm:inline">Absent List</span>
+          </button>
         </div>
       </div>
 
@@ -1007,15 +1076,24 @@ export default function Attendance() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 hover:shadow-md transition-all">
+              <div 
+                onClick={() => setShowAbsenteesOnly(!showAbsenteesOnly)}
+                className={cn(
+                  "bg-white rounded-[2rem] p-6 border shadow-sm relative overflow-hidden group hover:border-rose-300 hover:shadow-md transition-all cursor-pointer",
+                  showAbsenteesOnly ? "border-rose-400 bg-rose-50" : "border-slate-200"
+                )}
+              >
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full blur-2xl group-hover:bg-rose-100 transition-colors"></div>
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 border border-rose-100">
+                  <div className={cn(
+                     "w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors",
+                     showAbsenteesOnly ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-rose-50 text-rose-600 border-rose-100"
+                  )}>
                     <XCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                      Total Absent
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      Total Absent {showAbsenteesOnly && <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-md">FILTER ON</span>}
                     </p>
                     <h3 className="text-2xl font-black text-slate-900 mt-1">
                       {currentLevelStats.absent}
