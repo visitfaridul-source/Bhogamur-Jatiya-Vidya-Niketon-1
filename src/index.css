@@ -20,6 +20,7 @@
   --animate-slide-up: slide-up 0.4s ease-out forwards;
   --animate-pulse-soft: pulse-soft 2s infinite;
   --animate-shimmer: shimmer 2.5s infinite linear;
+  --animate-neon-glow: neon-glow 3s infinite ease-in-out;
 }
 
 @layer base {
@@ -106,3 +107,35 @@
   0% { transform: translateX(-150%) skewX(-15deg); }
   100% { transform: translateX(150%) skewX(-15deg); }
 }
+
+@keyframes neon-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.40)) drop-shadow(0 0 10px rgba(236, 72, 153, 0.25)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.15));
+    opacity: 1;
+  }
+  35% {
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.70)) drop-shadow(0 0 18px rgba(236, 72, 153, 0.45)) drop-shadow(0 0 35px rgba(59, 130, 246, 0.35));
+    opacity: 0.98;
+  }
+  40% {
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.20)) drop-shadow(0 0 6px rgba(236, 72, 153, 0.15));
+    opacity: 0.94;
+  }
+  45% {
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.75)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.50)) drop-shadow(0 0 40px rgba(59, 130, 246, 0.40));
+    opacity: 1;
+  }
+  75% {
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.85)) drop-shadow(0 0 25px rgba(236, 72, 153, 0.60)) drop-shadow(0 0 50px rgba(59, 130, 246, 0.50)) drop-shadow(0 0 80px rgba(168, 85, 247, 0.30));
+    opacity: 1;
+  }
+  77% {
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.25)) drop-shadow(0 0 8px rgba(236, 72, 153, 0.20));
+    opacity: 0.95;
+  }
+  80% {
+    filter: drop-shadow(0 0 9px rgba(245, 158, 11, 0.80)) drop-shadow(0 0 22px rgba(236, 72, 153, 0.55)) drop-shadow(0 0 45px rgba(59, 130, 246, 0.45));
+    opacity: 1;
+  }
+}
+

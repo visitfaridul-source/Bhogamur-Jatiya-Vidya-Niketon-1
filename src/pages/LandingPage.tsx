@@ -170,11 +170,23 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left relative z-50"
           >
-            <h1 
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-tiro font-bold tracking-tight leading-[1.2] pb-2 bg-gradient-to-r from-amber-400 via-rose-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-md select-none"
-            >
-              {settings.heroHeadline}
-            </h1>
+            {/* Premium Interactive School Title Plate with Moving Neon Border */}
+            <div className="relative p-[2.5px] rounded-[2rem] overflow-hidden shadow-2xl flex items-center justify-center w-full max-w-full group mb-5 lg:mb-6 mt-1 select-none">
+              {/* Spinning Neon Aura Borders */}
+              <div className="absolute inset-[-250%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#f59e0b_360deg)] animate-[spin_4.5s_linear_infinite]" />
+              <div className="absolute inset-[-250%] bg-[conic-gradient(from_180deg,transparent_0_340deg,#3b82f6_360deg)] animate-[spin_4.5s_linear_infinite]" />
+              
+              <div className="relative w-full h-full rounded-[calc(2rem-2.5px)] px-5 sm:px-8 py-5 sm:py-6 overflow-hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center isolate border border-white/5">
+                <h1 
+                  className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-5xl font-tiro font-bold tracking-tight leading-[1.45] bg-gradient-to-r from-amber-300 via-amber-200 via-rose-300 to-cyan-300 bg-clip-text text-transparent text-center py-2"
+                >
+                  {settings.heroHeadline}
+                </h1>
+                
+                {/* Highlight Sweep */}
+                <div className="absolute inset-y-0 left-0 w-1/3 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none group-hover:animate-[shimmer_1.5s_ease-in-out_infinite] z-20" />
+              </div>
+            </div>
             
             <p className="text-slate-200 text-sm sm:text-base md:text-xl font-tiro font-bold mt-3 lg:mt-4 max-w-xl mx-auto lg:mx-0 leading-relaxed border-l-4 border-green-500 pl-4 py-1.5 bg-gradient-to-r from-green-500/10 to-transparent">
                {settings.aboutText || "য’ত সপোনৰ আৰম্ভণি হয় আৰু ভৱিষ্যত উজলি উঠে।"}
