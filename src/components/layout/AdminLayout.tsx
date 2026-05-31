@@ -70,6 +70,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [syncDropdownOpen, setSyncDropdownOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -499,16 +500,64 @@ export default function AdminLayout() {
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
               <span className="absolute top-1 right-1 md:top-1.5 md:right-1.5 w-2 md:w-2.5 h-2 md:h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="flex items-center gap-2 pl-3 md:pl-6 border-l border-slate-200">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold text-slate-700">{user.name}</p>
-                <p className="text-xs text-slate-500">{user.role}</p>
-              </div>
-              <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 p-0.5 shadow-sm cursor-pointer hover:scale-105 transition-transform" onClick={handleLogout}>
-                <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Admin" className="w-7 h-7 md:w-9 md:h-9 rounded-full" />
+            <div className="relative">
+              <div 
+                className="flex items-center gap-2 pl-3 md:pl-6 border-l border-slate-200 cursor-pointer group"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              >
+                <div className="hidden md:block text-right">
+                  <p className="text-sm font-semibold text-slate-700">{user.name}</p>
+                  <p className="text-xs text-slate-500">{user.role}</p>
                 </div>
+                <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 p-0.5 shadow-sm group-hover:scale-105 transition-transform flex items-center justify-center">
+                  <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Admin" className="w-7 h-7 md:w-9 md:h-9 rounded-full" />
+                  </div>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors hidden md:block" />
               </div>
+
+              <AnimatePresence>
+                {profileDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileDropdownOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 flex flex-col"
+                    >
+                      <div className="px-4 py-2 border-b border-slate-100 md:hidden">
+                        <p className="text-sm font-bold text-slate-800">{user.name}</p>
+                        <p className="text-xs text-slate-500">{user.role}</p>
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (user.role === 'Super Admin' || user.role === 'Admin') {
+                            navigate('/admin/users');
+                          }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors w-full text-left"
+                      >
+                        <Users className="w-4 h-4" />
+                        User Credentials
+                      </button>
+
+                      <div className="h-px bg-slate-100 my-1"></div>
+                      
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors w-full text-left"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
