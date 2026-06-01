@@ -34,8 +34,11 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   >("All");
   const [scannerMode, setScannerMode] = useState<"Entry" | "Exit">("Entry");
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(true);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const [cameraError, setCameraError] = useState<string>("");
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [detectedFaces, setDetectedFaces] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -43,6 +46,26 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   const wakeLockRef = useRef<any>(null);
   const latestStudents = useRef(students);
   const latestTeachers = useRef(teachers);
+
+  const updateDeviceList = async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter((device) => device.kind === "videoinput");
+        setVideoDevices(videoInputs);
+        if (videoInputs.length > 0 && !selectedDeviceId) {
+          const savedCamera = localStorage.getItem("bhogamur_selected_camera_id");
+          if (savedCamera && videoInputs.some(v => v.deviceId === savedCamera)) {
+            setSelectedDeviceId(savedCamera);
+          } else {
+            setSelectedDeviceId(videoInputs[0].deviceId);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Could not enumerate camera devices:", err);
+    }
+  };
   const latestStaff = useRef(settings.staffMembers || []);
   const latestSelectedClass = useRef(selectedClass);
   const latestCategory = useRef(attendanceCategory);
@@ -225,17 +248,52 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
     loadModels();
   }, []);
 
+  // Warmup/Pre-fetch camera permissions on mounting and list all video devices instantly
+  useEffect(() => {
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices()
+        .then((devices) => {
+          const videoInputs = devices.filter(d => d.kind === "videoinput");
+          // If labels are empty, we request once to trigger permissions so they are listed with labels
+          if (videoInputs.length > 0 && !videoInputs[0].label) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+              .then((s) => {
+                updateDeviceList();
+                s.getTracks().forEach(t => t.stop());
+              })
+              .catch(e => console.log("Warmup getUserMedia rejected:", e));
+          } else {
+            setVideoDevices(videoInputs);
+            const savedCamera = localStorage.getItem("bhogamur_selected_camera_id");
+            if (savedCamera && videoInputs.some(v => v.deviceId === savedCamera)) {
+              setSelectedDeviceId(savedCamera);
+            } else if (videoInputs.length > 0) {
+              setSelectedDeviceId(videoInputs[0].deviceId);
+            }
+          }
+        })
+        .catch(err => console.log("Initial enumerateDevices failed:", err));
+    }
+  }, []);
+
   useEffect(() => {
     let stream: MediaStream | null = null;
+    setCameraError("");
 
     if (isScanning && modelsLoaded && videoRef.current) {
+      const constraints = selectedDeviceId 
+        ? { video: { deviceId: { exact: selectedDeviceId } } } 
+        : { video: true };
+
       navigator.mediaDevices
-        .getUserMedia({ video: true })
+        .getUserMedia(constraints)
         .then(async (s) => {
           stream = s;
           if (videoRef.current) {
             videoRef.current.srcObject = s;
           }
+          // Populate list again to ensure labels are detailed after permission is acquired
+          updateDeviceList();
 
           try {
             if ("wakeLock" in navigator) {
@@ -246,7 +304,8 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
           }
         })
         .catch((err) => {
-          console.error("Camera access denied or unavailble", err);
+          console.error("Camera access denied or unavailable", err);
+          setCameraError(err.message || "Permission Denied or Camera Busy");
           setIsScanning(false);
         });
     }
@@ -258,7 +317,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
         wakeLockRef.current.release().catch(() => {});
       }
     };
-  }, [isScanning, modelsLoaded]);
+  }, [isScanning, modelsLoaded, selectedDeviceId]);
 
   const handleVideoPlay = () => {
     if (detectionInterval.current) clearInterval(detectionInterval.current);
@@ -828,6 +887,101 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                 <p className="text-slate-500 text-sm mt-1">
                   Click "Start Camera" to begin scanning.
                 </p>
+              </div>
+            )}
+          </div>
+
+          {/* CAMERA DEVICE RESET & SELECTOR SYSTEM */}
+          <div className="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-[2rem] relative z-10 space-y-4 shadow-inner">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                  <span className="p-1 px-1.5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wider">Live Controls</span>
+                  कम्प्यूटर/मोबाइल कैमरा और फीड रीसेट • Camera Reset List
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                  यदि कैमरा फीड लोड नहीं हो रहा है या रुक गया है, तो उपलब्ध कैमरे की सूची में से डिवाइस चुनें या <strong>Instant Reset</strong> दबाएं।
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  // Instant hard reset
+                  setIsScanning(false);
+                  if (videoRef.current) {
+                    videoRef.current.srcObject = null;
+                  }
+                  setTimeout(async () => {
+                    await updateDeviceList();
+                    setIsScanning(true);
+                  }, 150);
+                }}
+                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-black rounded-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-md shadow-slate-900/10"
+              >
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
+                ⚡ Instant Camera Reset
+              </button>
+            </div>
+
+            {/* Device lists */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {videoDevices.length === 0 ? (
+                <div className="sm:col-span-2 p-5 text-center bg-white border border-slate-100 rounded-2xl text-slate-400 text-xs font-medium">
+                  fसूची खाली है या कैमरा अनुमति का इंतजार है। अनुमति देने के लिए "Instant Camera Reset" पर क्लिक करें। <br />
+                  <span className="text-[10px] text-slate-400 mt-1 block">(No camera devices detected yet. Awaiting browser permission approval.)</span>
+                </div>
+              ) : (
+                videoDevices.map((device, idx) => {
+                  const isActive = selectedDeviceId === device.deviceId;
+                  return (
+                    <button
+                      key={device.deviceId || idx}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDeviceId(device.deviceId);
+                        localStorage.setItem("bhogamur_selected_camera_id", device.deviceId);
+                      }}
+                      className={cn(
+                        "flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden cursor-pointer",
+                        isActive
+                          ? "bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10 text-indigo-950 font-bold"
+                          : "bg-white/70 hover:bg-white border-slate-200 hover:border-slate-350 text-slate-700"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full shrink-0",
+                          isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+                        )} />
+                        <div className="min-w-0">
+                          <p className="text-xs truncate font-bold tracking-tight">
+                            {device.label || `Camera Device ${idx + 1}`}
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-mono truncate">
+                            ID: {device.deviceId ? `${device.deviceId.substring(0, 16)}...` : 'Default'}
+                          </p>
+                        </div>
+                      </div>
+                      {isActive ? (
+                        <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                          सक्रिय / Active
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-extrabold uppercase text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                          चुनें / SELECT
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {cameraError && (
+              <div className="p-3 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                <strong>कैमरा समस्या:</strong> {cameraError}. कृपया जांचें कि कैमरा अन्य कार्यों में व्यस्त तो नहीं है।
               </div>
             )}
           </div>
