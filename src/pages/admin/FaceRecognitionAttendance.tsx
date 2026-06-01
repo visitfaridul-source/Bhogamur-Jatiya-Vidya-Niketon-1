@@ -55,6 +55,7 @@ export default function FaceRecognitionAttendance() {
 
   // UI state for dual-mode logging
   const [scanMode, setScanMode] = useState<'check-in' | 'early-out'>('check-in');
+  const [scanTargetGroup, setScanTargetGroup] = useState<'Student' | 'Staff'>('Student');
   const [selectedPerson, setSelectedPerson] = useState<{ id: string; name: string; type: 'Student' | 'Teacher' | 'Other Staff'; details: string; photoUrl: string } | null>(null);
   const [selectedReason, setSelectedReason] = useState('Illness');
   const [customReason, setCustomReason] = useState('');
@@ -137,7 +138,7 @@ export default function FaceRecognitionAttendance() {
       }
 
       if (labeledFaceDescriptors.length > 0) {
-        setFaceMatcher(new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6));
+        setFaceMatcher(new faceapi.FaceMatcher(labeledFaceDescriptors, 0.45));
         setLoadingText('');
       } else {
         setFaceMatcher(null);
@@ -348,14 +349,21 @@ export default function FaceRecognitionAttendance() {
     });
   }, [students, teachers, settings.staffMembers, searchQuery, memberTypeFilter]);
 
+  // Store the interval ID to avoid memory leaks
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Handle video play - face detection interval
   const handleVideoPlay = () => {
     if (!videoRef.current || !canvasRef.current || !faceMatcher) return;
 
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     const displaySize = { width: videoRef.current.videoWidth, height: videoRef.current.videoHeight };
     faceapi.matchDimensions(canvasRef.current, displaySize);
 
-    setInterval(async () => {
+    intervalRef.current = setInterval(async () => {
       if (videoRef.current && canvasRef.current && faceMatcher) {
          const detections = await faceapi.detectAllFaces(videoRef.current).withFaceLandmarks().withFaceDescriptors();
          const resizedDetections = faceapi.resizeResults(detections, displaySize);
@@ -368,10 +376,36 @@ export default function FaceRecognitionAttendance() {
            
            results.forEach((result, i) => {
              const box = resizedDetections[i].detection.box;
-             const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() });
+             
+             // Check if it's the right group logic
+             let validTarget = false;
+             let person: ReturnType<typeof personMap.get> | undefined;
+
+             if (result.label !== 'unknown') {
+               person = personMap.get(result.label);
+               if (person) {
+                 const isStudent = person.type === 'Student';
+                 if (scanTargetGroup === 'Student' && isStudent) validTarget = true;
+                 if (scanTargetGroup === 'Staff' && !isStudent) validTarget = true;
+               }
+             }
+
+             const displayLabel = validTarget ? result.toString() : 'Unknown / Wrong Group';
+             const boxColor = validTarget ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
+             
+             const drawBox = new faceapi.draw.DrawBox(box, { label: displayLabel, boxColor });
              drawBox.draw(canvasRef.current!);
              
-             if (result.label !== 'unknown') {
+             if (validTarget && person) {
+                // Prevent duplicate logging triggers 
+                const key = `${todayDateStr}:${person.id}`;
+                const currentRecord = attendanceRegistry[key] || {};
+                
+                // If checking in and already recorded, skip logic
+                if (scanMode === 'check-in' && currentRecord.inTime) return;
+                // If checking out and already recorded, skip logic
+                if (scanMode === 'early-out' && currentRecord.outTime) return;
+
                 if (soundEnabled && !recognizedPeople.has(result.label)) {
                   const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
                   audio.play().catch(e => console.log('Audio play failed:', e));
@@ -388,8 +422,16 @@ export default function FaceRecognitionAttendance() {
            });
          }
       }
-    }, 1000);
+    }, 1200);
   };
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+  }, []);
 
   // Side-panel mode tab selection
   const [rightPanelTab, setRightPanelTab] = useState<'recognized' | 'search-simulation' | 'today-logs'>('recognized');
@@ -471,6 +513,26 @@ export default function FaceRecognitionAttendance() {
                      {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                    </button>
                  </div>
+               </div>
+
+               {/* Target Group Selector */}
+               <div className="flex justify-center bg-white border border-slate-200 rounded-[1.5rem] p-1.5 shadow-sm max-w-sm mx-auto">
+                 {(['Student', 'Staff'] as const).map(group => (
+                   <button
+                     key={group}
+                     onClick={() => {
+                       setScanTargetGroup(group);
+                       setRecognizedPeople(new Set()); // Reset on switch
+                     }}
+                     className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
+                       scanTargetGroup === group 
+                         ? 'bg-indigo-600 text-white shadow-md' 
+                         : 'text-slate-500 hover:bg-slate-100'
+                     }`}
+                   >
+                     {group} Scan
+                   </button>
+                 ))}
                </div>
 
                {/* Toast System Actions alerts */}
