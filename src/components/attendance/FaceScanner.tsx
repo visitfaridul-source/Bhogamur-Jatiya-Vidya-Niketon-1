@@ -51,6 +51,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
     photo: string;
   } | null>(null);
   const alertTimeoutRef = useRef<any>(null);
+  const detectedFacesTimeoutRef = useRef<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wakeLockRef = useRef<any>(null);
@@ -89,6 +90,8 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
 
   const latestRegisteredFaceIds = useRef(registeredFaceIds);
   const latestSimulatedPersonId = useRef(simulatedPersonId);
+  const latestIsScanning = useRef(isScanning);
+  const latestSoundEnabled = useRef(soundEnabled);
 
   useEffect(() => {
     latestRegisteredFaceIds.current = registeredFaceIds;
@@ -97,6 +100,14 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   useEffect(() => {
     latestSimulatedPersonId.current = simulatedPersonId;
   }, [simulatedPersonId]);
+
+  useEffect(() => {
+    latestIsScanning.current = isScanning;
+  }, [isScanning]);
+
+  useEffect(() => {
+    latestSoundEnabled.current = soundEnabled;
+  }, [soundEnabled]);
 
   // Sync registered face IDs from Firestore in real-time
   useEffect(() => {
@@ -286,6 +297,16 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
     }
   }, []);
 
+  // Automatically trigger simulated match when camera starts or simulated target selection changes
+  useEffect(() => {
+    if (isScanning && modelsLoaded && simulatedPersonId) {
+      const timer = setTimeout(() => {
+        simulateSingleMatch(simulatedPersonId);
+      }, 1000); // Wait 1 second for camera feed structure to warm up and give beautiful visual synchronization
+      return () => clearTimeout(timer);
+    }
+  }, [isScanning, modelsLoaded, simulatedPersonId]);
+
   useEffect(() => {
     let stream: MediaStream | null = null;
     setCameraError("");
@@ -301,7 +322,15 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
           stream = s;
           if (videoRef.current) {
             videoRef.current.srcObject = s;
+            try {
+              await videoRef.current.play();
+            } catch (playErr) {
+              console.log("Autoplay waiting or user gesture required:", playErr);
+            }
           }
+          // Start the detection loop programmatically to bypass any missed browser events
+          handleVideoPlay();
+          
           // Populate list again to ensure labels are detailed after permission is acquired
           updateDeviceList();
 
@@ -329,121 +358,423 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
     };
   }, [isScanning, modelsLoaded, selectedDeviceId]);
 
+  const simulateSingleMatch = (targetId: string) => {
+    const candidates: any[] = [];
+    const curCategory = latestCategory.current;
+
+    if (curCategory === "All" || curCategory === "Students") {
+      const currentStudents = latestStudents.current;
+      const currentSelectedClass = latestSelectedClass.current;
+      const targetStudents = currentSelectedClass
+        ? currentStudents.filter((s) => s.class === currentSelectedClass)
+        : currentStudents;
+      candidates.push(
+        ...targetStudents.map((s) => ({
+          id: s.id,
+          name: s.name,
+          class: s.class || "N/A",
+          roll: s.roll || "-",
+          type: "Student",
+          photo:
+            s.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.name}`,
+        })),
+      );
+    }
+
+    if (curCategory === "All" || curCategory === "Teachers") {
+      const currentTeachers = latestTeachers.current;
+      candidates.push(
+        ...currentTeachers.map((t) => ({
+          id: t.id,
+          name: t.name,
+          class: t.department || t.subject || "Teaching Department",
+          roll: "Teacher",
+          type: "Teacher",
+          photo:
+            t.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
+        })),
+      );
+    }
+
+    if (curCategory === "All" || curCategory === "Other Staff") {
+      const currentStaff = latestStaff.current;
+      candidates.push(
+        ...currentStaff.map((st: any) => ({
+          id: st.id,
+          name: st.name,
+          class: st.role || "Institution Staff",
+          roll: "Staff",
+          type: "Other Staff",
+          photo:
+            st.imageUrl ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${st.name}`,
+        })),
+      );
+    }
+
+    if (candidates.length === 0) return;
+
+    const curRegIds = latestRegisteredFaceIds.current;
+    let targetCandidate = candidates.find((c) => c.id === targetId);
+    const isRegistered = targetCandidate && curRegIds.includes(targetCandidate.id);
+
+    const now = new Date();
+    const scanTimeStr = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const curScannerMode = latestScannerMode.current;
+
+    if (!targetCandidate || !isRegistered) {
+      const faceData = {
+        id: "unknown",
+        name: targetCandidate ? `${targetCandidate.name} (Unregistered)` : "Unknown Person / Outer Guest",
+        class: targetCandidate ? targetCandidate.class : "Outer Guest",
+        roll: "-",
+        type: targetCandidate ? targetCandidate.type : "Unknown",
+        confidence: 0,
+        photo: "https://api.dicebear.com/7.x/bottts/svg?seed=unknown",
+      };
+
+      setDetectedFaces([faceData]);
+      if (detectedFacesTimeoutRef.current) clearTimeout(detectedFacesTimeoutRef.current);
+      detectedFacesTimeoutRef.current = setTimeout(() => setDetectedFaces([]), 2500);
+
+      setScanResultAlert({
+        id: "unknown",
+        name: faceData.name,
+        class: faceData.class,
+        type: faceData.type,
+        photo: faceData.photo,
+        status: "UNREGISTERED",
+        time: scanTimeStr,
+      });
+      if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+      alertTimeoutRef.current = setTimeout(() => {
+        setScanResultAlert(null);
+      }, 4000);
+
+      if (latestSoundEnabled.current) {
+        playWebAudioSound("warning");
+        speakVoice("Face not registered! Admission declined.");
+      }
+
+      setLogs((prev) => {
+        return [
+          {
+            ...faceData,
+            time: scanTimeStr,
+            mode: curScannerMode,
+            status: "UNREGISTERED",
+            device: "Simulated Match",
+          },
+          ...prev.slice(0, 49),
+        ];
+      });
+      return;
+    }
+
+    const matchedPerson = targetCandidate;
+    const faceData = {
+      ...matchedPerson,
+      confidence: 100,
+      photo: matchedPerson.photo,
+    };
+
+    setDetectedFaces([faceData]);
+    if (detectedFacesTimeoutRef.current) clearTimeout(detectedFacesTimeoutRef.current);
+    detectedFacesTimeoutRef.current = setTimeout(() => setDetectedFaces([]), 2500);
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayDate = `${year}-${month}-${day}`;
+
+    const recordKey = `${todayDate}:${matchedPerson.id}`;
+    const currentRecord = latestAttendance.current[recordKey];
+
+    let hasAlreadyScanned = false;
+    if (curScannerMode === "Entry" && currentRecord?.inTime) {
+      hasAlreadyScanned = true;
+    } else if (curScannerMode === "Exit" && currentRecord?.outTime) {
+      hasAlreadyScanned = true;
+    }
+
+    const isLate = scanTimeStr >= "10:00";
+    const isEarlyLeave = scanTimeStr < "14:30";
+    const finalStatus = hasAlreadyScanned
+      ? "ALREADY LOGGED"
+      : (curScannerMode === "Entry"
+        ? (isLate ? "LATE" : "PRESENT")
+        : (isEarlyLeave ? "EARLY LEAVE" : "LEFT"));
+
+    setScanResultAlert({
+      id: matchedPerson.id,
+      name: matchedPerson.name,
+      class: matchedPerson.class,
+      type: matchedPerson.type,
+      photo: matchedPerson.photo,
+      status: finalStatus,
+      time: scanTimeStr,
+    });
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    alertTimeoutRef.current = setTimeout(() => {
+      setScanResultAlert(null);
+    }, 4000);
+
+    if (latestSoundEnabled.current) {
+      if (hasAlreadyScanned) {
+        playWebAudioSound("warning");
+        speakVoice(`${matchedPerson.name}, Already Marked!`);
+      } else {
+        playWebAudioSound("success");
+        speakVoice(`${matchedPerson.name}, Present!`);
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3");
+        audio.play().catch((e) => console.log("Audio play failed:", e));
+      }
+    }
+
+    setLogs((prev) => {
+      const isRecentDuplicate = prev
+        .slice(0, 5)
+        .some((l) => l.id === matchedPerson.id && l.mode === curScannerMode);
+
+      if (!isRecentDuplicate || hasAlreadyScanned) {
+        if (hasAlreadyScanned) {
+          return [
+            {
+              ...faceData,
+              time: scanTimeStr,
+              mode: curScannerMode,
+              status: "ALREADY LOGGED",
+              device: "Simulated Match",
+            },
+            ...prev.slice(0, 49),
+          ];
+        }
+
+        if (curScannerMode === "Entry") {
+          saveAttendanceRecord(matchedPerson.id, todayDate, {
+            status: isLate ? "Late" : "Present",
+            inTime: scanTimeStr,
+          }).catch((e) => console.error(e));
+
+          return [
+            {
+              ...faceData,
+              time: scanTimeStr,
+              mode: curScannerMode,
+              status: isLate ? "LATE" : "PRESENT",
+              device: "Simulated Match",
+            },
+            ...prev.slice(0, 49),
+          ];
+        } else {
+          saveAttendanceRecord(matchedPerson.id, todayDate, {
+            outTime: scanTimeStr,
+            ...(isEarlyLeave ? { earlyOutReason: "Early Leave (Auto)" } : {}),
+          }).catch((e) => console.error(e));
+
+          return [
+            {
+              ...faceData,
+              time: scanTimeStr,
+              mode: curScannerMode,
+              status: isEarlyLeave ? "EARLY LEAVE" : "LEFT",
+              device: "Simulated Match",
+            },
+            ...prev.slice(0, 49),
+          ];
+        }
+      }
+      return prev;
+    });
+  };
+
   const handleVideoPlay = () => {
     if (detectionInterval.current) clearInterval(detectionInterval.current);
 
     detectionInterval.current = setInterval(async () => {
-      if (videoRef.current && isScanning) {
-        // Detect faces using tinyFaceDetector
-        const detections = await faceapi.detectAllFaces(
-          videoRef.current,
-          new faceapi.TinyFaceDetectorOptions({
-            inputSize: 224,
-            scoreThreshold: 0.5,
-          }),
-        );
+      if (videoRef.current && latestIsScanning.current) {
+        try {
+          const detections = await faceapi.detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 224,
+              scoreThreshold: 0.35, // More sensitive to facial angles and lighting!
+            }),
+          );
 
-        if (detections.length > 0) {
-          // Gather candidates depending on category
-          const candidates: any[] = [];
-          const curCategory = latestCategory.current;
+          if (detections.length > 0) {
+            const candidates: any[] = [];
+            const curCategory = latestCategory.current;
 
-          if (curCategory === "All" || curCategory === "Students") {
-            const currentStudents = latestStudents.current;
-            const currentSelectedClass = latestSelectedClass.current;
-            const targetStudents = currentSelectedClass
-              ? currentStudents.filter((s) => s.class === currentSelectedClass)
-              : currentStudents;
-            candidates.push(
-              ...targetStudents.map((s) => ({
-                id: s.id,
-                name: s.name,
-                class: s.class || "N/A",
-                roll: s.roll || "-",
-                type: "Student",
-                photo:
-                  s.avatar ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.name}`,
-              })),
-            );
-          }
+            if (curCategory === "All" || curCategory === "Students") {
+              const currentStudents = latestStudents.current;
+              const currentSelectedClass = latestSelectedClass.current;
+              const targetStudents = currentSelectedClass
+                ? currentStudents.filter((s) => s.class === currentSelectedClass)
+                : currentStudents;
+              candidates.push(
+                ...targetStudents.map((s) => ({
+                  id: s.id,
+                  name: s.name,
+                  class: s.class || "N/A",
+                  roll: s.roll || "-",
+                  type: "Student",
+                  photo:
+                    s.avatar ||
+                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.name}`,
+                })),
+              );
+            }
 
-          if (curCategory === "All" || curCategory === "Teachers") {
-            const currentTeachers = latestTeachers.current;
-            candidates.push(
-              ...currentTeachers.map((t) => ({
-                id: t.id,
-                name: t.name,
-                class: t.department || t.subject || "Teaching Department",
-                roll: "Teacher",
-                type: "Teacher",
-                photo:
-                  t.avatar ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
-              })),
-            );
-          }
+            if (curCategory === "All" || curCategory === "Teachers") {
+              const currentTeachers = latestTeachers.current;
+              candidates.push(
+                ...currentTeachers.map((t) => ({
+                  id: t.id,
+                  name: t.name,
+                  class: t.department || t.subject || "Teaching Department",
+                  roll: "Teacher",
+                  type: "Teacher",
+                  photo:
+                    t.avatar ||
+                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
+                })),
+              );
+            }
 
-          if (curCategory === "All" || curCategory === "Other Staff") {
-            const currentStaff = latestStaff.current;
-            candidates.push(
-              ...currentStaff.map((st: any) => ({
-                id: st.id,
-                name: st.name,
-                class: st.role || "Institution Staff",
-                roll: "Staff",
-                type: "Other Staff",
-                photo:
-                  st.imageUrl ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${st.name}`,
-              })),
-            );
-          }
+            if (curCategory === "All" || curCategory === "Other Staff") {
+              const currentStaff = latestStaff.current;
+              candidates.push(
+                ...currentStaff.map((st: any) => ({
+                  id: st.id,
+                  name: st.name,
+                  class: st.role || "Institution Staff",
+                  roll: "Staff",
+                  type: "Other Staff",
+                  photo:
+                    st.imageUrl ||
+                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${st.name}`,
+                })),
+              );
+            }
 
-          if (candidates.length === 0) return;
+            if (candidates.length === 0) return;
 
-          if (candidates.length === 0) return;
+            const curSimId = latestSimulatedPersonId.current;
+            const curRegIds = latestRegisteredFaceIds.current;
 
-          // Match detected face with the simulated person to check if they are registered
-          const curSimId = latestSimulatedPersonId.current;
-          const curRegIds = latestRegisteredFaceIds.current;
+            let targetCandidate = candidates.find((c) => c.id === curSimId);
+            const isRegistered = targetCandidate && curRegIds.includes(targetCandidate.id);
 
-          let targetCandidate = candidates.find((c) => c.id === curSimId);
+            const now = new Date();
+            const scanTimeStr = now.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            });
+            const curScannerMode = latestScannerMode.current;
 
-          const isRegistered = targetCandidate && curRegIds.includes(targetCandidate.id);
+            if (!targetCandidate || !isRegistered) {
+              const faceData = {
+                id: "unknown",
+                name: targetCandidate ? `${targetCandidate.name} (Unregistered)` : "Unknown Person / Outer Guest",
+                class: targetCandidate ? targetCandidate.class : "Outer Guest",
+                roll: "-",
+                type: targetCandidate ? targetCandidate.type : "Unknown",
+                confidence: 0,
+                photo: "https://api.dicebear.com/7.x/bottts/svg?seed=unknown",
+              };
 
-          const now = new Date();
-          const scanTimeStr = now.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
-          const curScannerMode = latestScannerMode.current;
+              setDetectedFaces([faceData]);
+              if (detectedFacesTimeoutRef.current) clearTimeout(detectedFacesTimeoutRef.current);
+              detectedFacesTimeoutRef.current = setTimeout(() => setDetectedFaces([]), 2000);
 
-          if (!targetCandidate || !isRegistered) {
-            // It is an unregistered face standing in front of webcam!
-            // Warn and play warning buzz buzzer sound!
+              setScanResultAlert({
+                id: "unknown",
+                name: faceData.name,
+                class: faceData.class,
+                type: faceData.type,
+                photo: faceData.photo,
+                status: "UNREGISTERED",
+                time: scanTimeStr,
+              });
+              if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+              alertTimeoutRef.current = setTimeout(() => {
+                setScanResultAlert(null);
+              }, 4000);
+
+              if (latestSoundEnabled.current) {
+                playWebAudioSound("warning");
+                speakVoice("Face not registered! Admission declined.");
+              }
+
+              setLogs((prev) => {
+                const isRecentDuplicate = prev
+                  .slice(0, 5)
+                  .some((l) => l.id === "unknown" && l.status === "UNREGISTERED");
+
+                if (!isRecentDuplicate) {
+                  return [
+                    {
+                      ...faceData,
+                      time: scanTimeStr,
+                      mode: curScannerMode,
+                      status: "UNREGISTERED",
+                      device: "This Device",
+                    },
+                    ...prev.slice(0, 49),
+                  ];
+                }
+                return prev;
+              });
+              return;
+            }
+
+            const matchedPerson = targetCandidate;
             const faceData = {
-              id: "unknown",
-              name: targetCandidate ? `${targetCandidate.name} (Unregistered)` : "Unknown Person / Outer Guest",
-              class: targetCandidate ? targetCandidate.class : "Outer Guest",
-              roll: "-",
-              type: targetCandidate ? targetCandidate.type : "Unknown",
-              confidence: 0,
-              photo: "https://api.dicebear.com/7.x/bottts/svg?seed=unknown",
+              ...matchedPerson,
+              confidence: Math.round(detections[0].score * 100),
+              photo: matchedPerson.photo,
             };
 
             setDetectedFaces([faceData]);
-            setTimeout(() => setDetectedFaces([]), 2000);
 
-            // Pop visual diagnostic alert
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const todayDate = `${year}-${month}-${day}`;
+
+            const recordKey = `${todayDate}:${matchedPerson.id}`;
+            const currentRecord = latestAttendance.current[recordKey];
+
+            let hasAlreadyScanned = false;
+            if (curScannerMode === "Entry" && currentRecord?.inTime) {
+              hasAlreadyScanned = true;
+            } else if (curScannerMode === "Exit" && currentRecord?.outTime) {
+              hasAlreadyScanned = true;
+            }
+
+            const isLate = scanTimeStr >= "10:00";
+            const isEarlyLeave = scanTimeStr < "14:30";
+            const finalStatus = hasAlreadyScanned
+              ? "ALREADY LOGGED"
+              : (curScannerMode === "Entry"
+                ? (isLate ? "LATE" : "PRESENT")
+                : (isEarlyLeave ? "EARLY LEAVE" : "LEFT"));
+
             setScanResultAlert({
-              id: "unknown",
-              name: faceData.name,
-              class: faceData.class,
-              type: faceData.type,
-              photo: faceData.photo,
-              status: "UNREGISTERED",
+              id: matchedPerson.id,
+              name: matchedPerson.name,
+              class: matchedPerson.class,
+              type: matchedPerson.type,
+              photo: matchedPerson.photo,
+              status: finalStatus,
               time: scanTimeStr,
             });
             if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -451,179 +782,89 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
               setScanResultAlert(null);
             }, 4000);
 
+            if (latestSoundEnabled.current) {
+              if (hasAlreadyScanned) {
+                playWebAudioSound("warning");
+                speakVoice(`${matchedPerson.name}, Already Marked!`);
+              } else {
+                playWebAudioSound("success");
+                speakVoice(`${matchedPerson.name}, Present!`);
+                const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3");
+                audio.play().catch((e) => console.log("Audio play failed:", e));
+              }
+            }
+
             setLogs((prev) => {
               const isRecentDuplicate = prev
-                .slice(0, 5)
-                .some((l) => l.id === "unknown" && l.status === "UNREGISTERED");
+                .slice(0, 10)
+                .some(
+                  (l) => l.id === matchedPerson.id && l.mode === curScannerMode,
+                );
 
-              if (!isRecentDuplicate) {
-                if (soundEnabled) {
-                  playWebAudioSound("warning");
-                  speakVoice("Face not registered! Admission declined.");
+              if (!isRecentDuplicate || hasAlreadyScanned) {
+                if (hasAlreadyScanned) {
+                  return [
+                    {
+                      ...faceData,
+                      time: scanTimeStr,
+                      mode: curScannerMode,
+                      status: "ALREADY LOGGED",
+                      device: "This Device",
+                    },
+                    ...prev.slice(0, 49),
+                  ];
                 }
 
-                return [
-                  {
-                    ...faceData,
-                    time: scanTimeStr,
-                    mode: curScannerMode,
-                    status: "UNREGISTERED",
-                    device: "This Device",
-                  },
-                  ...prev.slice(0, 49),
-                ];
+                if (curScannerMode === "Entry") {
+                  saveAttendanceRecord(matchedPerson.id, todayDate, {
+                    status: isLate ? "Late" : "Present",
+                    inTime: scanTimeStr,
+                  }).catch((e) =>
+                    console.error("Failed to save entry attendance:", e),
+                  );
+
+                  return [
+                    {
+                      ...faceData,
+                      time: scanTimeStr,
+                      mode: curScannerMode,
+                      status: isLate ? "LATE" : "PRESENT",
+                      device: "This Device",
+                    },
+                    ...prev.slice(0, 49),
+                  ];
+                } else {
+                  saveAttendanceRecord(matchedPerson.id, todayDate, {
+                    outTime: scanTimeStr,
+                    ...(isEarlyLeave
+                      ? { earlyOutReason: "Early Leave (Auto)" }
+                      : {}),
+                  }).catch((e) =>
+                    console.error("Failed to save exit attendance:", e),
+                  );
+
+                  return [
+                    {
+                      ...faceData,
+                      time: scanTimeStr,
+                      mode: curScannerMode,
+                      status: isEarlyLeave ? "EARLY LEAVE" : "LEFT",
+                      device: "This Device",
+                    },
+                    ...prev.slice(0, 49),
+                  ];
+                }
               }
               return prev;
             });
-            return;
+
+            if (detectedFacesTimeoutRef.current) clearTimeout(detectedFacesTimeoutRef.current);
+            detectedFacesTimeoutRef.current = setTimeout(() => {
+              setDetectedFaces([]);
+            }, 2000);
           }
-
-          // If we reach here, we have a target candidate and they ARE registered!
-          const matchedPerson = targetCandidate;
-          const faceData = {
-            ...matchedPerson,
-            confidence: Math.round(detections[0].score * 100),
-            photo: matchedPerson.photo,
-          };
-
-          setDetectedFaces([faceData]);
-
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const day = String(now.getDate()).padStart(2, '0');
-          const todayDate = `${year}-${month}-${day}`;
-
-          const recordKey = `${todayDate}:${matchedPerson.id}`;
-          const currentRecord = latestAttendance.current[recordKey];
-
-          let hasAlreadyScanned = false;
-          if (curScannerMode === "Entry" && currentRecord?.inTime) {
-            hasAlreadyScanned = true;
-          } else if (curScannerMode === "Exit" && currentRecord?.outTime) {
-            hasAlreadyScanned = true;
-          }
-
-          // Trigger screen alerts BEFORE modifying logs state
-          const isLate = scanTimeStr >= "10:00";
-          const isEarlyLeave = scanTimeStr < "14:30";
-          const finalStatus = hasAlreadyScanned
-            ? "ALREADY LOGGED"
-            : (curScannerMode === "Entry"
-              ? (isLate ? "LATE" : "PRESENT")
-              : (isEarlyLeave ? "EARLY LEAVE" : "LEFT"));
-
-          setScanResultAlert({
-            id: matchedPerson.id,
-            name: matchedPerson.name,
-            class: matchedPerson.class,
-            type: matchedPerson.type,
-            photo: matchedPerson.photo,
-            status: finalStatus,
-            time: scanTimeStr,
-          });
-          if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
-          alertTimeoutRef.current = setTimeout(() => {
-            setScanResultAlert(null);
-          }, 4000);
-
-          setLogs((prev) => {
-            const isRecentDuplicate = prev
-              .slice(0, 10)
-              .some(
-                (l) => l.id === matchedPerson.id && l.mode === curScannerMode,
-              );
-
-            if (!isRecentDuplicate) {
-              if (hasAlreadyScanned) {
-                if (soundEnabled) {
-                  // Play warning buzz tone & announce voice
-                  playWebAudioSound("warning");
-                  speakVoice(`${matchedPerson.name}, Already Marked!`);
-
-                  // Optional fallback classic Audio
-                  const errorAudio = new Audio(
-                    "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-                  );
-                  errorAudio
-                    .play()
-                    .catch((e) => console.log("Audio play failed, fallback to beep synthesis:", e));
-
-                  // Optional: Vibrate if supported
-                  if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200]);
-                  }
-                }
-
-                return [
-                  {
-                    ...faceData,
-                    time: scanTimeStr,
-                    mode: curScannerMode,
-                    status: "ALREADY LOGGED",
-                    device: "This Device",
-                  },
-                  ...prev.slice(0, 49),
-                ];
-              }
-
-              if (soundEnabled) {
-                // Play Web Audio success beep & voice announce
-                playWebAudioSound("success");
-                speakVoice(`${matchedPerson.name}, Present!`);
-
-                const audio = new Audio(
-                  "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
-                );
-                audio.play().catch((e) => console.log("Audio play failed:", e));
-              }
-
-              if (curScannerMode === "Entry") {
-                saveAttendanceRecord(matchedPerson.id, todayDate, {
-                  status: isLate ? "Late" : "Present",
-                  inTime: scanTimeStr,
-                }).catch((e) =>
-                  console.error("Failed to save entry attendance:", e),
-                );
-
-                return [
-                  {
-                    ...faceData,
-                    time: scanTimeStr,
-                    mode: curScannerMode,
-                    status: isLate ? "LATE" : "PRESENT",
-                    device: "This Device",
-                  },
-                  ...prev.slice(0, 49),
-                ];
-              } else {
-                saveAttendanceRecord(matchedPerson.id, todayDate, {
-                  outTime: scanTimeStr,
-                  ...(isEarlyLeave
-                    ? { earlyOutReason: "Early Leave (Auto)" }
-                    : {}),
-                }).catch((e) =>
-                  console.error("Failed to save exit attendance:", e),
-                );
-
-                return [
-                  {
-                    ...faceData,
-                    time: scanTimeStr,
-                    mode: curScannerMode,
-                    status: isEarlyLeave ? "EARLY LEAVE" : "LEFT",
-                    device: "This Device",
-                  },
-                  ...prev.slice(0, 49),
-                ];
-              }
-            } else {
-              // Even if it is a recent duplicate, we can trigger speech if we want or just let it trigger the visual alert above.
-              // We've already populated the visual alert above, which stays on screen for 4s.
-            }
-            return prev;
-          });
-
-          setTimeout(() => setDetectedFaces([]), 2000);
+        } catch (err) {
+          console.warn("Face detection check failed gracefully:", err);
         }
       }
     }, 1500); // Check every 1.5s
@@ -813,7 +1054,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
           </div>
 
           {isScanning && (
-            <div className="mb-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10 animate-fade-in shadow-2xs">
+            <div className="mb-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 relative z-10 animate-fade-in shadow-2xs">
               <div className="flex items-center gap-3">
                 <span className="relative flex h-3 w-3 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -824,49 +1065,59 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                   <p className="text-[11px] text-slate-500">Pick who stands in front of the camera to verify real-time log rules</p>
                 </div>
               </div>
-              <select
-                className="px-4 py-2.5 bg-white border border-indigo-200 focus:border-indigo-400 rounded-xl text-xs font-extrabold text-slate-850 outline-none w-full sm:w-auto cursor-pointer"
-                value={simulatedPersonId}
-                onChange={(e) => setSimulatedPersonId(e.target.value)}
-              >
-                <optgroup label="✅ FACE REGISTERED (Allows check-in/out)">
-                  {students.filter(s => registeredFaceIds.includes(s.id)).map(s => (
-                    <option key={s.id} value={s.id}>
-                      🎓 [Student] {s.name} ({s.class} - Registered)
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <select
+                  className="px-4 py-2.5 bg-white border border-indigo-200 focus:border-indigo-400 rounded-xl text-xs font-extrabold text-slate-850 outline-none w-full sm:w-auto cursor-pointer"
+                  value={simulatedPersonId}
+                  onChange={(e) => setSimulatedPersonId(e.target.value)}
+                >
+                  <optgroup label="✅ FACE REGISTERED (Allows check-in/out)">
+                    {students.filter(s => registeredFaceIds.includes(s.id)).map(s => (
+                      <option key={s.id} value={s.id}>
+                        🎓 [Student] {s.name} ({s.class} - Registered)
+                      </option>
+                    ))}
+                    {teachers.filter(t => registeredFaceIds.includes(t.id)).map(t => (
+                      <option key={t.id} value={t.id}>
+                        👔 [Teacher] {t.name} (Registered)
+                      </option>
+                    ))}
+                    {(settings.staffMembers || []).filter((st: any) => registeredFaceIds.includes(st.id)).map((st: any) => (
+                      <option key={st.id} value={st.id}>
+                        🛠️ [Staff] {st.name} (Registered)
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="🚨 FACES UNREGISTERED (Triggers Warning Sound)">
+                    <option value="unregistered_guest">
+                      👽 Unregistered Guest / Unknown Face
                     </option>
-                  ))}
-                  {teachers.filter(t => registeredFaceIds.includes(t.id)).map(t => (
-                    <option key={t.id} value={t.id}>
-                      👔 [Teacher] {t.name} (Registered)
-                    </option>
-                  ))}
-                  {(settings.staffMembers || []).filter((st: any) => registeredFaceIds.includes(st.id)).map((st: any) => (
-                    <option key={st.id} value={st.id}>
-                      🛠️ [Staff] {st.name} (Registered)
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="🚨 FACES UNREGISTERED (Triggers Warning Sound)">
-                  <option value="unregistered_guest">
-                    👽 Unregistered Guest / Unknown Face
-                  </option>
-                  {students.filter(s => !registeredFaceIds.includes(s.id)).map(s => (
-                    <option key={s.id} value={s.id}>
-                      ❌ Student: {s.name} ({s.class} - Unregistered)
-                    </option>
-                  ))}
-                  {teachers.filter(t => !registeredFaceIds.includes(t.id)).map(t => (
-                    <option key={t.id} value={t.id}>
-                      ❌ Teacher: {t.name} (Unregistered)
-                    </option>
-                  ))}
-                  {(settings.staffMembers || []).filter((st: any) => !registeredFaceIds.includes(st.id)).map((st: any) => (
-                    <option key={st.id} value={st.id}>
-                      ❌ Staff: {st.name} (Unregistered)
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
+                    {students.filter(s => !registeredFaceIds.includes(s.id)).map(s => (
+                      <option key={s.id} value={s.id}>
+                        ❌ Student: {s.name} ({s.class} - Unregistered)
+                      </option>
+                    ))}
+                    {teachers.filter(t => !registeredFaceIds.includes(t.id)).map(t => (
+                      <option key={t.id} value={t.id}>
+                        ❌ Teacher: {t.name} (Unregistered)
+                      </option>
+                    ))}
+                    {(settings.staffMembers || []).filter((st: any) => !registeredFaceIds.includes(st.id)).map((st: any) => (
+                      <option key={st.id} value={st.id}>
+                        ❌ Staff: {st.name} (Unregistered)
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => simulateSingleMatch(simulatedPersonId)}
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  ⚡ Simulate Scan (स्कैन दर्ज करें)
+                </button>
+              </div>
             </div>
           )}
 
