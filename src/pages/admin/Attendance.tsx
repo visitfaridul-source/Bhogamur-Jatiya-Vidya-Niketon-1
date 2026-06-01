@@ -95,7 +95,7 @@ export default function Attendance() {
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedSection, setSelectedSection] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
-  const [viewMode, setViewMode] = useState<"detailed" | "summary">("detailed");
+  const [viewMode, setViewMode] = useState<"detailed" | "summary" | "class-overview">("detailed");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAbsenteesOnly, setShowAbsenteesOnly] = useState(false);
 
@@ -236,6 +236,48 @@ export default function Attendance() {
     "Class 11",
     "Class 12",
   ];
+
+  const classWiseStats = useMemo(() => {
+    const stats: Record<
+      string,
+      { total: number; present: number; absent: number; late: number; sections: string[] }
+    > = {};
+
+    classes.forEach((c) => {
+      stats[c] = { total: 0, present: 0, absent: 0, late: 0, sections: [] };
+    });
+
+    students.forEach((s) => {
+      const classKey = s.class;
+      if (!stats[classKey]) {
+        stats[classKey] = { total: 0, present: 0, absent: 0, late: 0, sections: [] };
+      }
+
+      const secVal = (s.section || "A").toUpperCase().trim();
+      if (!stats[classKey].sections.includes(secVal)) {
+        stats[classKey].sections.push(secVal);
+      }
+
+      stats[classKey].total += 1;
+
+      const record = attendanceMap[`${date}:${s.id}`];
+      const status = getCalculatedStatus(record, date);
+      if (status === "Present") {
+        stats[classKey].present += 1;
+      } else if (status === "Absent") {
+        stats[classKey].absent += 1;
+      } else if (status === "Late") {
+        stats[classKey].late += 1;
+      }
+    });
+
+    return stats;
+  }, [students, classes, date, attendanceMap]);
+
+  const filteredOverviewClasses = useMemo(() => {
+    if (!searchQuery) return classes;
+    return classes.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [classes, searchQuery]);
 
   const availableSections = useMemo(() => {
     if (!selectedClass) return [];
@@ -1455,7 +1497,7 @@ export default function Attendance() {
                           memberType === "Teacher" ? "bg-purple-50 text-purple-700 border-purple-150" :
                           "bg-amber-50 text-amber-700 border-amber-150"
                        )}>
-                          ACTIVE CATEGORY: {memberType}S
+                          ACTIVE CATEGORY: {memberType === "Other Staff" ? "OTHER STAFF" : memberType === "Teacher" ? "TEACHERS" : "STUDENTS"}
                        </span>
                        <h3 className="text-base font-black text-slate-800 mt-1.5 tracking-tight">
                           {memberType === "Student" && "Academic Classroom Registers (कक्षावार छात्र रजिस्टर)"}
@@ -1464,12 +1506,12 @@ export default function Attendance() {
                        </h3>
                     </div>
                     {memberType === "Student" && !selectedClass && (
-                       <div className="flex bg-slate-100 p-1 rounded-xl whitespace-nowrap self-start sm:self-center">
+                       <div className="flex bg-slate-100 p-1 rounded-xl whitespace-nowrap self-start sm:self-center gap-1">
                           <button
                             type="button"
                             onClick={() => setViewMode("detailed")}
                             className={cn(
-                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1",
                               viewMode === "detailed"
                                 ? "bg-white text-slate-800 shadow-xs border border-slate-200/50"
                                 : "text-slate-500 hover:text-slate-800",
@@ -1479,9 +1521,21 @@ export default function Attendance() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => setViewMode("class-overview")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1",
+                              viewMode === "class-overview"
+                                ? "bg-white text-slate-800 shadow-xs border border-slate-200/50"
+                                : "text-slate-500 hover:text-slate-800",
+                            )}
+                          >
+                            🏫 Class-wise Overview
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setViewMode("summary")}
                             className={cn(
-                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1",
                               viewMode === "summary"
                                 ? "bg-white text-slate-800 shadow-xs border border-slate-200/50"
                                 : "text-slate-500 hover:text-slate-800",
@@ -1567,8 +1621,122 @@ export default function Attendance() {
                  </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm whitespace-nowrap">
+              {memberType === "Student" && viewMode === "class-overview" && !selectedClass ? (
+                <div className="p-6 bg-slate-50/50 border-t border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredOverviewClasses.map((className) => {
+                      const stats = classWiseStats[className] || { total: 0, present: 0, absent: 0, late: 0, sections: [] };
+                      const presenceRate = stats.total > 0
+                        ? Math.round(((stats.present + stats.late) / stats.total) * 100)
+                        : 0;
+
+                      return (
+                        <div
+                          key={className}
+                          className="bg-white rounded-[2rem] p-6 border border-slate-200/80 shadow-xs hover:border-indigo-300 hover:shadow-md transition-all duration-300 group flex flex-col justify-between relative overflow-hidden"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase mb-1">
+                                  COHORT REGISTRY
+                                </span>
+                                <h4 className="text-lg font-black text-slate-800 tracking-tight group-hover:text-indigo-650 transition-colors">
+                                  {className}
+                                </h4>
+                              </div>
+                              <span className={cn(
+                                "text-[10px] font-black px-2.5 py-1 rounded-full border shadow-2xs transition-all",
+                                presenceRate >= 85 ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                presenceRate >= 65 ? "bg-amber-50 text-amber-700 border-amber-100" :
+                                stats.total === 0 ? "bg-slate-50 text-slate-400 border-slate-100" :
+                                "bg-rose-50 text-rose-700 border-rose-100"
+                              )}>
+                                {stats.total === 0 ? "No Students" : `${presenceRate}% Present`}
+                              </span>
+                            </div>
+
+                            <div className="mt-5 space-y-4">
+                              {/* Horizontal progress bar */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                                  <span>Daily Ratio</span>
+                                  <span>{stats.present + stats.late} / {stats.total} Pupils</span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                  <div
+                                    className={cn(
+                                      "h-full rounded-full transition-all duration-550 ease-out",
+                                      presenceRate >= 85 ? "bg-emerald-500 animate-pulse" :
+                                      presenceRate >= 65 ? "bg-amber-500" :
+                                      "bg-rose-500"
+                                    )}
+                                    style={{ width: `${presenceRate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              {/* Stats breakdown badge */}
+                              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div className="bg-emerald-50 text-emerald-850 p-2.5 rounded-2xl border border-emerald-100/50">
+                                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wide font-mono">Present</p>
+                                  <p className="font-extrabold text-sm mt-0.5 text-emerald-950">{stats.present}</p>
+                                </div>
+                                <div className="bg-rose-50 text-rose-850 p-2.5 rounded-2xl border border-rose-100/50">
+                                  <p className="text-[9px] font-black text-rose-600 uppercase tracking-wide font-mono">Absent</p>
+                                  <p className="font-extrabold text-sm mt-0.5 text-rose-955">{stats.absent}</p>
+                                </div>
+                                <div className="bg-amber-50 text-amber-850 p-2.5 rounded-2xl border border-amber-100/50">
+                                  <p className="text-[9px] font-black text-amber-600 uppercase tracking-wide font-mono">Late</p>
+                                  <p className="font-extrabold text-sm mt-0.5 text-amber-955">{stats.late}</p>
+                                </div>
+                              </div>
+
+                              {/* Sections tags */}
+                              {stats.sections.length > 0 && (
+                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+                                  <span>Sections:</span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {stats.sections.map((sec, idx) => (
+                                      <span key={idx} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-extrabold text-[10px]">
+                                        {sec}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                            <button
+                              onClick={() => {
+                                setSelectedClass(className);
+                                setViewMode("detailed");
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-50/75 hover:bg-indigo-100 text-indigo-700 text-xs font-black py-2.5 px-3 rounded-xl transition-all shadow-2xs"
+                            >
+                              <Users className="w-3.5 h-3.5" />
+                              <span>Student-wise ({stats.total})</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedClass(className);
+                                setViewMode("detailed");
+                              }}
+                              className="p-2.5 hover:bg-slate-50 border border-slate-200 hover:border-slate-350 text-slate-500 hover:text-slate-800 rounded-xl transition-all shadow-2xs"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-100 text-slate-600 border-b border-slate-200">
                     {selectedClass || viewMode === "detailed" ? (
                       <tr>
@@ -2127,6 +2295,7 @@ export default function Attendance() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           </div>
         )}
