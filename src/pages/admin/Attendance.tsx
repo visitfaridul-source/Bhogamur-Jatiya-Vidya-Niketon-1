@@ -146,20 +146,9 @@ export default function Attendance() {
   const getCalculatedStatus = (record: any, queryDate: string) => {
     if (record?.status) return record.status;
 
-    const now = new Date();
-    const todayStr = format(now, "yyyy-MM-dd");
-
-    if (queryDate < todayStr) return "Absent";
-
-    if (queryDate === todayStr) {
-      const timeStr = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-      if (timeStr >= "10:00") return "Absent";
-    }
-
+    // Do not automatically assume Absent just because it's past 10 AM or a previous day.
+    // If not explicitly recorded as Absent, keep it as 'Not Recorded' so the user 
+    // knows the data wasn't taken, rather than thinking the student was physically absent.
     return "Not Recorded";
   };
 

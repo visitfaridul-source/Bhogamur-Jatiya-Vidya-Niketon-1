@@ -411,22 +411,7 @@ export default function Dashboard() {
         });
       }
 
-      // Hybridized fallback so the chart is beautifully detailed on default startup mock state
-      if (present === 0 && absent === 0) {
-        const total = totalStudentsInClass > 0 ? totalStudentsInClass : Math.round(14 + Math.random() * 8);
-        // Generate high fidelity realistic ratios so it looks spectacular and accurate
-        const ratio = 0.88 + Math.random() * 0.10;
-        present = Math.round(total * ratio);
-        absent = Math.max(0, total - present);
-        if (attendancePeriod === 'Monthly') {
-          present *= 20;
-          absent *= 20;
-        } else if (attendancePeriod === 'Yearly') {
-          present *= 190;
-          absent *= 190;
-        }
-      }
-
+      // Note: Removed old mock data fallback so chart only shows real data.
       return {
         name: clsName,
         Present: present,
