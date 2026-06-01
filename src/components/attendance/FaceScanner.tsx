@@ -41,6 +41,16 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   const [cameraError, setCameraError] = useState<string>("");
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [detectedFaces, setDetectedFaces] = useState<any[]>([]);
+  const [scanResultAlert, setScanResultAlert] = useState<{
+    id: string;
+    name: string;
+    class: string;
+    status: string;
+    type: string;
+    time: string;
+    photo: string;
+  } | null>(null);
+  const alertTimeoutRef = useRef<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wakeLockRef = useRef<any>(null);
@@ -426,6 +436,21 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
             setDetectedFaces([faceData]);
             setTimeout(() => setDetectedFaces([]), 2000);
 
+            // Pop visual diagnostic alert
+            setScanResultAlert({
+              id: "unknown",
+              name: faceData.name,
+              class: faceData.class,
+              type: faceData.type,
+              photo: faceData.photo,
+              status: "UNREGISTERED",
+              time: scanTimeStr,
+            });
+            if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+            alertTimeoutRef.current = setTimeout(() => {
+              setScanResultAlert(null);
+            }, 4000);
+
             setLogs((prev) => {
               const isRecentDuplicate = prev
                 .slice(0, 5)
@@ -477,6 +502,29 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
           } else if (curScannerMode === "Exit" && currentRecord?.outTime) {
             hasAlreadyScanned = true;
           }
+
+          // Trigger screen alerts BEFORE modifying logs state
+          const isLate = scanTimeStr >= "10:00";
+          const isEarlyLeave = scanTimeStr < "14:30";
+          const finalStatus = hasAlreadyScanned
+            ? "ALREADY LOGGED"
+            : (curScannerMode === "Entry"
+              ? (isLate ? "LATE" : "PRESENT")
+              : (isEarlyLeave ? "EARLY LEAVE" : "LEFT"));
+
+          setScanResultAlert({
+            id: matchedPerson.id,
+            name: matchedPerson.name,
+            class: matchedPerson.class,
+            type: matchedPerson.type,
+            photo: matchedPerson.photo,
+            status: finalStatus,
+            time: scanTimeStr,
+          });
+          if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+          alertTimeoutRef.current = setTimeout(() => {
+            setScanResultAlert(null);
+          }, 4000);
 
           setLogs((prev) => {
             const isRecentDuplicate = prev
@@ -530,7 +578,6 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
               }
 
               if (curScannerMode === "Entry") {
-                const isLate = scanTimeStr >= "10:00";
                 saveAttendanceRecord(matchedPerson.id, todayDate, {
                   status: isLate ? "Late" : "Present",
                   inTime: scanTimeStr,
@@ -549,7 +596,6 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                   ...prev.slice(0, 49),
                 ];
               } else {
-                const isEarlyLeave = scanTimeStr < "14:30";
                 saveAttendanceRecord(matchedPerson.id, todayDate, {
                   outTime: scanTimeStr,
                   ...(isEarlyLeave
@@ -570,6 +616,9 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                   ...prev.slice(0, 49),
                 ];
               }
+            } else {
+              // Even if it is a recent duplicate, we can trigger speech if we want or just let it trigger the visual alert above.
+              // We've already populated the visual alert above, which stays on screen for 4s.
             }
             return prev;
           });
@@ -882,6 +931,90 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                       LIVE RECOGNITION
                     </span>
                   </div>
+
+                  {/* MAGNIFICENT DIAGNOSTIC CONFIRM STATUS OVERLAY CARD */}
+                  <AnimatePresence>
+                    {scanResultAlert && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        className="absolute inset-x-4 top-4 bottom-4 z-40 rounded-[1.5rem] overflow-hidden flex flex-col justify-between p-5 text-white backdrop-blur-md shadow-2xl"
+                        style={{
+                          background: scanResultAlert.status === "UNREGISTERED" 
+                            ? "linear-gradient(135deg, rgba(225,29,72,0.95), rgba(159,18,57,0.95))"
+                            : scanResultAlert.status === "ALREADY LOGGED"
+                            ? "linear-gradient(135deg, rgba(217,119,6,0.95), rgba(146,64,14,0.95))"
+                            : "linear-gradient(135deg, rgba(5,150,105,0.95), rgba(6,78,59,0.95))"
+                        }}
+                      >
+                        {/* Header status bar */}
+                        <div className="flex items-center justify-between">
+                          <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] uppercase font-black tracking-widest">
+                            DIAGNOSTIC FEEDBACK
+                          </span>
+                          <span className="text-[11px] font-mono opacity-80 font-bold bg-black/20 px-2.5 py-1 rounded-lg">
+                            🕒 {scanResultAlert.time}
+                          </span>
+                        </div>
+
+                        {/* Middle display content */}
+                        <div className="flex items-center gap-4 my-auto">
+                          <div className="relative">
+                            <img
+                              src={scanResultAlert.photo}
+                              alt={scanResultAlert.name}
+                              referrerPolicy="no-referrer"
+                              className="w-16 h-16 rounded-full border-4 border-white/20 object-cover shadow-md bg-white/10"
+                            />
+                            {/* Animated icon badge status indicator */}
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-lg"
+                              style={{
+                                background: scanResultAlert.status === "UNREGISTERED" ? "#f43f5e" : scanResultAlert.status === "ALREADY LOGGED" ? "#f59e0b" : "#10b981"
+                              }}
+                            >
+                              {scanResultAlert.status === "UNREGISTERED" ? "⚠️" : scanResultAlert.status === "ALREADY LOGGED" ? "🔁" : "✓"}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider font-extrabold text-white/75">
+                              {scanResultAlert.type} • {scanResultAlert.class}
+                            </p>
+                            <h4 className="text-lg font-black tracking-tight uppercase leading-tight">
+                              {scanResultAlert.name}
+                            </h4>
+                            <div className="inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border border-white/15">
+                              <span>Id:</span>
+                              <span className="font-mono">{scanResultAlert.id}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom Action Footer with high impact */}
+                        <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+                            <span className="text-[12px] font-black uppercase tracking-wider">
+                              {scanResultAlert.status === "UNREGISTERED" 
+                                ? "PROHIBITED / अनधिकृत प्रवेश"
+                                : scanResultAlert.status === "ALREADY LOGGED"
+                                ? "ALREADY RECORDED / पहले से दर्ज"
+                                : "ATTENDANCE SAVED / हाजिरी दर्ज हुई"}
+                            </span>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setScanResultAlert(null)}
+                            className="p-1.5 hover:bg-white/15 active:scale-90 rounded-full transition-all cursor-pointer border border-white/20"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </>
               )
             ) : (
