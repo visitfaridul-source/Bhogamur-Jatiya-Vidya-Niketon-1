@@ -518,6 +518,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (!existing || JSON.stringify(existing) !== JSON.stringify(s)) {
           try {
             await setDoc(doc(db, 'students', s.id), s);
+            
+            // Automatically register face if they have an uploaded photo or avatar
+            const hasPhoto = s.photoUrl || (s.avatar && !s.avatar.includes("dicebear.com"));
+            if (hasPhoto) {
+              await setDoc(doc(db, "registeredFaces", s.id), {
+                id: s.id,
+                registered: true,
+                registeredAt: new Date().toISOString(),
+                autoRegistered: true,
+                source: "Student Photo Registration"
+              });
+            }
           } catch (err) {
             handleFirestoreError(err, OperationType.WRITE, `students/${s.id}`);
           }
@@ -553,6 +565,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (!existing || JSON.stringify(existing) !== JSON.stringify(t)) {
           try {
             await setDoc(doc(db, 'teachers', t.id), t);
+            
+            // Automatically register face if they have an uploaded photo or avatar
+            const hasPhoto = t.avatar && !t.avatar.includes("dicebear.com");
+            if (hasPhoto) {
+              await setDoc(doc(db, "registeredFaces", t.id), {
+                id: t.id,
+                registered: true,
+                registeredAt: new Date().toISOString(),
+                autoRegistered: true,
+                source: "Teacher Photo Registration"
+              });
+            }
           } catch (err) {
             handleFirestoreError(err, OperationType.WRITE, `teachers/${t.id}`);
           }

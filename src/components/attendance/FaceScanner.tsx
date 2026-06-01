@@ -605,6 +605,12 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
             <p className="text-sm text-slate-300 leading-relaxed">
               आप चाहे <strong>"Start Camera"</strong> करके Face-Scan से हाजिरी लें, या <strong>"Attendance Page"</strong> पर मैन्युअल रजिस्टर से प्रविष्टि करें — दोनों रिकॉर्ड्स एक ही <strong>Cloud Database (Firebase Firestore)</strong> में सुरक्षित होते हैं और सभी डिवाइस पर तुरंत दिखते हैं।
             </p>
+            <div className="pt-2 flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-ping"></span>
+              <p className="text-xs font-black text-emerald-300">
+                ✨ नई सुविधा: छात्र (Student) या शिक्षक (Teacher) का पंजीकरण करते समय अपलोड की गई तस्वीर (Photo) से उनका Face Setup अपने आप पूरा हो जाता है!
+              </p>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
