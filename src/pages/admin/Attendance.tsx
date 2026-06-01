@@ -17,6 +17,11 @@ import {
   Download,
   Printer,
   UserX,
+  Users,
+  GraduationCap,
+  Briefcase,
+  Sparkles,
+  ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -1131,248 +1136,435 @@ export default function Attendance() {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === "overview" && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-8 animate-fade-in">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 hover:shadow-md transition-all">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-emerald-300 hover:shadow-md transition-all duration-300">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full blur-2xl group-hover:bg-emerald-100 transition-colors"></div>
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100">
-                    <CheckCircle className="w-6 h-6" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-xs">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                        Total Present
+                      </p>
+                      <h3 className="text-2xl font-black text-slate-800 mt-0.5">
+                        {currentLevelStats.present}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                      Total Present
-                    </p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {currentLevelStats.present}
-                    </h3>
-                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
+                    On Duty
+                  </span>
                 </div>
               </div>
+
               <div 
                 onClick={() => setShowAbsenteesOnly(!showAbsenteesOnly)}
                 className={cn(
-                  "bg-white rounded-[2rem] p-6 border shadow-sm relative overflow-hidden group hover:border-rose-300 hover:shadow-md transition-all cursor-pointer",
-                  showAbsenteesOnly ? "border-rose-400 bg-rose-50" : "border-slate-200"
+                  "bg-white rounded-[2rem] p-6 border shadow-xs relative overflow-hidden group hover:border-rose-300 hover:shadow-md transition-all duration-300 cursor-pointer",
+                  showAbsenteesOnly ? "border-rose-400 bg-rose-50/70 shadow-inner" : "border-slate-200/80"
                 )}
               >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full blur-2xl group-hover:bg-rose-100 transition-colors"></div>
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className={cn(
-                     "w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors",
-                     showAbsenteesOnly ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-rose-50 text-rose-600 border-rose-100"
-                  )}>
-                    <XCircle className="w-6 h-6" />
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full blur-2xl group-hover:bg-rose-100/50 transition-colors"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                       "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-300 shadow-xs",
+                       showAbsenteesOnly ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-rose-50 text-rose-600 border-rose-100"
+                    )}>
+                      <XCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        Total Absent
+                      </p>
+                      <h3 className="text-2xl font-black text-slate-800 mt-0.5">
+                        {currentLevelStats.absent}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      Total Absent {showAbsenteesOnly && <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-md">FILTER ON</span>}
-                    </p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {currentLevelStats.absent}
-                    </h3>
-                  </div>
+                  {showAbsenteesOnly ? (
+                    <span className="text-[10px] font-black text-white bg-rose-600 px-2 py-1 rounded-full animate-pulse uppercase tracking-wide">
+                      FILTER ON
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-1 rounded-full">
+                      Absent
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 hover:shadow-md transition-all">
+
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-amber-300 hover:shadow-md transition-all duration-300">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full blur-2xl group-hover:bg-amber-100 transition-colors"></div>
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100">
-                    <Clock className="w-6 h-6" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 shadow-xs">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                        Late Arrivals
+                      </p>
+                      <h3 className="text-2xl font-black text-slate-800 mt-0.5">
+                        {currentLevelStats.late}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                      Late Arrivals
-                    </p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {currentLevelStats.late}
-                    </h3>
-                  </div>
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-1 rounded-full">
+                    Delayed
+                  </span>
                 </div>
               </div>
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 hover:shadow-md transition-all">
+
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-indigo-300 hover:shadow-md transition-all duration-300">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full blur-2xl group-hover:bg-indigo-100 transition-colors"></div>
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100">
-                    <ScanFace className="w-6 h-6" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    {(() => {
+                      const presenceRatePercent = currentLevelStats.total > 0
+                        ? Math.round((currentLevelStats.present / currentLevelStats.total) * 100)
+                        : 100;
+                      const r = 16;
+                      const circ = 2 * Math.PI * r;
+                      const offset = circ - (presenceRatePercent / 100) * circ;
+                      return (
+                        <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="24"
+                              cy="24"
+                              r={r}
+                              className="text-slate-100"
+                              strokeWidth="3.5"
+                              stroke="currentColor"
+                              fill="transparent"
+                            />
+                            <circle
+                              cx="24"
+                              cy="24"
+                              r={r}
+                              className="text-indigo-600 transition-all duration-500 ease-out"
+                              strokeWidth="3.5"
+                              strokeDasharray={circ}
+                              strokeDashoffset={offset}
+                              strokeLinecap="round"
+                              stroke="currentColor"
+                              fill="transparent"
+                            />
+                          </svg>
+                          <span className="absolute text-[10px] font-black text-slate-700">{presenceRatePercent}%</span>
+                        </div>
+                      );
+                    })()}
+                    <div>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                        Presence Rate
+                      </p>
+                      <h3 className="text-2xl font-black text-indigo-950 mt-0.5">
+                        {currentLevelStats.total > 0
+                          ? Math.round(
+                              (currentLevelStats.present /
+                                currentLevelStats.total) *
+                                100,
+                            )
+                          : 100}
+                        %
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                      Presence Rate
-                    </p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {currentLevelStats.total > 0
-                        ? Math.round(
-                            (currentLevelStats.present /
-                              currentLevelStats.total) *
-                              100,
-                          )
-                        : 100}
-                      %
-                    </h3>
-                  </div>
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-full">
+                    Overall
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-              {/* Member Type Selection Tabs */}
-              <div className="flex border-b border-slate-200 p-4 gap-2 bg-white flex-wrap">
-                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Only Students") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMemberType("Student");
-                      setViewMode("detailed");
-                    }}
-                    className={cn(
-                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                      memberType === "Student"
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10"
-                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                    )}
-                  >
-                    👥 Students List ({students.length})
-                  </button>
-                )}
-                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Teachers") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMemberType("Teacher");
-                      setViewMode("detailed");
-                      setSelectedClass("");
-                    }}
-                    className={cn(
-                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                      memberType === "Teacher"
-                        ? "bg-purple-600 text-white shadow-md shadow-purple-500/10"
-                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                    )}
-                  >
-                    🎓 Teachers List ({teachers.length})
-                  </button>
-                )}
-                {(!user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Staff") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMemberType("Other Staff");
-                      setViewMode("detailed");
-                      setSelectedClass("");
-                    }}
-                    className={cn(
-                      "px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                      memberType === "Other Staff"
-                        ? "bg-amber-600 text-white shadow-md shadow-amber-500/10"
-                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200",
-                    )}
-                  >
-                    💼 Other Staff List ({settings.staffMembers?.length || 0})
-                  </button>
-                )}
+            {/* Categorical Directory Hub */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                <h2 className="text-xs font-extrabold text-slate-700 tracking-wider uppercase">
+                  Interactive Categorical Registry Division
+                </h2>
               </div>
 
-              <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between gap-4 bg-slate-50/50">
-                <div className="flex flex-wrap gap-4 flex-1 items-center">
-                  {memberType === "Student" && (
-                    <div className="relative min-w-[200px]">
-                      <select
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
-                        value={selectedClass}
-                        onChange={(e) => {
-                          setSelectedClass(e.target.value);
-                          setSelectedSection("");
-                          if (e.target.value) {
-                            setViewMode("detailed");
-                          }
+              {(() => {
+                const canShowStudents = !user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Only Students";
+                const canShowTeachers = !user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Teachers";
+                const canShowStaff = !user?.attendanceScope || user.attendanceScope === "All" || user.attendanceScope === "Staff";
+                const columnsCount = [canShowStudents, canShowTeachers, canShowStaff].filter(Boolean).length;
+
+                return (
+                  <div className={cn(
+                    "grid gap-5 w-full",
+                    columnsCount === 3 ? "grid-cols-1 md:grid-cols-3" : columnsCount === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                  )}>
+                    {/* Academic Students Card */}
+                    {canShowStudents && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMemberType("Student");
+                          setViewMode("detailed");
                         }}
-                      >
-                        <option value="">All Classes (Summary)</option>
-                        {classes.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  {memberType === "Student" && selectedClass && availableSections.length > 0 && (
-                    <div className="relative min-w-[150px]">
-                      <select
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
-                        value={selectedSection}
-                        onChange={(e) => setSelectedSection(e.target.value)}
-                      >
-                        <option value="">All Sections</option>
-                        {availableSections.map((sec) => (
-                          <option key={sec} value={sec}>
-                            {sec}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className="relative max-w-xs w-full">
-                    <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder={
-                        memberType === "Student"
-                          ? "Search student or summary..."
-                          : memberType === "Teacher"
-                            ? "Search teacher..."
-                            : "Search staff member..."
-                      }
-                      className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium shadow-sm"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative max-w-[200px] w-full">
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {memberType === "Student" && !selectedClass && (
-                    <div className="flex bg-slate-200/60 p-1 rounded-xl whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("detailed")}
                         className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                          viewMode === "detailed"
-                            ? "bg-white text-slate-800 shadow-xs"
-                            : "text-slate-600 hover:text-slate-900",
+                          "flex flex-col text-left p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden cursor-pointer group",
+                          memberType === "Student"
+                            ? "bg-indigo-50/50 border-indigo-300 shadow-md ring-2 ring-indigo-500/10"
+                            : "bg-white border-slate-200/85 hover:border-indigo-200 hover:bg-slate-50/50 hover:shadow-xs"
                         )}
                       >
-                        👥 Student-wise ({filteredStudents.length})
+                        <div className="flex justify-between items-start w-full gap-3">
+                          <div className={cn(
+                            "w-11 h-11 rounded-2xl flex items-center justify-center transition-colors",
+                            memberType === "Student" ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-indigo-55 group-hover:text-indigo-600"
+                          )}>
+                            <Users className="w-5 h-5" />
+                          </div>
+                          <span className={cn(
+                            "text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider",
+                            memberType === "Student" ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"
+                          )}>
+                            {students.length} Pupils
+                          </span>
+                        </div>
+                        <div className="mt-5">
+                          <h4 className="font-extrabold text-[15px] text-slate-800 tracking-tight flex items-center gap-1.5">
+                            Academic Cohort <span className="text-xs text-slate-400 font-medium">(छात्र प्रभाग)</span>
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            Classrooms and rolling student rosters. Choose class tiers, register daily logs, and generate PDF register sheets.
+                          </p>
+                        </div>
+                        {memberType === "Student" && (
+                          <div className="absolute right-4 bottom-4 w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                        )}
                       </button>
+                    )}
+
+                    {/* Educational Faculty Card */}
+                    {canShowTeachers && (
                       <button
                         type="button"
-                        onClick={() => setViewMode("summary")}
+                        onClick={() => {
+                          setMemberType("Teacher");
+                          setViewMode("detailed");
+                          setSelectedClass("");
+                        }}
                         className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                          viewMode === "summary"
-                            ? "bg-white text-slate-800 shadow-xs"
-                            : "text-slate-600 hover:text-slate-900",
+                          "flex flex-col text-left p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden cursor-pointer group",
+                          memberType === "Teacher"
+                            ? "bg-purple-50/50 border-purple-300 shadow-md ring-2 ring-purple-500/10"
+                            : "bg-white border-slate-200/85 hover:border-purple-200 hover:bg-slate-50/50 hover:shadow-xs"
                         )}
                       >
-                        📊 Summaries ({filteredAttendanceData.length})
+                        <div className="flex justify-between items-start w-full gap-3">
+                          <div className={cn(
+                            "w-11 h-11 rounded-2xl flex items-center justify-center transition-colors",
+                            memberType === "Teacher" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-purple-55 group-hover:text-purple-600"
+                          )}>
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+                          <span className={cn(
+                            "text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider",
+                            memberType === "Teacher" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-600"
+                          )}>
+                            {teachers.length} Faculty
+                          </span>
+                        </div>
+                        <div className="mt-5">
+                          <h4 className="font-extrabold text-[15px] text-slate-800 tracking-tight flex items-center gap-1.5">
+                            Educational Faculty <span className="text-xs text-slate-400 font-medium">(शिक्षक प्रभाग)</span>
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            School educators and key Subject instructors. Check checking-in details, delays, and generate landscape salary ledger cards.
+                          </p>
+                        </div>
+                        {memberType === "Teacher" && (
+                          <div className="absolute right-4 bottom-4 w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
+                        )}
                       </button>
+                    )}
+
+                    {/* Support Staff Card */}
+                    {canShowStaff && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMemberType("Other Staff");
+                          setViewMode("detailed");
+                          setSelectedClass("");
+                        }}
+                        className={cn(
+                          "flex flex-col text-left p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden cursor-pointer group",
+                          memberType === "Other Staff"
+                            ? "bg-amber-50/50 border-amber-300 shadow-md ring-2 ring-amber-500/10"
+                            : "bg-white border-slate-200/85 hover:border-amber-200 hover:bg-slate-50/50 hover:shadow-xs"
+                        )}
+                      >
+                        <div className="flex justify-between items-start w-full gap-3">
+                          <div className={cn(
+                            "w-11 h-11 rounded-2xl flex items-center justify-center transition-colors",
+                            memberType === "Other Staff" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-amber-55 group-hover:text-amber-600"
+                          )}>
+                            <Briefcase className="w-5 h-5" />
+                          </div>
+                          <span className={cn(
+                            "text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider",
+                            memberType === "Other Staff" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600"
+                          )}>
+                            {settings.staffMembers?.length || 0} Members
+                          </span>
+                        </div>
+                        <div className="mt-5">
+                          <h4 className="font-extrabold text-[15px] text-slate-800 tracking-tight flex items-center gap-1.5">
+                            Support Operations <span className="text-xs text-slate-400 font-medium">(कर्मचारी प्रभाग)</span>
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            Administrative coordinators and system support. Monitor in-times and out-times, modify diaries manually.
+                          </p>
+                        </div>
+                        {memberType === "Other Staff" && (
+                          <div className="absolute right-4 bottom-4 w-1.5 h-1.5 bg-amber-600 rounded-full"></div>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Table Block */}
+            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xs overflow-hidden">
+              {/* Context Header with Division Label */}
+              <div className={cn(
+                "p-6 border-b border-slate-200 flex flex-col gap-4",
+                memberType === "Student" ? "bg-indigo-50/10" :
+                memberType === "Teacher" ? "bg-purple-50/10" :
+                "bg-amber-50/10"
+              )}>
+                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                       <span className={cn(
+                          "text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full border",
+                          memberType === "Student" ? "bg-indigo-50 text-indigo-700 border-indigo-150" :
+                          memberType === "Teacher" ? "bg-purple-50 text-purple-700 border-purple-150" :
+                          "bg-amber-50 text-amber-700 border-amber-150"
+                       )}>
+                          ACTIVE CATEGORY: {memberType}S
+                       </span>
+                       <h3 className="text-base font-black text-slate-800 mt-1.5 tracking-tight">
+                          {memberType === "Student" && "Academic Classroom Registers (कक्षावार छात्र रजिस्टर)"}
+                          {memberType === "Teacher" && "Institutional Teacher Records (शिक्षक उपस्थिति विवरण)"}
+                          {memberType === "Other Staff" && "Support Coordinator Logs (गैर-शिक्षण अमला प्रविष्टि)"}
+                       </h3>
                     </div>
-                  )}
-                  <button className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 hover:bg-slate-50 text-sm font-bold px-5 shadow-sm transition-colors">
-                    <Filter className="w-4 h-4" /> Filter
-                  </button>
-                </div>
+                    {memberType === "Student" && !selectedClass && (
+                       <div className="flex bg-slate-100 p-1 rounded-xl whitespace-nowrap self-start sm:self-center">
+                          <button
+                            type="button"
+                            onClick={() => setViewMode("detailed")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                              viewMode === "detailed"
+                                ? "bg-white text-slate-800 shadow-xs border border-slate-200/50"
+                                : "text-slate-500 hover:text-slate-800",
+                            )}
+                          >
+                            👥 Student-wise ({filteredStudents.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setViewMode("summary")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                              viewMode === "summary"
+                                ? "bg-white text-slate-800 shadow-xs border border-slate-200/50"
+                                : "text-slate-500 hover:text-slate-800",
+                            )}
+                          >
+                            📊 Summaries ({filteredAttendanceData.length})
+                          </button>
+                       </div>
+                    )}
+                 </div>
+
+                 {/* Categorized Filter inputs */}
+                 <div className="flex flex-wrap gap-3 items-center">
+                    {memberType === "Student" && (
+                      <div className="relative min-w-[180px]">
+                        <select
+                          className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-500/10 cursor-pointer"
+                          value={selectedClass}
+                          onChange={(e) => {
+                            setSelectedClass(e.target.value);
+                            setSelectedSection("");
+                            if (e.target.value) {
+                              setViewMode("detailed");
+                            }
+                          }}
+                        >
+                          <option value="">All Tiers (Summary Overview)</option>
+                          {classes.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {memberType === "Student" && selectedClass && availableSections.length > 0 && (
+                      <div className="relative min-w-[124px]">
+                        <select
+                          className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-500/10 cursor-pointer"
+                          value={selectedSection}
+                          onChange={(e) => setSelectedSection(e.target.value)}
+                        >
+                          <option value="">All Sections</option>
+                          {availableSections.map((sec) => (
+                            <option key={sec} value={sec}>
+                              Sec {sec}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="relative min-w-[180px] w-full sm:w-auto">
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-slate-55/10 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="relative min-w-[200px] flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder={
+                          memberType === "Student"
+                            ? "Search students or summaries..."
+                            : memberType === "Teacher"
+                              ? "Search teachers register..."
+                              : "Search helper staff registry..."
+                        }
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-slate-55/10 focus:border-slate-400 transition-all font-medium placeholder:text-slate-400"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+
+                    <button className="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800 text-xs font-bold px-4 transition-colors">
+                      <Filter className="w-3.5 h-3.5" /> <span>Filter</span>
+                    </button>
+                 </div>
               </div>
 
               <div className="overflow-x-auto">
