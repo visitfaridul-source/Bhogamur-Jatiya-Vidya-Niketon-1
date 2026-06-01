@@ -48,6 +48,74 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   const latestAttendance = useRef(attendanceMap);
   const detectionInterval = useRef<NodeJS.Timeout | null>(null);
 
+  // Native Web Audio Synthesizer for high-reliability beep sounds
+  const playWebAudioSound = (type: "success" | "warning") => {
+    if (!soundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+
+      if (type === "success") {
+        // High crisp double beep for success
+        const now = ctx.currentTime;
+        const playBeep = (time: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1050, time); // 1050Hz sharp beep
+          gain.gain.setValueAtTime(0.12, time);
+          gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+          
+          osc.start(time);
+          osc.stop(time + 0.12);
+        };
+        playBeep(now);
+        playBeep(now + 0.15);
+      } else {
+        // Low harsh buzzer/double buzz alert for "Already logged/Warning"
+        const now = ctx.currentTime;
+        const playBuzz = (time: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.type = "sawtooth"; // Rough tone
+          osc.frequency.setValueAtTime(150, time); // Low buzzing pitch
+          gain.gain.setValueAtTime(0.2, time);
+          gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+          
+          osc.start(time);
+          osc.stop(time + 0.3);
+        };
+        playBuzz(now);
+        playBuzz(now + 0.35);
+        playBuzz(now + 0.7); // Low triple buzz alert code
+      }
+    } catch (e) {
+      console.warn("Web Audio synthesis failed:", e);
+    }
+  };
+
+  const speakVoice = (text: string) => {
+    if (!soundEnabled) return;
+    try {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel(); // Clear speaking queue immediately
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.02;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (e) {
+      console.log("SpeechSynthesis utterance failed:", e);
+    }
+  };
+
   useEffect(() => {
     latestAttendance.current = attendanceMap;
   }, [attendanceMap]);
@@ -247,13 +315,17 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
             if (!isRecentDuplicate) {
               if (hasAlreadyScanned) {
                 if (soundEnabled) {
-                  // Danger/Alert sound
+                  // Play warning buzz tone & announce voice
+                  playWebAudioSound("warning");
+                  speakVoice(`${matchedPerson.name}, Already Marked!`);
+
+                  // Optional fallback classic Audio
                   const errorAudio = new Audio(
                     "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
                   );
                   errorAudio
                     .play()
-                    .catch((e) => console.log("Audio play failed:", e));
+                    .catch((e) => console.log("Audio play failed, fallback to beep synthesis:", e));
 
                   // Optional: Vibrate if supported
                   if (navigator.vibrate) {
@@ -274,6 +346,10 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
               }
 
               if (soundEnabled) {
+                // Play Web Audio success beep & voice announce
+                playWebAudioSound("success");
+                speakVoice(`${matchedPerson.name}, Present!`);
+
                 const audio = new Audio(
                   "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
                 );
