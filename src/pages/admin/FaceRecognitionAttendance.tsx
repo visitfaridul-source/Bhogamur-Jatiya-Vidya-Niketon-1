@@ -14,8 +14,27 @@ const LEAVE_REASONS = [
   { value: 'Other', label: 'Other Reason (अन्य कारण)' }
 ];
 
+const DESCRIPTOR_CACHE_KEY = 'bhogamur_face_descriptors_cache';
+
+const getDescriptorCache = (): Record<string, number[]> => {
+  try {
+    const saved = localStorage.getItem(DESCRIPTOR_CACHE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+const saveDescriptorCache = (cache: Record<string, number[]>) => {
+  try {
+    localStorage.setItem(DESCRIPTOR_CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error('Failed to save descriptor cache:', e);
+  }
+};
+
 export default function FaceRecognitionAttendance() {
-  const { students, teachers } = useSchool();
+  const { students, teachers, saveAttendanceRecord } = useSchool();
   const { settings } = useWebsite();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -119,6 +138,9 @@ export default function FaceRecognitionAttendance() {
         ...(settings.staffMembers || []).map((st: any) => ({ id: st.id, name: st.name, type: 'Other Staff', photoUrl: st.imageUrl }))
       ];
 
+      const cache = getDescriptorCache();
+      let cacheUpdated = false;
+
       for (const person of allPeople) {
         if (
           person.photoUrl && 
@@ -126,6 +148,19 @@ export default function FaceRecognitionAttendance() {
           !person.photoUrl.includes('unsplash') && 
           !person.photoUrl.includes('ui-avatars')
         ) {
+          const cacheKey = `${person.id}:${person.photoUrl}`;
+          if (cache[cacheKey]) {
+            try {
+              const floatArray = new Float32Array(cache[cacheKey]);
+              labeledFaceDescriptors.push(
+                new faceapi.LabeledFaceDescriptors(person.name, [floatArray])
+              );
+              continue;
+            } catch (err) {
+              console.warn(`Failed to reload cached face descriptors for ${person.name}, re-detecting...`, err);
+            }
+          }
+
           try {
             // Load image
             const img = await faceapi.fetchImage(person.photoUrl);
@@ -135,11 +170,17 @@ export default function FaceRecognitionAttendance() {
               labeledFaceDescriptors.push(
                 new faceapi.LabeledFaceDescriptors(person.name, [detection.descriptor])
               );
+              cache[cacheKey] = Array.from(detection.descriptor);
+              cacheUpdated = true;
             }
           } catch (e) {
             console.error(`Error processing image for ${person.name}`, e);
           }
         }
+      }
+
+      if (cacheUpdated) {
+        saveDescriptorCache(cache);
       }
 
       if (labeledFaceDescriptors.length > 0) {
@@ -209,6 +250,16 @@ export default function FaceRecognitionAttendance() {
     };
     saveRegistry(updated);
 
+    // Save to Firestore SchoolContext database
+    const isLate = currentTime >= "10:00";
+    saveAttendanceRecord(personId, todayDateStr, {
+      status: isLate ? 'Late' : 'Present',
+      inTime: currentTime,
+      remarks: `Checked in via Face ID`
+    }).catch((err) => {
+      console.error("Failed to save check-in through Face ID to Firestore:", err);
+    });
+
     setActionSuccess(`Check-In logged for ${name} at ${currentTime}!`);
     setTimeout(() => setActionSuccess(''), 4000);
   };
@@ -221,21 +272,32 @@ export default function FaceRecognitionAttendance() {
 
     const reason = selectedReason === 'Other' ? customReason : (LEAVE_REASONS.find(r => r.value === selectedReason)?.label || selectedReason);
     
+    const finalOutTime = checkoutTime || (() => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    })();
+
     const updated = {
       ...attendanceRegistry,
       [key]: {
         ...currentRecord,
         status: currentRecord.status || 'Present',
-        outTime: checkoutTime || (() => {
-          const now = new Date();
-          const hours = String(now.getHours()).padStart(2, '0');
-          const minutes = String(now.getMinutes()).padStart(2, '0');
-          return `${hours}:${minutes}`;
-        })(),
+        outTime: finalOutTime,
         earlyOutReason: reason || 'Early leave'
       }
     };
     saveRegistry(updated);
+
+    // Save check-out directly to Firestore
+    saveAttendanceRecord(selectedPerson.id, todayDateStr, {
+      outTime: finalOutTime,
+      earlyOutReason: reason || 'Early leave',
+      status: currentRecord.status || 'Present'
+    }).catch((err) => {
+      console.error("Failed to save early check-out through Face ID to Firestore:", err);
+    });
 
     if (soundEnabled) {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');

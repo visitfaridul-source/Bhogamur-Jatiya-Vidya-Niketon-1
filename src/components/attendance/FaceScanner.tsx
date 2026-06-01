@@ -214,7 +214,11 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
             hour12: false,
           });
           const curScannerMode = latestScannerMode.current;
-          const todayDate = now.toISOString().split("T")[0];
+          
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const todayDate = `${year}-${month}-${day}`;
 
           const recordKey = `${todayDate}:${matchedPerson.id}`;
           const currentRecord = latestAttendance.current[recordKey];

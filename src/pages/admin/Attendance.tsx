@@ -64,7 +64,7 @@ const initialMockAttendance = [
   },
 ];
 
-type ActiveTab = "overview" | "qr" | "face";
+type ActiveTab = "overview" | "qr" | "face" | "absent-manager";
 
 export default function Attendance() {
   const { students, teachers, attendanceMap, saveAttendanceRecord } =
@@ -314,6 +314,85 @@ export default function Attendance() {
       );
     });
   }, [attendanceData, searchQuery]);
+
+  const currentAbsentees = useMemo(() => {
+    // 1. Students
+    const studentAbsentees = students
+      .filter((s) => {
+        const matchesClass = selectedClass ? s.class === selectedClass : true;
+        const matchesSection = selectedSection ? s.section === selectedSection : true;
+        const matchesSearch = searchQuery
+          ? s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            s.id.toLowerCase().includes(searchQuery.toLowerCase())
+          : true;
+        if (!matchesClass || !matchesSection || !matchesSearch) return false;
+        
+        const record = attendanceMap[`${date}:${s.id}`];
+        return getCalculatedStatus(record, date) === "Absent";
+      })
+      .map(s => {
+        const record = attendanceMap[`${date}:${s.id}`];
+        return {
+          id: s.id,
+          name: s.name,
+          type: "Student" as const,
+          details: `${s.class} - Sec ${s.section || 'A'}`,
+          photoUrl: s.avatar || "",
+          roll: s.roll || "",
+          record
+        };
+      });
+
+    // 2. Teachers
+    const teacherAbsentees = teachers
+      .filter((t) => {
+        const matchesSearch = searchQuery
+          ? t.name.toLowerCase().includes(searchQuery.toLowerCase())
+          : true;
+        if (!matchesSearch) return false;
+
+        const record = attendanceMap[`${date}:${t.id}`];
+        return getCalculatedStatus(record, date) === "Absent";
+      })
+      .map(t => {
+        const record = attendanceMap[`${date}:${t.id}`];
+        return {
+          id: t.id,
+          name: t.name,
+          type: "Teacher" as const,
+          details: t.subject || "Educator",
+          photoUrl: t.avatar || t.photoUrl || "",
+          roll: "",
+          record
+        };
+      });
+
+    // 3. Other Staff
+    const staffAbsentees = (settings.staffMembers || [])
+      .filter((st: any) => {
+        const matchesSearch = searchQuery
+          ? st.name.toLowerCase().includes(searchQuery.toLowerCase())
+          : true;
+        if (!matchesSearch) return false;
+
+        const record = attendanceMap[`${date}:${st.id}`];
+        return getCalculatedStatus(record, date) === "Absent";
+      })
+      .map((st: any) => {
+        const record = attendanceMap[`${date}:${st.id}`];
+        return {
+          id: st.id,
+          name: st.name,
+          type: "Other Staff" as const,
+          details: st.role || "Staff Members",
+          photoUrl: st.imageUrl || "",
+          roll: "",
+          record
+        };
+      });
+
+    return [...studentAbsentees, ...teacherAbsentees, ...staffAbsentees];
+  }, [students, teachers, settings.staffMembers, selectedClass, selectedSection, searchQuery, attendanceMap, date]);
 
   const exportAttendanceDetails = () => {
     let csvHeader = "";
@@ -1040,6 +1119,12 @@ export default function Attendance() {
           onClick={() => setActiveTab("face")}
           icon={ScanFace}
           label="Face Recognition"
+        />
+        <TabButton
+          active={activeTab === "absent-manager"}
+          onClick={() => setActiveTab("absent-manager")}
+          icon={UserX}
+          label="Absentee Manager"
         />
       </div>
 
@@ -1868,6 +1953,137 @@ export default function Attendance() {
         )}
         {activeTab === "face" && (
           <FaceScanner onExit={() => setActiveTab("overview")} />
+        )}
+        {activeTab === "absent-manager" && (
+          <div className="space-y-6 animate-fade-in bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+             {/* Header */}
+             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200">
+                <div>
+                   <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                      <UserX className="w-6 h-6 text-rose-500" />
+                      Absentee Manager (अनुपस्थित सूची प्रबंधक)
+                   </h3>
+                   <p className="text-sm text-slate-500 mt-1">
+                      Showing all individuals who are calculated as <span className="text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full text-xs">Absent</span> on {format(new Date(date), "MMMM dd, yyyy")}. Easily toggle or shift their attendance status here.
+                   </p>
+                </div>
+                <div className="flex items-center gap-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-indigo-700 text-sm">
+                   <Clock className="w-5 h-5 text-indigo-500" />
+                   <span>Selected Date key: <strong className="font-mono">{date}</strong></span>
+                </div>
+             </div>
+
+             {/* Absent Grid */}
+             {currentAbsentees.length === 0 ? (
+                <div className="text-center py-16 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                   <div className="mx-auto w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100">
+                      <CheckCircle className="w-8 h-8" />
+                   </div>
+                   <h4 className="font-bold text-lg text-slate-800">Zero Absentees / All Logged!</h4>
+                   <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                      All matching members are registered as Present, Late, or there are no student profiles under the current class filter. Or, you can change the target filters in the top row.
+                   </p>
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {currentAbsentees.map((member) => {
+                      const fallbackAvatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.name)}`;
+                      const avatar = member.photoUrl && !member.photoUrl.includes("dicebear") && !member.photoUrl.includes("unsplash") ? member.photoUrl : fallbackAvatar;
+                      const typeColors = {
+                         "Student": "bg-blue-50 text-blue-700 border-blue-100",
+                         "Teacher": "bg-indigo-50 text-indigo-700 border-indigo-100",
+                         "Other Staff": "bg-violet-50 text-violet-700 border-violet-100"
+                      };
+
+                      return (
+                         <div key={member.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
+                            <div className="flex items-start gap-4">
+                               <img 
+                                  src={avatar} 
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = fallbackAvatar; }}
+                                  alt={member.name} 
+                                  className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 object-cover"
+                               />
+                               <div className="space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                     <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${typeColors[member.type]}`}>
+                                        {member.type}
+                                     </span>
+                                     {member.roll && (
+                                        <span className="text-[10px] font-mono text-slate-500 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
+                                           Roll: {member.roll}
+                                        </span>
+                                     )}
+                                  </div>
+                                  <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                     {member.name}
+                                  </h4>
+                                  <p className="text-xs text-slate-500 font-medium">
+                                     {member.details}
+                                  </p>
+                               </div>
+                            </div>
+
+                            {/* Manual Adjustment Actions */}
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+                               <div className="text-xs text-slate-400 font-semibold mb-2 uppercase tracking-wide">
+                                  Shift Attendance Status To:
+                               </div>
+                               <div className="grid grid-cols-3 gap-2">
+                                  <button
+                                     onClick={() => {
+                                        saveAttendanceRecord(member.id, date, {
+                                           status: "Present",
+                                           inTime: "09:00",
+                                           remarks: "Shifted to Present manually via Absentee Manager"
+                                        }).catch(console.error);
+                                     }}
+                                     className="py-1.5 px-2 bg-emerald-50 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 rounded-xl border border-emerald-100 transition-colors flex flex-col items-center gap-1"
+                                  >
+                                     <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                     Present
+                                  </button>
+                                  <button
+                                     onClick={() => {
+                                        saveAttendanceRecord(member.id, date, {
+                                           status: "Late",
+                                           inTime: "10:15",
+                                           remarks: "Shifted to Late manually via Absentee Manager"
+                                        }).catch(console.error);
+                                     }}
+                                     className="py-1.5 px-2 bg-amber-50 text-[11px] font-bold text-amber-700 hover:bg-amber-100 rounded-xl border border-amber-100 transition-colors flex flex-col items-center gap-1"
+                                  >
+                                     <Clock className="w-4 h-4 text-amber-600" />
+                                     Late
+                                  </button>
+                                  <button
+                                     onClick={() => {
+                                        // Trigger standard edit modal for detailed configurations
+                                        const record = attendanceMap[`${date}:${member.id}`];
+                                        openEditModal(record || {
+                                           id: `${date}:${member.id}`,
+                                           date,
+                                           memberId: member.id,
+                                           status: "Absent",
+                                           remarks: "",
+                                           class: member.type === "Student" ? (member as any).class : "",
+                                           section: member.type === "Student" ? (member as any).section : ""
+                                        });
+                                     }}
+                                     className="py-1.5 px-2 bg-slate-50 text-[11px] font-bold text-slate-700 hover:bg-slate-150 rounded-xl border border-slate-200/60 transition-colors flex flex-col items-center gap-1"
+                                  >
+                                     <Edit2 className="w-4 h-4 text-slate-500" />
+                                     Custom Detail
+                                  </button>
+                               </div>
+                            </div>
+                         </div>
+                      );
+                   })}
+                </div>
+             )}
+          </div>
         )}
       </div>
 
