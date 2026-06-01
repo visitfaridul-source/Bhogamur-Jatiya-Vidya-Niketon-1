@@ -114,13 +114,18 @@ export default function FaceRecognitionAttendance() {
 
       // Combine students, teachers, and other staff
       const allPeople = [
-        ...students.map(s => ({ id: s.id, name: s.name, photoUrl: (s as any).photoUrl })),
-        ...teachers.map(t => ({ id: t.id, name: t.name, photoUrl: (t as any).photoUrl || t.avatar })),
-        ...(settings.staffMembers || []).map((st: any) => ({ id: st.id, name: st.name, photoUrl: st.imageUrl }))
+        ...students.map(s => ({ id: s.id, name: s.name, type: 'Student', photoUrl: (s as any).photoUrl })),
+        ...teachers.map(t => ({ id: t.id, name: t.name, type: 'Teacher', photoUrl: (t as any).photoUrl })),
+        ...(settings.staffMembers || []).map((st: any) => ({ id: st.id, name: st.name, type: 'Other Staff', photoUrl: st.imageUrl }))
       ];
 
       for (const person of allPeople) {
-        if (person.photoUrl && !person.photoUrl.includes('dicebear')) {
+        if (
+          person.photoUrl && 
+          !person.photoUrl.includes('dicebear') && 
+          !person.photoUrl.includes('unsplash') && 
+          !person.photoUrl.includes('ui-avatars')
+        ) {
           try {
             // Load image
             const img = await faceapi.fetchImage(person.photoUrl);
