@@ -191,6 +191,8 @@ export interface WebsiteSettings {
   
   feeStructures: FeeStructureTier[];
   restrictedResultClasses?: string[];
+  enableFaceAttendance?: boolean;
+  enableQrAttendance?: boolean;
 }
 
 const defaultSettings: WebsiteSettings = {
@@ -442,7 +444,9 @@ const defaultSettings: WebsiteSettings = {
       ]
     }
   ],
-  restrictedResultClasses: []
+  restrictedResultClasses: [],
+  enableFaceAttendance: true,
+  enableQrAttendance: true
 };
 
 interface WebsiteContextType {

@@ -1699,6 +1699,71 @@ export default function Settings() {
                </div>
              </div>
 
+             {/* Attendance System Toggles */}
+             <div className="pt-6 border-t border-slate-100">
+               <h3 className="text-md font-bold text-slate-800 mb-2 flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> 
+                 Attendance Tracking Channels
+               </h3>
+               <p className="text-xs text-slate-500 mb-6 font-medium">
+                 Super Admin controls to toggle attendance tracking capabilities. Disabling a channel blocks access to its scanner.
+               </p>
+               
+               <div className="grid sm:grid-cols-2 gap-6">
+                 {/* Face Recognition Attendance Toggle */}
+                 <div className="flex items-center justify-between p-5 rounded-[20px] bg-slate-50 border border-slate-200 hover:border-indigo-200 transition-colors">
+                   <div className="space-y-1 pr-4">
+                     <p className="text-sm font-bold text-slate-800">Face Recognition Attendance</p>
+                     <p className="text-xs text-slate-500">Enable camera-based biometric scanning using stored faces.</p>
+                   </div>
+                   <button
+                     type="button"
+                     onClick={() => {
+                       isDirtyRef.current = true;
+                       setFormData(prev => ({ 
+                         ...prev, 
+                         enableFaceAttendance: prev.enableFaceAttendance === undefined ? false : !prev.enableFaceAttendance 
+                       }));
+                       setSaved(false);
+                     }}
+                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                       formData.enableFaceAttendance !== false ? 'bg-indigo-600' : 'bg-slate-200'
+                     }`}
+                   >
+                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                       formData.enableFaceAttendance !== false ? 'translate-x-5' : 'translate-x-0'
+                     }`} />
+                   </button>
+                 </div>
+
+                 {/* QR Code Attendance Toggle */}
+                 <div className="flex items-center justify-between p-5 rounded-[20px] bg-slate-50 border border-slate-200 hover:border-emerald-200 transition-colors">
+                   <div className="space-y-1 pr-4">
+                     <p className="text-sm font-bold text-slate-800">QR Code Attendance</p>
+                     <p className="text-xs text-slate-500">Enable physical student/teacher identity card QR scanner.</p>
+                   </div>
+                   <button
+                     type="button"
+                     onClick={() => {
+                       isDirtyRef.current = true;
+                       setFormData(prev => ({ 
+                         ...prev, 
+                         enableQrAttendance: prev.enableQrAttendance === undefined ? false : !prev.enableQrAttendance 
+                       }));
+                       setSaved(false);
+                     }}
+                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                       formData.enableQrAttendance !== false ? 'bg-emerald-600' : 'bg-slate-200'
+                     }`}
+                   >
+                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                       formData.enableQrAttendance !== false ? 'translate-x-5' : 'translate-x-0'
+                     }`} />
+                   </button>
+                 </div>
+               </div>
+             </div>
+
           </div>
         </motion.div>
         )}

@@ -1160,12 +1160,14 @@ export default function Attendance() {
           onClick={() => setActiveTab("qr")}
           icon={QrCode}
           label="QR Scanner"
+          disabled={settings.enableQrAttendance === false}
         />
         <TabButton
           active={activeTab === "face"}
           onClick={() => setActiveTab("face")}
           icon={ScanFace}
           label="Face Recognition"
+          disabled={settings.enableFaceAttendance === false}
         />
         <TabButton
           active={activeTab === "absent-manager"}
@@ -2329,19 +2331,75 @@ export default function Attendance() {
         )}
 
         {activeTab === "qr" && (
-          <Suspense
-            fallback={
-              <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                Loading Scanner...
+          settings.enableQrAttendance !== false ? (
+            <Suspense
+              fallback={
+                <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                  Loading Scanner...
+                </div>
+              }
+            >
+              <QRScanner onExit={() => setActiveTab("overview")} />
+            </Suspense>
+          ) : (
+            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 text-center max-w-2xl mx-auto my-12 shadow-sm space-y-6">
+              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto border border-rose-100">
+                <QrCode className="w-8 h-8" />
               </div>
-            }
-          >
-            <QRScanner onExit={() => setActiveTab("overview")} />
-          </Suspense>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-800">QR Scanner Attendance is Disabled</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                  The Super Admin has turned off QR-based attendance scanning for the school directory. You can manually check-in or enable this feature in Settings.
+                </p>
+              </div>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setActiveTab("overview")}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors text-sm cursor-pointer"
+                >
+                  Back to Overview
+                </button>
+                <a
+                  href="/admin/settings?category=other_pages"
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all text-sm flex items-center gap-1 shadow-md shadow-indigo-600/10"
+                >
+                  Configure Channels
+                </a>
+              </div>
+            </div>
+          )
         )}
         {activeTab === "face" && (
-          <FaceScanner onExit={() => setActiveTab("overview")} />
+          settings.enableFaceAttendance !== false ? (
+            <FaceScanner onExit={() => setActiveTab("overview")} />
+          ) : (
+            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 text-center max-w-2xl mx-auto my-12 shadow-sm space-y-6">
+              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto border border-rose-100">
+                <ScanFace className="w-8 h-8" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-800">Face Recognition Attendance is Disabled</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                  The Super Admin has turned off camera-based Face Recognition attendance tracking. Standard manual grid registers remain fully active.
+                </p>
+              </div>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setActiveTab("overview")}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors text-sm cursor-pointer"
+                >
+                  Back to Overview
+                </button>
+                <a
+                  href="/admin/settings?category=other_pages"
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all text-sm flex items-center gap-1 shadow-md shadow-indigo-600/10"
+                >
+                  Configure Channels
+                </a>
+              </div>
+            </div>
+          )
         )}
         {activeTab === "absent-manager" && (
           <div className="space-y-6 animate-fade-in bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
@@ -2759,11 +2817,13 @@ function TabButton({
   onClick,
   icon: Icon,
   label,
+  disabled,
 }: {
   active: boolean;
   onClick: () => void;
   icon: any;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -2773,12 +2833,18 @@ function TabButton({
         active
           ? "bg-slate-900 text-white shadow-sm"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+        disabled && "border border-amber-200/50"
       )}
     >
       <Icon
         className={cn("w-4 h-4", active ? "text-white" : "text-slate-400")}
       />
       <span>{label}</span>
+      {disabled && (
+        <span className="ml-1 px-1.5 py-0.5 text-[8px] font-extrabold tracking-wider bg-rose-50 text-rose-600 uppercase rounded-md border border-rose-100">
+          OFF
+        </span>
+      )}
     </button>
   );
 }
