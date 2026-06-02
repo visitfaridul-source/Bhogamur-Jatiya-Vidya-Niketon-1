@@ -733,155 +733,111 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-      {/* Real-time Cloud Connection Explanation Banner */}
-      <div className="lg:col-span-3 bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-16 w-96 h-96 bg-indigo-505/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-12 -bottom-12 p-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-emerald-950 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-950 rounded-full animate-ping"></span>
-                Cloud Synced Status
-              </span>
-              <span className="text-[11px] font-bold text-indigo-300">
-                • Firebase Firestore Core Active
-              </span>
-            </div>
-            <h1 className="text-xl md:text-2xl font-black tracking-tight">
-              कम्प्यूटर/मोबाइल कैमरा और हाजिरी रजिस्टर आपस में जुड़े हुए हैं! <br />
-              <span className="text-indigo-200">Both Camera Face-Scanning & Manual Attendance are fully Connected!</span>
-            </h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              आप चाहे <strong>"Start Camera"</strong> करके Face-Scan से हाजिरी लें, या <strong>"Attendance Page"</strong> पर मैन्युअल रजिस्टर से प्रविष्टि करें — दोनों रिकॉर्ड्स एक ही <strong>Cloud Database (Firebase Firestore)</strong> में सुरक्षित होते हैं और सभी डिवाइस पर तुरंत दिखते हैं।
-            </p>
-            <div className="pt-2 flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-ping"></span>
-              <p className="text-xs font-black text-emerald-300">
-                ✨ नई सुविधा: छात्र (Student) या शिक्षक (Teacher) का पंजीकरण करते समय अपलोड की गई तस्वीर (Photo) से उनका Face Setup अपने आप पूरा हो जाता है!
-              </p>
-            </div>
-          </div>
+    <div className="flex flex-col xl:flex-row gap-6 animate-fade-in">
+      {/* Main Scanner Section */}
+      <div className="flex-1 flex flex-col gap-6">
+        <div className="bg-slate-900 rounded-[2rem] border border-slate-800 shadow-2xl overflow-hidden relative">
           
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex-1 min-w-[200px]">
-              <p className="text-xs font-black text-indigo-300 uppercase tracking-wider mb-1">Option A: Smart Camera</p>
-              <p className="text-[11px] text-slate-300">Place a device with <strong>Camera ON</strong> at the school gate. Attendance logs automatically as people stand in front of it.</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex-1 min-w-[200px]">
-              <p className="text-xs font-black text-emerald-300 uppercase tracking-wider mb-1">Option B: Manual Grid</p>
-              <p className="text-[11px] text-slate-300">Mark students Present/Absent directly using the <strong>Manual Register grid</strong> on the Attendance Page from any tablet or mobile.</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-slate-400 relative z-10">
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-              <strong>Simulate Target :</strong> Choose who stands in front of the lens to demo scanned states.
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-              <strong>Register Face :</strong> Register individual IDs to allow authorized face scans.
-            </span>
-          </div>
-          <span className="text-indigo-300 font-extrabold bg-indigo-500/25 px-2 py-0.5 rounded-md">
-            🚀 100% Mobile & Desktop Cross-Device Compatible
-          </span>
-        </div>
-      </div>
-
-      {/* Left Column - Camera Feed */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 bg-gradient-to-br from-white to-indigo-50/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
-
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 relative z-10">
+          {/* Top Control Bar */}
+          <div className="p-4 sm:p-6 pb-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-20">
             <div>
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <ScanFace className="w-6 h-6 text-indigo-600" /> AI Face
-                Recognition
+              <h2 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+                <div className="p-2 bg-indigo-500/20 rounded-xl">
+                  <ScanFace className="w-6 h-6 text-indigo-400" />
+                </div>
+                Live Face Scanner
               </h2>
-              <p className="text-sm text-slate-500">
-                Auto-detect and mark attendance natively
-              </p>
+              <div className="flex items-center gap-3 mt-2 text-sm">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Sensors Active
+                </span>
+                <span className="text-slate-400 font-mono text-xs">AI VERIFICATION ENGINE</span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 items-center w-full md:w-auto md:justify-end">
-              <div className="bg-slate-100 p-1 rounded-xl flex items-center z-10 relative">
+            
+            <div className="flex flex-wrap items-center gap-3 p-1.5 bg-slate-800/80 backdrop-blur rounded-2xl border border-slate-700/50">
+              <div className="flex rounded-xl overflow-hidden bg-slate-900">
                 <button
                   onClick={() => setScannerMode("Entry")}
                   className={cn(
-                    "px-4 py-1.5 text-sm font-bold rounded-lg transition-colors",
+                    "px-5 py-2 text-sm font-bold transition-all",
                     scannerMode === "Entry"
-                      ? "bg-white text-indigo-700 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700",
+                      ? "bg-indigo-500 text-white shadow-lg"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800",
                   )}
                 >
-                  Time In (Entry)
+                  Entry Mode
                 </button>
                 <button
                   onClick={() => setScannerMode("Exit")}
                   className={cn(
-                    "px-4 py-1.5 text-sm font-bold rounded-lg transition-colors",
+                    "px-5 py-2 text-sm font-bold transition-all",
                     scannerMode === "Exit"
-                      ? "bg-white text-indigo-700 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700",
+                      ? "bg-indigo-500 text-white shadow-lg"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800",
                   )}
                 >
-                  Time Out (Leave)
+                  Exit Mode
                 </button>
               </div>
-              
-              {/* Note: In real-world automatic facial matching, categories are parsed directly from descriptors */}
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-600 hover:text-indigo-600 focus:outline-none transition-colors z-10 relative"
-                  title={soundEnabled ? "Mute beep" : "Enable beep"}
-                >
-                  {soundEnabled ? (
-                    <Volume2 className="w-5 h-5 text-emerald-600" />
-                  ) : (
-                    <VolumeX className="w-5 h-5" />
-                  )}
-                </button>
+              <div className="h-6 w-px bg-slate-700 mx-1"></div>
 
-                {onExit && (
-                  <button
-                    onClick={onExit}
-                    className="px-6 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm transition-all flex items-center gap-2 z-10 relative"
-                  >
-                    <X className="w-4 h-4" /> Exit
-                  </button>
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={cn(
+                  "p-2.5 rounded-xl transition-all border",
+                  soundEnabled 
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                    : "bg-slate-800 text-slate-500 border-slate-700 hover:bg-slate-700"
                 )}
+                title={soundEnabled ? "Mute Output" : "Enable Audio"}
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </button>
+
+              <button
+                onClick={() => setIsScanning(!isScanning)}
+                className={cn(
+                  "px-6 py-2.5 rounded-xl text-sm font-black transition-all shadow-lg flex items-center gap-2",
+                  isScanning
+                    ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/25"
+                    : "bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/25",
+                )}
+              >
+                {isScanning ? "🛑 Hault Scanner" : "▶️ Initialize Lens"}
+              </button>
+              
+              {onExit && (
                 <button
-                  onClick={() => setIsScanning(!isScanning)}
-                  className={cn(
-                    "px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2 z-10 relative",
-                    isScanning
-                      ? "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/20",
-                  )}
+                  onClick={onExit}
+                  className="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-all font-bold"
+                  title="Close Screen"
                 >
-                  {isScanning ? "Stop Camera" : "Start Camera"}
+                  <X className="w-5 h-5" />
                 </button>
-              </div>
+              )}
             </div>
           </div>
 
-          <div className="relative rounded-3xl overflow-hidden bg-slate-900 aspect-video flex flex-col items-center justify-center border-[6px] border-slate-800 shadow-2xl relative z-10">
+          {/* Camera Viewport */}
+          <div className="relative aspect-video mt-6 bg-black border-y border-slate-800 flex flex-col items-center justify-center">
+            {/* Viewport Corner Brackets */}
+            <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-indigo-500/50 rounded-tl-lg z-10 pointer-events-none"></div>
+            <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-indigo-500/50 rounded-tr-lg z-10 pointer-events-none"></div>
+            <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-indigo-500/50 rounded-bl-lg z-10 pointer-events-none"></div>
+            <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-indigo-500/50 rounded-br-lg z-10 pointer-events-none"></div>
+
             {isScanning ? (
               !modelsLoaded || isFaceMatcherLoading ? (
-                <div className="flex flex-col items-center justify-center text-indigo-400">
-                  <Loader2 className="w-10 h-10 animate-spin mb-4" />
-                  <p className="font-bold">Loading AI face descriptor models...</p>
-                  <p className="text-xs text-indigo-300 mt-1">
-                    This takes a few seconds on first run
-                  </p>
+                <div className="flex flex-col items-center justify-center text-center text-indigo-400 z-10">
+                  <div className="relative">
+                    <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full animate-ping"></div>
+                    <Loader2 className="w-12 h-12 animate-spin relative z-10 text-indigo-500" />
+                  </div>
+                  <p className="font-extrabold mt-6 tracking-widest uppercase text-sm">Initializing Neural Net</p>
+                  <p className="text-xs text-indigo-400/60 mt-2 font-mono">Loading face descriptor dictionaries...</p>
                 </div>
               ) : (
                 <>
@@ -891,10 +847,16 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                     playsInline
                     muted
                     onPlay={handleVideoPlay}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover opacity-90 mix-blend-lighten"
                   />
 
-                  {/* Simulated Bounding Boxes Overlay */}
+                  {/* Processing Overlay Effect */}
+                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)50%,rgba(0,0,0,0.8)100%)]"></div>
+                  
+                  {/* Grid Lines */}
+                  <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
+
+                  {/* Live Bounding Boxes Overlays */}
                   {detectedFaces.map((face, idx) => {
                     const isUnregistered = face.id === "unknown";
                     return (
@@ -903,10 +865,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                         initial={{ opacity: 0, scale: 1.1 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className={cn(
-                          "absolute z-20 border-2 rounded-xl transition-all duration-300",
-                          isUnregistered
-                            ? "border-rose-500 bg-rose-500/10"
-                            : "border-emerald-400 bg-emerald-400/10"
+                          "absolute z-20 transition-all duration-150 flex items-center justify-center",
                         )}
                         style={{
                           left: "30%",
@@ -915,63 +874,55 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                           height: "60%",
                         }}
                       >
-                        <div className={cn(
-                          "absolute -bottom-10 left-1/2 -translate-x-1/2 text-white text-[11px] font-black px-3 py-1.5 rounded-full whitespace-nowrap shadow-lg transition-colors flex items-center gap-1.5",
-                          isUnregistered ? "bg-rose-600 animate-bounce" : "bg-emerald-500"
-                        )}>
-                          {isUnregistered && <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>}
-                          {isUnregistered ? "⚠️ WARNING: Face Not Registered" : `${face.name} • ${face.confidence}% Match`}
-                        </div>
+                         <svg className="absolute inset-0 w-full h-full drop-shadow-md" viewBox="0 0 100 100" preserveAspectRatio="none">
+                           <path d="M0,20 L0,0 L20,0 M80,0 L100,0 L100,20 M100,80 L100,100 L80,100 M20,100 L0,100 L0,80" fill="none" stroke={isUnregistered ? "#f43f5e" : "#10b981"} strokeWidth="1" />
+                           <rect x="0" y="0" width="100" height="100" fill={isUnregistered ? "rgba(244, 63, 94, 0.1)" : "rgba(16, 185, 129, 0.1)"} />
+                         </svg>
+
+                         <div className={cn(
+                           "absolute -bottom-12 font-mono px-4 py-2 rounded-lg text-white font-black text-xs uppercase tracking-widest whitespace-nowrap shadow-2xl backdrop-blur-md flex items-center gap-2",
+                           isUnregistered ? "bg-rose-500/90 border border-rose-400" : "bg-emerald-500/90 border border-emerald-400"
+                         )}>
+                           {isUnregistered && <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>}
+                           {isUnregistered ? "UNKNOWN IDENTITY" : `${face.name} • ${face.confidence}%`}
+                         </div>
                       </motion.div>
                     );
                   })}
 
-                  {/* Processing Overlay Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none mix-blend-overlay"></div>
-                  <div className="absolute top-4 left-4 flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                    <span className="text-white text-xs font-bold tracking-wider opacity-80 shadow-black drop-shadow-md">
-                      LIVE RECOGNITION
+                  {/* Top Left Live Indicator */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10 text-white">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                    <span className="text-[10px] font-black tracking-widest uppercase opacity-90 font-mono">
+                      REC
                     </span>
                   </div>
 
-                  {/* MAGNIFICENT DIAGNOSTIC CONFIRM STATUS OVERLAY CARD */}
+                  {/* Immersive Diagnostic Overlay */}
                   <AnimatePresence>
                     {scanResultAlert && (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute inset-x-4 top-4 bottom-4 z-40 rounded-[1.5rem] overflow-hidden flex flex-col justify-between p-5 text-white backdrop-blur-md shadow-2xl"
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        className="absolute inset-x-6 bottom-6 z-40 rounded-2xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-xl"
                         style={{
                           background: scanResultAlert.status === "UNREGISTERED" 
-                            ? "linear-gradient(135deg, rgba(225,29,72,0.95), rgba(159,18,57,0.95))"
+                            ? "linear-gradient(to right, rgba(225,29,72,0.95), rgba(159,18,57,0.95))"
                             : scanResultAlert.status === "ALREADY LOGGED"
-                            ? "linear-gradient(135deg, rgba(217,119,6,0.95), rgba(146,64,14,0.95))"
-                            : "linear-gradient(135deg, rgba(5,150,105,0.95), rgba(6,78,59,0.95))"
+                            ? "linear-gradient(to right, rgba(217,119,6,0.95), rgba(146,64,14,0.95))"
+                            : "linear-gradient(to right, rgba(5,150,105,0.95), rgba(6,78,59,0.95))"
                         }}
                       >
-                        {/* Header status bar */}
-                        <div className="flex items-center justify-between">
-                          <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] uppercase font-black tracking-widest">
-                            DIAGNOSTIC FEEDBACK
-                          </span>
-                          <span className="text-[11px] font-mono opacity-80 font-bold bg-black/20 px-2.5 py-1 rounded-lg">
-                            🕒 {scanResultAlert.time}
-                          </span>
-                        </div>
-
-                        {/* Middle display content */}
-                        <div className="flex items-center gap-4 my-auto">
-                          <div className="relative">
+                        <div className="p-4 sm:p-5 flex items-center gap-5">
+                          <div className="relative shrink-0">
                             <img
                               src={scanResultAlert.photo}
                               alt={scanResultAlert.name}
                               referrerPolicy="no-referrer"
-                              className="w-16 h-16 rounded-full border-4 border-white/20 object-cover shadow-md bg-white/10"
+                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-white/30 object-cover shadow-inner bg-black/20"
                             />
-                            {/* Animated icon badge status indicator */}
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-lg"
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shadow-xl"
                               style={{
                                 background: scanResultAlert.status === "UNREGISTERED" ? "#f43f5e" : scanResultAlert.status === "ALREADY LOGGED" ? "#f59e0b" : "#10b981"
                               }}
@@ -980,38 +931,28 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                             </div>
                           </div>
 
-                          <div className="space-y-1">
-                            <p className="text-[10px] uppercase tracking-wider font-extrabold text-white/75">
-                              {scanResultAlert.type} • {scanResultAlert.class}
+                          <div className="flex-1 min-w-0 text-white">
+                            <p className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-white/70 mb-1">
+                              {scanResultAlert.type} // {scanResultAlert.class} // ID: {scanResultAlert.id}
                             </p>
-                            <h4 className="text-lg font-black tracking-tight uppercase leading-tight">
+                            <h4 className="text-lg sm:text-2xl font-black tracking-tight uppercase truncate">
                               {scanResultAlert.name}
                             </h4>
-                            <div className="inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border border-white/15">
-                              <span>Id:</span>
-                              <span className="font-mono">{scanResultAlert.id}</span>
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="bg-black/30 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
+                                {scanResultAlert.status === "UNREGISTERED" 
+                                  ? "ACCESS DENIED"
+                                  : scanResultAlert.status === "ALREADY LOGGED"
+                                  ? "DUPLICATE ENTRY"
+                                  : "VERIFIED & LOGGED"}
+                              </span>
+                              <span className="text-[10px] font-mono text-white/50">
+                                {scanResultAlert.time}
+                              </span>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Bottom Action Footer with high impact */}
-                        <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
-                            <span className="text-[12px] font-black uppercase tracking-wider">
-                              {scanResultAlert.status === "UNREGISTERED" 
-                                ? "PROHIBITED / अनधिकृत प्रवेश"
-                                : scanResultAlert.status === "ALREADY LOGGED"
-                                ? "ALREADY RECORDED / पहले से दर्ज"
-                                : "ATTENDANCE SAVED / हाजिरी दर्ज हुई"}
-                            </span>
-                          </div>
-                          
-                          <button
-                            type="button"
-                            onClick={() => setScanResultAlert(null)}
-                            className="p-1.5 hover:bg-white/15 active:scale-90 rounded-full transition-all cursor-pointer border border-white/20"
-                          >
+                          <button onClick={() => setScanResultAlert(null)} className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/20 text-white/70 hover:bg-black/40 hover:text-white transition-all">
                             <X className="w-4 h-4" />
                           </button>
                         </div>
@@ -1021,258 +962,172 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
                 </>
               )
             ) : (
-              <div className="text-center p-8">
-                <Camera className="w-16 h-16 text-slate-700 mx-auto mb-4 opacity-50" />
-                <p className="text-slate-400 font-medium">
-                  Camera is inactive.
-                </p>
-                <p className="text-slate-500 text-sm mt-1">
-                  Click "Start Camera" to begin scanning.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* CAMERA DEVICE RESET & SELECTOR SYSTEM */}
-          <div className="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-[2rem] relative z-10 space-y-4 shadow-inner">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
-                  <span className="p-1 px-1.5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wider">Live Controls</span>
-                  कम्प्यूटर/मोबाइल कैमरा और फीड रीसेट • Camera Reset List
-                </h3>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                  यदि कैमरा फीड लोड नहीं हो रहा है या रुक गया है, तो उपलब्ध कैमरे की सूची में से डिवाइस चुनें या <strong>Instant Reset</strong> दबाएं।
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  // Instant hard reset
-                  setIsScanning(false);
-                  if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                  }
-                  setTimeout(async () => {
-                    await updateDeviceList();
-                    setIsScanning(true);
-                  }, 150);
-                }}
-                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-black rounded-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-md shadow-slate-900/10"
-              >
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
-                ⚡ Instant Camera Reset
-              </button>
-            </div>
-
-            {/* Device lists */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {videoDevices.length === 0 ? (
-                <div className="sm:col-span-2 p-5 text-center bg-white border border-slate-100 rounded-2xl text-slate-400 text-xs font-medium">
-                  fसूची खाली है या कैमरा अनुमति का इंतजार है। अनुमति देने के लिए "Instant Camera Reset" पर क्लिक करें। <br />
-                  <span className="text-[10px] text-slate-400 mt-1 block">(No camera devices detected yet. Awaiting browser permission approval.)</span>
+              <div className="text-center p-8 flex flex-col items-center">
+                <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <Camera className="w-8 h-8 text-slate-500" />
                 </div>
-              ) : (
-                videoDevices.map((device, idx) => {
-                  const isActive = selectedDeviceId === device.deviceId;
-                  return (
-                    <button
-                      key={device.deviceId || idx}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDeviceId(device.deviceId);
-                        localStorage.setItem("bhogamur_selected_camera_id", device.deviceId);
-                      }}
-                      className={cn(
-                        "flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden cursor-pointer",
-                        isActive
-                          ? "bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10 text-indigo-950 font-bold"
-                          : "bg-white/70 hover:bg-white border-slate-200 hover:border-slate-350 text-slate-700"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                        <div className={cn(
-                          "w-2 h-2 rounded-full shrink-0",
-                          isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
-                        )} />
-                        <div className="min-w-0">
-                          <p className="text-xs truncate font-bold tracking-tight">
-                            {device.label || `Camera Device ${idx + 1}`}
-                          </p>
-                          <p className="text-[9px] text-slate-400 font-mono truncate">
-                            ID: {device.deviceId ? `${device.deviceId.substring(0, 16)}...` : 'Default'}
-                          </p>
-                        </div>
-                      </div>
-                      {isActive ? (
-                        <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                          सक्रिय / Active
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-extrabold uppercase text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                          चुनें / SELECT
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            {cameraError && (
-              <div className="p-3 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-xl flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
-                <strong>कैमरा समस्या:</strong> {cameraError}. कृपया जांचें कि कैमरा अन्य कार्यों में व्यस्त तो नहीं है।
+                <p className="text-slate-300 font-bold tracking-widest uppercase text-sm">
+                  System Offline
+                </p>
+                <p className="text-slate-500 text-xs mt-2 font-mono">
+                  Awaiting initialization command.
+                </p>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6 relative z-10">
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-xs text-slate-500 font-medium uppercase mb-1">
-                Model Accuracy
-              </p>
-              <p className="font-bold text-indigo-700">99.8%</p>
+          {/* Bottom Control Bar */}
+          <div className="p-4 sm:p-6 bg-slate-900 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+             <div className="flex items-center gap-3 bg-slate-800/50 p-2 rounded-2xl border border-slate-700/50">
+               <div className="p-3 bg-slate-800 rounded-xl">
+                 <Camera className="w-4 h-4 text-indigo-400" />
+               </div>
+               <div className="flex-1 min-w-0 pr-2">
+                 <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Capture Device</p>
+                 <select
+                   className="w-full bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer truncate mt-0.5 appearance-none"
+                   value={selectedDeviceId}
+                   onChange={(e) => {
+                     setSelectedDeviceId(e.target.value);
+                     localStorage.setItem("bhogamur_selected_camera_id", e.target.value);
+                   }}
+                 >
+                   {videoDevices.length === 0 && <option value="">No devices found</option>}
+                   {videoDevices.map((device, idx) => (
+                     <option key={idx} value={device.deviceId} className="bg-slate-900 text-white">
+                       {device.label || `Camera Device ${idx + 1}`}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+               <button
+                 type="button"
+                 onClick={async () => {
+                   setIsScanning(false);
+                   if (videoRef.current) videoRef.current.srcObject = null;
+                   setTimeout(async () => {
+                     await updateDeviceList();
+                     setIsScanning(true);
+                   }, 150);
+                 }}
+                 className="px-3 py-2 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+               >
+                 Reset
+               </button>
+             </div>
+
+             <div className="flex justify-around items-center h-full px-4 text-center divide-x divide-slate-800">
+                <div className="px-4">
+                  <p className="text-2xl font-black text-emerald-400 font-mono tracking-tighter">99.8<span className="text-sm">%</span></p>
+                  <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Accuracy</p>
+                </div>
+                <div className="px-4">
+                  <p className="text-2xl font-black text-indigo-400 font-mono tracking-tighter">120<span className="text-sm">ms</span></p>
+                  <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Latency</p>
+                </div>
+                <div className="px-4">
+                  <p className="text-2xl font-black text-amber-400 font-mono tracking-tighter">{registeredFaceIds.length}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Identities</p>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        {/* Security Controls & Manual Registration */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center shrink-0">
+               <ShieldAlert className="w-6 h-6" />
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-xs text-slate-500 font-medium uppercase mb-1">
-                Processing Time
-              </p>
-              <p className="font-bold text-slate-800">~120ms</p>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-xs text-slate-500 font-medium uppercase mb-1">
-                Registered Faces
-              </p>
-              <p className="font-bold text-slate-800">2,840</p>
+            <div>
+              <h3 className="font-bold text-slate-800 tracking-tight">Identity Management</h3>
+              <p className="text-xs text-slate-500 font-medium">Automatic synced across all institutional portals.</p>
             </div>
           </div>
+          <button
+            onClick={() => setIsRegisterModalOpen(true)}
+            className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            <UserPlus className="w-4 h-4" /> Add Identity
+          </button>
         </div>
       </div>
 
-      {/* Right Column */}
-      <div className="space-y-6">
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 overflow-hidden relative">
-          <div className="flex justify-between items-center mb-6 z-10 relative">
-            <h3 className="font-bold text-slate-800">Live Attendance Log</h3>
-            <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">
+      {/* Side Panel: Log Activity */}
+      <div className="w-full xl:w-96 flex flex-col gap-6 shrink-0 h-full max-h-[85vh]">
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full">
+          <div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center z-10">
+            <div>
+              <h3 className="font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                Session Ledger
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </h3>
+              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Real-time DB Sync</p>
+            </div>
+            <span className="text-xs font-black bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full shadow-sm">
               {logs.length} Logged
             </span>
           </div>
 
-          {/* Connected Devices Indicator */}
-          <div className="flex gap-2 mb-6 flex-wrap pb-4 border-b border-slate-100">
-            <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              This Device (Online)
-            </div>
-            <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-[pulse_2s_ease-in-out_infinite]"></span>
-              Gate 1 (Tablet)
-            </div>
-            <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-[pulse_3s_ease-in-out_infinite]"></span>
-              Library (Camera 2)
-            </div>
-          </div>
-
-          <div className="space-y-4 max-h-[350px] overflow-y-auto relative z-10">
+          <div className="flex-1 overflow-y-auto min-h-[400px] p-5 sm:p-6 space-y-3 bg-slate-50/30">
             {logs.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-10">
-                No members detected yet.
-              </p>
+              <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
+                <ScanFace className="w-12 h-12 text-slate-200 mb-3" />
+                <p className="text-sm font-bold text-slate-600">No Check-ins Yet</p>
+                <p className="text-xs mt-1">Waiting for initial facial scan...</p>
+              </div>
             ) : (
               logs.map((log, i) => (
                 <div
                   key={i}
                   className={cn(
-                    "flex items-center gap-4 p-3 rounded-2xl border animate-fade-in",
+                    "flex items-center gap-4 p-3.5 rounded-2xl border bg-white animate-fade-in transition-all",
                     log.status === "ALREADY LOGGED" || log.status === "UNREGISTERED"
-                      ? "bg-rose-50 border-rose-100"
+                      ? "border-rose-100 shadow-[0_4px_15px_-3px_rgba(254,226,226,0.5)]"
                       : log.status === "LATE"
-                        ? "bg-amber-50 border-amber-100"
-                        : "bg-slate-50 border-slate-100",
+                        ? "border-amber-100 shadow-[0_4px_15px_-3px_rgba(254,243,199,0.5)]"
+                        : "border-slate-100 hover:border-slate-300 shadow-sm",
                   )}
                 >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-full overflow-hidden border-2 shrink-0",
-                      log.status === "ALREADY LOGGED" || log.status === "UNREGISTERED"
-                        ? "border-rose-400 animate-pulse"
-                        : log.status === "LATE"
-                          ? "border-amber-400"
-                          : "border-emerald-400",
-                    )}
-                  >
-                    <img referrerPolicy="no-referrer" src={log.photo} alt={log.name} />
+                  <div className="relative">
+                    <img referrerPolicy="no-referrer" src={log.photo} alt={log.name} className="w-12 h-12 rounded-xl object-cover bg-slate-100" />
+                    <div className={cn(
+                      "absolute -bottom-1 -right-1 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black border-2 border-white",
+                      log.status === "ALREADY LOGGED" || log.status === "UNREGISTERED" ? "bg-rose-500 text-white" : log.status === "LATE" ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
+                    )}>
+                       {log.status === "UNREGISTERED" ? "!" : log.status === "ALREADY LOGGED" ? "↺" : "✓"}
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 truncate">
+                    <p className="text-sm font-black text-slate-800 truncate mb-0.5">
                       {log.name}
                     </p>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                      <span
-                        className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded font-black uppercase text-center",
-                          log.type === "Student"
-                            ? "bg-blue-100 text-blue-700"
-                            : log.type === "Teacher"
-                              ? "bg-purple-100 text-purple-700"
-                              : log.type === "Unknown"
-                                ? "bg-red-100 text-red-600 border border-red-200"
-                                : "bg-amber-100 text-amber-700",
-                        )}
-                      >
-                        {log.type || "Student"}
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        "text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider",
+                        log.type === "Student" ? "bg-blue-50 text-blue-600" : log.type === "Teacher" ? "bg-purple-50 text-purple-600" : "bg-slate-100 text-slate-600"
+                      )}>
+                        {log.type}
                       </span>
-                      <p className="text-xs text-slate-500 truncate">
-                        {log.class} • ID/Roll: {log.roll}
-                      </p>
+                      <span className="text-[10px] text-slate-500 truncate font-mono">
+                        {log.class}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p
-                      className={cn(
-                        "text-xs font-bold mb-0.5",
-                        log.status === "ALREADY LOGGED" || log.status === "UNREGISTERED"
-                          ? "text-rose-600 font-extrabold"
-                          : log.status === "LATE"
-                            ? "text-amber-600 font-extrabold"
-                            : "text-emerald-600 font-extrabold",
-                      )}
-                    >
-                      {log.status === "ALREADY LOGGED"
-                        ? "ALREADY LOGGED"
-                        : log.status === "UNREGISTERED"
-                          ? "NOT REGISTERED"
-                          : log.status || "PRESENT"}
+                    <p className={cn(
+                      "text-[10px] font-black uppercase tracking-wider mb-1",
+                      log.status === "ALREADY LOGGED" || log.status === "UNREGISTERED" ? "text-rose-600" : log.status === "LATE" ? "text-amber-600" : "text-emerald-600"
+                    )}>
+                      {log.status === "ALREADY LOGGED" ? "DUPLICATE" : log.status === "UNREGISTERED" ? "UNKNOWN" : log.status || "PRESENT"}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-mono">
+                    <p className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md inline-block">
                       {log.time}
                     </p>
                   </div>
                 </div>
               ))
             )}
-          </div>
-        </div>
-
-        <div className="bg-slate-900 rounded-[2rem] p-6 text-white border border-slate-800 shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-amber-400" /> Security Controls
-          </h3>
-          <p className="text-slate-300 text-sm mb-6 leading-relaxed">
-            Anti-spoofing is enabled. The system will prevent attendance marking
-            using photos or videos shown on devices.
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={() => setIsRegisterModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 transition-colors rounded-xl text-sm font-semibold"
-            >
-              <UserPlus className="w-4 h-4" /> Register New Face Data
-            </button>
           </div>
         </div>
       </div>
