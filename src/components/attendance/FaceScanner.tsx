@@ -57,6 +57,8 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
   const wakeLockRef = useRef<any>(null);
   const [faceMatcher, setFaceMatcher] = useState<faceapi.FaceMatcher | null>(null);
   const latestFaceMatcher = useRef<faceapi.FaceMatcher | null>(null);
+  const [cacheVersion, setCacheVersion] = useState(0);
+
   useEffect(() => {
     latestFaceMatcher.current = faceMatcher;
   }, [faceMatcher]);
@@ -309,6 +311,21 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
       let cacheUpdated = false;
 
       for (const person of allPeople) {
+        // Priority 1: Camera-trained descriptor from local storage
+        const cameraCacheKey = `camera_${person.id}`;
+        if (cache[cameraCacheKey]) {
+          try {
+            const floatArray = new Float32Array(cache[cameraCacheKey]);
+            labeledFaceDescriptors.push(
+              new faceapi.LabeledFaceDescriptors(person.id, [floatArray])
+            );
+            continue;
+          } catch (err) {
+            console.warn(`Failed to reload camera-trained face descriptor for ${person.name}`, err);
+          }
+        }
+
+        // Priority 2: Valid photoUrl (Firebase Storage or direct URI, NOT placeholders)
         if (
           person.photoUrl && 
           !person.photoUrl.includes('dicebear') && 
@@ -320,7 +337,7 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
             try {
               const floatArray = new Float32Array(cache[cacheKey]);
               labeledFaceDescriptors.push(
-                new faceapi.LabeledFaceDescriptors(person.id, [floatArray]) // Using ID instead of name to reliably map
+                new faceapi.LabeledFaceDescriptors(person.id, [floatArray])
               );
               continue;
             } catch (err) {
@@ -358,30 +375,20 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
     };
 
     createFaceMatcher();
-  }, [modelsLoaded, students, teachers, settings.staffMembers]);
+  }, [modelsLoaded, students, teachers, settings.staffMembers, cacheVersion]);
 
-  // Warmup/Pre-fetch camera permissions on mounting and list all video devices instantly
+  // Pre-fetch camera permissions on mounting and list all video devices instantly
   useEffect(() => {
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices()
         .then((devices) => {
           const videoInputs = devices.filter(d => d.kind === "videoinput");
-          // If labels are empty, we request once to trigger permissions so they are listed with labels
-          if (videoInputs.length > 0 && !videoInputs[0].label) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-              .then((s) => {
-                updateDeviceList();
-                s.getTracks().forEach(t => t.stop());
-              })
-              .catch(e => console.log("Warmup getUserMedia rejected:", e));
-          } else {
-            setVideoDevices(videoInputs);
-            const savedCamera = localStorage.getItem("bhogamur_selected_camera_id");
-            if (savedCamera && videoInputs.some(v => v.deviceId === savedCamera)) {
-              setSelectedDeviceId(savedCamera);
-            } else if (videoInputs.length > 0) {
-              setSelectedDeviceId(videoInputs[0].deviceId);
-            }
+          setVideoDevices(videoInputs);
+          const savedCamera = localStorage.getItem("bhogamur_selected_camera_id");
+          if (savedCamera && videoInputs.some(v => v.deviceId === savedCamera)) {
+            setSelectedDeviceId(savedCamera);
+          } else if (videoInputs.length > 0) {
+            setSelectedDeviceId(videoInputs[0].deviceId);
           }
         })
         .catch(err => console.log("Initial enumerateDevices failed:", err));
@@ -1136,7 +1143,10 @@ export default function FaceScanner({ onExit }: { onExit?: () => void }) {
         {isRegisterModalOpen && (
           <RegisterFaceModal
             onClose={() => setIsRegisterModalOpen(false)}
-            onRegister={(id) => handleRegisterFace(id)}
+            onRegister={(id) => {
+              handleRegisterFace(id);
+              setCacheVersion((c) => c + 1);
+            }}
           />
         )}
       </AnimatePresence>
@@ -1291,18 +1301,87 @@ function RegisterFaceModal({
     }, 400);
   };
 
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (step === "scan") {
-      timeout = setTimeout(() => {
-        if (onRegister && formData.id) {
-          onRegister(formData.id);
-        }
-        setStep("success");
-      }, 3000);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [scanError, setScanError] = useState("");
+
+  const saveTrainedFace = (descriptor: Float32Array) => {
+    try {
+      const DESCRIPTOR_CACHE_KEY = 'bhogamur_face_descriptors_cache';
+      const saved = localStorage.getItem(DESCRIPTOR_CACHE_KEY);
+      const cache = saved ? JSON.parse(saved) : {};
+      cache[`camera_${formData.id}`] = Array.from(descriptor);
+      localStorage.setItem(DESCRIPTOR_CACHE_KEY, JSON.stringify(cache));
+      console.log("Saved local descriptor for:", formData.id);
+    } catch (err) {
+      console.warn("Local storage error:", err);
     }
-    return () => clearTimeout(timeout);
-  }, [step, onRegister, formData.id]);
+  };
+
+  const processUploadedImage = async (file: File) => {
+    try {
+      setStep("scan");
+      setScanError("");
+      const img = await faceapi.bufferToImage(file);
+      const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+      if (!detection) {
+        setScanError("No face detected in the uploaded image.");
+        setTimeout(() => setStep("info"), 2000);
+        return;
+      }
+      saveTrainedFace(detection.descriptor);
+      if (onRegister && formData.id) onRegister(formData.id);
+      setStep("success");
+    } catch (e) {
+      console.error(e);
+      setScanError("Error processing image.");
+      setTimeout(() => setStep("info"), 2000);
+    }
+  };
+
+  useEffect(() => {
+    let localStream: MediaStream | null = null;
+    let scanInterval: NodeJS.Timeout;
+
+    if (step === "scan" && !scanError) {
+      const startCamera = async () => {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          if (videoRef.current) {
+            videoRef.current.srcObject = localStream;
+            await videoRef.current.play();
+          }
+        } catch (e) {
+          setScanError("Camera access denied.");
+          setTimeout(() => setStep("info"), 2000);
+        }
+      };
+
+      startCamera();
+
+      scanInterval = setInterval(async () => {
+        if (videoRef.current && localStream) {
+          try {
+            const detection = await faceapi.detectSingleFace(videoRef.current).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+              clearInterval(scanInterval);
+              saveTrainedFace(detection.descriptor);
+              if (onRegister && formData.id) onRegister(formData.id);
+              setStep("success");
+            }
+          } catch (e) {
+            // ignore scan errors, keep trying
+          }
+        }
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(scanInterval);
+      if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [step, scanError, onRegister, formData.id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -1540,7 +1619,7 @@ function RegisterFaceModal({
                     disabled={!formData.name || !formData.id}
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                        setStep("scan");
+                        processUploadedImage(e.target.files[0]);
                       }
                     }}
                   />
@@ -1562,16 +1641,25 @@ function RegisterFaceModal({
           {step === "scan" && (
             <div className="text-center py-6 animate-fade-in">
               <div className="relative w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden border-4 border-indigo-100 bg-indigo-50">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ScanFace className="w-16 h-16 text-indigo-300 animate-pulse" />
-                </div>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {!videoRef.current?.srcObject && !scanError && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ScanFace className="w-16 h-16 text-indigo-300 animate-pulse" />
+                  </div>
+                )}
                 <div className="absolute inset-0 border-t-4 border-indigo-600 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-lg font-bold text-slate-800">
-                Scanning Face...
+                {scanError ? "Scan Error" : "Scanning Face..."}
               </h3>
-              <p className="text-sm text-slate-500 mt-2">
-                Please look directly at the camera.
+              <p className={cn("text-sm mt-2", scanError ? "text-rose-600" : "text-slate-500")}>
+                {scanError || "Please look directly at the camera."}
               </p>
             </div>
           )}
